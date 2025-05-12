@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @Getter
 @Table(name = "Gio_hang")
-public class Gio_hang {
+public class GioHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

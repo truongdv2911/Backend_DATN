@@ -1,6 +1,6 @@
 package com.example.demo.Service;
 
-import com.example.demo.Entity.Gio_hang;
+import com.example.demo.Entity.GioHang;
 import com.example.demo.Repository.Gio_Hang_Repo;
 import lombok.AllArgsConstructor;
 
@@ -12,19 +12,19 @@ public class Gio_hang_Service {
 
     private final Gio_Hang_Repo gioHangRepository;
 
-    public List<Gio_hang> getAllGioHangs() {
+    public List<GioHang> getAllGioHangs() {
         return gioHangRepository.findAll();
     }
 
-    public Optional<Gio_hang> getGioHangById(Integer id) {
+    public Optional<GioHang> getGioHangById(Integer id) {
         return gioHangRepository.findById(id);
     }
 
-    public Gio_hang createGioHang(Gio_hang gioHang) {
+    public GioHang createGioHang(GioHang gioHang) {
         return gioHangRepository.save(gioHang);
     }
 
-    public Gio_hang updateGioHang(Integer id, Gio_hang updatedGioHang) {
+    public GioHang updateGioHang(Integer id, GioHang updatedGioHang) {
         return gioHangRepository.findById(id).map(gioHang -> {
             gioHang.setSoTienGiam(updatedGioHang.getSoTienGiam());
             gioHang.setTongTien(updatedGioHang.getTongTien());

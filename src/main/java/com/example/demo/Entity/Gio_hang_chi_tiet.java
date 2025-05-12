@@ -16,7 +16,7 @@ public class Gio_hang_chi_tiet {
 
     @ManyToOne
     @JoinColumn(name = "gio_hang_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHangChiTiet_GioHang"))
-    private Gio_hang gioHang;
+    private GioHang gioHang;
 
     @ManyToOne
     @JoinColumn(name = "san_pham_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHangChiTiet_SanPham"))
