@@ -31,9 +31,10 @@ public class UserController {
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
             }
-            return ResponseEntity.ok(new LoginResponse(userService.login(dtOlogin)));
+            String token = userService.login(dtOlogin);
+            return ResponseEntity.ok(new LoginResponse(token,"Dang nhap thanh cong"));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(new LoginResponse("Sai thong tin dang nhap"));
+            return ResponseEntity.badRequest().body(new LoginResponse(null,"Sai thong tin dang nhap"));
         }
     }
 
