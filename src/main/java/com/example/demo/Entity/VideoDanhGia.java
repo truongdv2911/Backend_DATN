@@ -11,11 +11,14 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "Role")
-public class Role {
+@Table(name = "Video_feedback")
+public class VideoDanhGia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "ten_role")
-    private String name;
+    private String url;
+
+    @OneToOne
+    @JoinColumn(name = "danh_gia_id", referencedColumnName = "id")
+    private DanhGia danhGia;
 }

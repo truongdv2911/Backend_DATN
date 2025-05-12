@@ -1,0 +1,41 @@
+package com.example.demo.DTOs;
+
+import com.example.demo.Entity.HoaDonChiTiet;
+import com.example.demo.Entity.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.Date;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class DTOdanhGia {
+    @NotEmpty(message = "không để trống tiêu đề")
+    private String tieuDe;
+    @NotEmpty(message = "không để trống đánh giá")
+    private String textDanhGia;
+    private String textPhanHoi;
+    @NotNull(message = "Vui lòng điền số sao")
+    @Min(value = 1)
+    private Integer soSao;
+    private LocalDateTime ngayDanhGia;
+    private Date ngayPhanHoi;
+
+    private Integer user_id;
+
+    private Integer nv_id;
+
+    private Integer dhct_id;
+
+//    private Integer sp_id;
+}
