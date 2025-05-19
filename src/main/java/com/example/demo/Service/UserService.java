@@ -61,4 +61,19 @@ public class UserService {
         authenticationManager.authenticate(passwordAuthenticationToken);
         return jwtTokenUntil.generationToken(user.get());
     }
+
+
+    //login username - password binh thuong
+    public String login1(DTOlogin dtOlogin) throws Exception {
+        Optional<User> user = userRepository.findByEmail(dtOlogin.getEmail());
+        if(user.isEmpty()){
+            throw new Exception("Sai thong tin dang nhap");
+        }
+        if (user.get().getFacebookId()==null && user.get().getGoogleId() == null){
+            if (!passwordEncoder.matches(dtOlogin.getMatKhau(), user.get().getMatKhau())){
+                throw new BadCredentialsException("Sai thong tin");
+            }
+        }
+        return "Đang nhap thanh cong";
+    }
 }
