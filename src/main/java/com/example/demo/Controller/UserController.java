@@ -51,5 +51,21 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+//login basic
+//    @PostMapping("/loginBasic")
+//    public ResponseEntity<?> login1(@Valid @RequestBody DTOlogin dtOlogin, BindingResult result){
+//        try{
+//            if (result.hasErrors()){
+//                List<String> listErorrs = result.getFieldErrors().stream().
+//                        map(errors -> errors.getDefaultMessage()).toList();
+//                return ResponseEntity.badRequest().body(listErorrs);
+//            }
+//            String mess = userService.login1(dtOlogin);
+//            return ResponseEntity.ok(mess);
+//        }catch (Exception e){
+//            return ResponseEntity.badRequest().body(new LoginResponse(null,"Sai thong tin dang nhap"));
+//        }
+//    }
+
 
 }

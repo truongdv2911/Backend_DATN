@@ -26,7 +26,8 @@ public class WebConfig {
                     request
                             .requestMatchers(
                                     ("/api/lego-store/user/register"),
-                                    ("/api/lego-store/user/login")
+                                    ("/api/lego-store/user/login"),
+                                    ("/api/lego-store/user/loginBasic")
                             ).permitAll()
                     .anyRequest().authenticated();
                 }).formLogin(form-> form.disable())
