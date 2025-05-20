@@ -16,7 +16,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 @Component
+<<<<<<< HEAD
 public class JwtTokenUtil {
+=======
+public class JwtTokenUntil {
+>>>>>>> 1aff337 (test)
     private final long expirationTime = 3600;
 //    private String secretKey="ThisIsA256BitLongSecretKeyForJWTTokenjhvuugcy";
 String secretKey = Base64.getEncoder().encodeToString("ThisIsA256BitLongSecretKeyForJWTTokenjhvuugcy".getBytes());
