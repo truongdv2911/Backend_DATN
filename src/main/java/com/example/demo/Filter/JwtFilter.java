@@ -24,6 +24,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final JwtTokenUtil jwtTokenUntil;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
