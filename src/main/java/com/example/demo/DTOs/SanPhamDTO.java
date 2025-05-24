@@ -1,23 +1,63 @@
 package com.example.demo.DTOs;
 
-import java.math.BigDecimal;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE )
 public class SanPhamDTO {
-    private Integer id;
-    private String tenSanPham;
-    private String maSanPham;
-    private Integer doTuoi;
-    private String moTa;
-    private Double gia;
-    private Double giaKhuyenMai;
-    private Integer soLuong;
-    private Integer soLuongManhGhep;
-    private Integer soLuongTon;
-    private String anhDaiDien;
-    private Integer soLuongVote;
-    private BigDecimal danhGiaTrungBinh;
-    private Integer khuyenMaiId;
-    private Integer danhMucId;
-    private Integer boSuuTapId;
-    private String trangThai;
+
+     Integer id;
+
+    @NotBlank(message = "Tên sản phẩm không được để trống")
+    @Size(max = 200, message = "Tên sản phẩm không được vượt quá 200 ký tự")
+     String tenSanPham;
+
+    @NotBlank(message = "Mã sản phẩm không được để trống")
+    @Size(max = 200, message = "Mã sản phẩm không được vượt quá 200 ký tự")
+     String maSanPham;
+
+    @Min(value = 0, message = "Độ tuổi phải lớn hơn hoặc bằng 0")
+     Integer doTuoi;
+
+    @Size(max = 1000, message = "Mô tả không được vượt quá 1000 ký tự")
+     String moTa;
+
+    @NotNull(message = "Giá không được để trống")
+    @DecimalMin(value = "0.0", message = "Giá phải lớn hơn hoặc bằng 0")
+     Double gia;
+
+    @DecimalMin(value = "0.0", message = "Giá khuyến mãi phải lớn hơn hoặc bằng 0")
+     Double giaKhuyenMai;
+
+    @Min(value = 0, message = "Số lượng phải lớn hơn hoặc bằng 0")
+     Integer soLuong;
+
+    @Min(value = 0, message = "Số lượng mảnh ghép phải lớn hơn hoặc bằng 0")
+     Integer soLuongManhGhep;
+
+    @Min(value = 0, message = "Số lượng tồn phải lớn hơn hoặc bằng 0")
+     Integer soLuongTon;
+
+    @Size(max = 255, message = "Ảnh đại diện không được vượt quá 255 ký tự")
+     String anhDaiDien;
+
+    @Min(value = 0, message = "Số lượng vote phải lớn hơn hoặc bằng 0")
+     Integer soLuongVote;
+
+    @DecimalMin(value = "0.0", message = "Đánh giá trung bình phải lớn hơn hoặc bằng 0")
+     Double danhGiaTrungBinh;
+
+     Integer khuyenMaiId;
+     Integer danhMucId;
+     Integer boSuuTapId;
+
+    @NotBlank(message = "Trạng thái không được để trống")
+    @Size(max = 50, message = "Trạng thái không được vượt quá 50 ký tự")
+     String trangThai;
 }

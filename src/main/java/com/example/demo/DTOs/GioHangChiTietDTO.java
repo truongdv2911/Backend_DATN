@@ -1,10 +1,34 @@
 package com.example.demo.DTOs;
 
+import jakarta.validation.constraints.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE )
 public class GioHangChiTietDTO {
-    private Integer id;
-    private Integer gioHangId;
-    private Integer sanPhamId;
-    private Double gia;
-    private Double tongTien;
-    private Integer soLuong;
+
+     Integer id;
+
+    @NotNull(message = "GioHang ID không được để trống")
+     Integer gioHangId;
+
+    @NotNull(message = "SanPham ID không được để trống")
+     Integer sanPhamId;
+
+    @NotNull(message = "Giá không được để trống")
+    @DecimalMin(value = "0.0", message = "Giá phải lớn hơn hoặc bằng 0")
+     Double gia;
+
+    @NotNull(message = "Tổng tiền không được để trống")
+    @DecimalMin(value = "0.0", message = "Tổng tiền phải lớn hơn hoặc bằng 0")
+     Double tongTien;
+
+    @NotNull(message = "Số lượng không được để trống")
+    @Min(value = 1, message = "Số lượng phải lớn hơn hoặc bằng 1")
+     Integer soLuong;
 }

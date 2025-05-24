@@ -1,43 +1,120 @@
 package com.example.demo.Service;
 
-import com.example.demo.Entity.SanPham;
-import com.example.demo.Repository.San_pham_Repo;
-import lombok.AllArgsConstructor;
+import com.example.demo.DTOs.SanPhamDTO;
+import com.example.demo.Entity.*;
+import com.example.demo.Repository.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
+@Service
 @RequiredArgsConstructor
 public class San_pham_Service {
 
     private final San_pham_Repo sanPhamRepository;
+    private final Danh_muc_Repo danhMucRepository;
+    private final Bo_suu_tap_Repo boSuuTapRepository;
+    private final Khuyen_mai_Repo khuyenMaiRepository;
 
-    public List<SanPham> getAllSanPhams() {
-        return sanPhamRepository.findAll();
-    }
+    // Create
+    public SanPham createSanPham(@Valid SanPhamDTO sanPhamDTO) {
+        SanPham sanPham = new SanPham();
+        sanPham.setTen_san_pham(sanPhamDTO.getTenSanPham());
+        sanPham.setMa_san_pham(sanPhamDTO.getMaSanPham());
+        sanPham.setDo_tuoi(sanPhamDTO.getDoTuoi());
+        sanPham.setMo_ta(sanPhamDTO.getMoTa());
+        sanPham.setGia(sanPhamDTO.getGia());
+        sanPham.setGia_khuyen_mai(sanPhamDTO.getGiaKhuyenMai());
+        sanPham.setSo_luong(sanPhamDTO.getSoLuong());
+        sanPham.setSo_luong_manh_ghep(sanPhamDTO.getSoLuongManhGhep());
+        sanPham.setSo_luong_ton(sanPhamDTO.getSoLuongTon());
+        sanPham.setAnh_dai_dien(sanPhamDTO.getAnhDaiDien());
+        sanPham.setSo_luong_vote(sanPhamDTO.getSoLuongVote());
+        sanPham.setDanh_gia_trung_binh(sanPhamDTO.getDanhGiaTrungBinh());
 
-    public Optional<SanPham> getSanPhamById(Integer id) {
-        return sanPhamRepository.findById(id);
-    }
+        // Validate and set DanhMuc
+        if (sanPhamDTO.getDanhMucId() != null) {
+            DanhMuc danhMuc = danhMucRepository.findById(sanPhamDTO.getDanhMucId())
+                    .orElseThrow(() -> new RuntimeException("DanhMuc not found with id: " + sanPhamDTO.getDanhMucId()));
+            sanPham.setDanhMuc(danhMuc);
+        }
 
-    public SanPham createSanPham(SanPham sanPham) {
+        // Validate and set BoSuuTap
+        if (sanPhamDTO.getBoSuuTapId() != null) {
+            BoSuuTap boSuuTap = boSuuTapRepository.findById(sanPhamDTO.getBoSuuTapId())
+                    .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
+            sanPham.setBoSuuTap(boSuuTap);
+        }
+
+        // Validate and set KhuyenMai
+        if (sanPhamDTO.getKhuyenMaiId() != null) {
+            KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
+                    .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
+            sanPham.setKhuyenMai(khuyenMai);
+        }
+
         return sanPhamRepository.save(sanPham);
     }
 
-    public SanPham updateSanPham(Integer id, SanPham updatedSanPham) {
-        return sanPhamRepository.findById(id).map(sanPham -> {
-            sanPham.setTenSanPham(updatedSanPham.getTenSanPham());
-            sanPham.setGia(updatedSanPham.getGia());
-            sanPham.setGiaKhuyenMai(updatedSanPham.getGiaKhuyenMai());
-            sanPham.setSoLuong(updatedSanPham.getSoLuong());
-            sanPham.setDanhMuc(updatedSanPham.getDanhMuc());
-            sanPham.setBoSuuTap(updatedSanPham.getBoSuuTap());
-            return sanPhamRepository.save(sanPham);
-        }).orElseThrow(() -> new RuntimeException("SanPham not found with id " + id));
+    // Read All with Pagination
+    public Page<SanPham> getAllSanPhams(Pageable pageable) {
+        return sanPhamRepository.findAll(pageable);
     }
 
+    // Read One
+    public SanPham getSanPhamById(Integer id) {
+        return sanPhamRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + id));
+    }
+
+    // Update
+    public SanPham updateSanPham(Integer id, @Valid SanPhamDTO sanPhamDTO) {
+        SanPham sanPham = getSanPhamById(id);
+        sanPham.setTen_san_pham(sanPhamDTO.getTenSanPham());
+        sanPham.setMa_san_pham(sanPhamDTO.getMaSanPham());
+        sanPham.setDo_tuoi(sanPhamDTO.getDoTuoi());
+        sanPham.setMo_ta(sanPhamDTO.getMoTa());
+        sanPham.setGia(sanPhamDTO.getGia());
+        sanPham.setGia_khuyen_mai(sanPhamDTO.getGiaKhuyenMai());
+        sanPham.setSo_luong(sanPhamDTO.getSoLuong());
+        sanPham.setSo_luong_manh_ghep(sanPhamDTO.getSoLuongManhGhep());
+        sanPham.setSo_luong_ton(sanPhamDTO.getSoLuongTon());
+        sanPham.setAnh_dai_dien(sanPhamDTO.getAnhDaiDien());
+        sanPham.setSo_luong_vote(sanPhamDTO.getSoLuongVote());
+        sanPham.setDanh_gia_trung_binh(sanPhamDTO.getDanhGiaTrungBinh());
+
+        // Validate and set DanhMuc
+        if (sanPhamDTO.getDanhMucId() != null) {
+            DanhMuc danhMuc = danhMucRepository.findById(sanPhamDTO.getDanhMucId())
+                    .orElseThrow(() -> new RuntimeException("DanhMuc not found with id: " + sanPhamDTO.getDanhMucId()));
+            sanPham.setDanhMuc(danhMuc);
+        }
+
+        // Validate and set BoSuuTap
+        if (sanPhamDTO.getBoSuuTapId() != null) {
+            BoSuuTap boSuuTap = boSuuTapRepository.findById(sanPhamDTO.getBoSuuTapId())
+                    .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
+            sanPham.setBoSuuTap(boSuuTap);
+        }
+
+        // Validate and set KhuyenMai
+        if (sanPhamDTO.getKhuyenMaiId() != null) {
+            KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
+                    .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
+            sanPham.setKhuyenMai(khuyenMai);
+        }
+
+        return sanPhamRepository.save(sanPham);
+    }
+
+    // Delete
     public void deleteSanPham(Integer id) {
-        sanPhamRepository.deleteById(id);
+        SanPham sanPham = getSanPhamById(id);
+        sanPhamRepository.delete(sanPham);
     }
 }
