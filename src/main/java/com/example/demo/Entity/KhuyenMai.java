@@ -3,6 +3,10 @@ package com.example.demo.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -12,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
+@JsonIgnoreProperties({"sanPhams"})
 @Table(name = "Khuyen_mai")
 public class KhuyenMai {
 
@@ -20,29 +25,30 @@ public class KhuyenMai {
     private Integer id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String maKhuyenMai;
+    private String ma_khuyen_mai;
 
-    private Integer soLuong;
+    private Integer so_luong;
 
-    private Double giaTriGiam;
+    private BigDecimal gia_tri_giam;
 
-    private Double giaTriToiDa;
+    private BigDecimal gia_tri_toi_da;
 
     @Column(columnDefinition = "TEXT")
-    private String moTa;
+    private String mo_ta;
 
-    private Integer phanTramGiam;
-
-    @Temporal(TemporalType.DATE)
-    private Date ngayBatDau;
+    private Integer phan_tram_giam;
 
     @Temporal(TemporalType.DATE)
-    private Date ngayKetThuc;
+    private Date ngay_bat_dau;
+
+    @Temporal(TemporalType.DATE)
+    private Date ngay_ket_thuc;
 
     @Column(nullable = false, length = 20)
-    private String trangThai;
+    private String trang_thai;
 
     @OneToMany(mappedBy = "khuyenMai", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // Quản lý phía cha
     private List<SanPham> sanPhams;
 
 }

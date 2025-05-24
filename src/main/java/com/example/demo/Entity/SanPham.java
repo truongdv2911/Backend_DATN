@@ -2,6 +2,7 @@ package com.example.demo.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Date;
 import java.util.List;
@@ -19,52 +20,53 @@ public class SanPham {
     private Integer id;
 
     @Column(nullable = false, length = 200)
-    private String tenSanPham;
+    private String ten_san_pham;
 
     @Column(nullable = false, length = 200)
-    private String maSanPham;
+    private String ma_san_pham;
 
-    private Integer doTuoi;
+    private Integer do_tuoi;
 
     @Column(columnDefinition = "TEXT")
-    private String moTa;
+    private String mo_ta;
 
     private Double gia;
 
-    private Double giaKhuyenMai;
+    private Double gia_khuyen_mai;
 
-    private Integer soLuong;
+    private Integer so_luong;
 
-    private Integer soLuongManhGhep;
+    private Integer so_luong_manh_ghep;
 
-    private Integer soLuongTon;
+    private Integer so_luong_ton;
 
     @Column(length = 255)
-    private String anhDaiDien;
+    private String anh_dai_dien;
 
-    private Integer soLuongVote;
+    private Integer so_luong_vote;
 
-    private Double danhGiaTrungBinh;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayTao = new Date();
+    private Double danh_gia_trung_binh;
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngaySua = new Date();
+    private Date ngay_tao = new Date();
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngay_sua = new Date();
 
     @ManyToOne
+    @JsonIgnore // Bỏ qua khi tuần tự hóa
     @JoinColumn(name = "khuyen_mai_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_KhuyenMai"))
     private KhuyenMai khuyenMai;
 
     @ManyToOne
     @JoinColumn(name = "danh_muc_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_DanhMuc"))
-    private Danh_muc danhMuc;
+    private DanhMuc danhMuc;
 
     @ManyToOne
     @JoinColumn(name = "bo_suu_tap_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_BoSuuTap"))
-    private Bo_suu_tap boSuuTap;
+    private BoSuuTap boSuuTap;
 
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Anh_sp> anhSps;
+    private List<AnhSp> anhSps;
 
 }
