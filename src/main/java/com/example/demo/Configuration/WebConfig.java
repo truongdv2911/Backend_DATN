@@ -1,4 +1,4 @@
-package com.example.demo.Configuration;
+    package com.example.demo.Configuration;
 
 import com.example.demo.Service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +18,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import java.util.Arrays;
-import java.util.List;
-
+    import java.util.Arrays;
+    import java.util.List;
 @Configuration
 @EnableWebMvc
 @EnableWebSecurity
