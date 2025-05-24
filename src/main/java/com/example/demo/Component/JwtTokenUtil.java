@@ -40,7 +40,7 @@ public class JwtTokenUtil {
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
+//111111
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key())
