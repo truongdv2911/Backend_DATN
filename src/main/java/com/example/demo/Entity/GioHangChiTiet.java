@@ -2,6 +2,8 @@ package com.example.demo.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -9,7 +11,7 @@ import lombok.*;
 @Setter
 @Getter
 @Table(name = "Gio_hang_chi_tiet")
-public class Gio_hang_chi_tiet {
+public class GioHangChiTiet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -22,10 +24,10 @@ public class Gio_hang_chi_tiet {
     @JoinColumn(name = "san_pham_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHangChiTiet_SanPham"))
     private SanPham sanPham;
 
-    private Double gia;
+    private BigDecimal gia;
 
-    private Double tongTien;
+    private  BigDecimal tong_tien;
 
-    private Integer soLuong;
+    private Integer so_luong;
 
 }
