@@ -1,7 +1,7 @@
 package com.example.demo.Service;
 
 
-import com.example.demo.Component.JwtTokenUtil;
+import com.example.demo.Component.JwtTokenUntil;
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
 import com.example.demo.Entity.User;
@@ -26,7 +26,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtTokenUtil jwtTokenUntil;
+    private final JwtTokenUntil jwtTokenUntil;
 
     @Transactional
     public User createUser(DTOuser dtoUser) {

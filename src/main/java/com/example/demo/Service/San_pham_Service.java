@@ -44,14 +44,14 @@ public class San_pham_Service {
             sanPham.setDanhMuc(danhMuc);
         }
 
-        // Validate and set BoSuuTap
+
         if (sanPhamDTO.getBoSuuTapId() != null) {
             BoSuuTap boSuuTap = boSuuTapRepository.findById(sanPhamDTO.getBoSuuTapId())
                     .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
             sanPham.setBoSuuTap(boSuuTap);
         }
 
-        // Validate and set KhuyenMai
+
         if (sanPhamDTO.getKhuyenMaiId() != null) {
             KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
                     .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
@@ -61,18 +61,19 @@ public class San_pham_Service {
         return sanPhamRepository.save(sanPham);
     }
 
-    // Read All with Pagination
+
     public Page<SanPham> getAllSanPhams(Pageable pageable) {
+
         return sanPhamRepository.findAll(pageable);
     }
 
-    // Read One
+
     public SanPham getSanPhamById(Integer id) {
         return sanPhamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + id));
     }
 
-    // Update
+
     public SanPham updateSanPham(Integer id, @Valid SanPhamDTO sanPhamDTO) {
         SanPham sanPham = getSanPhamById(id);
         sanPham.setTen_san_pham(sanPhamDTO.getTenSanPham());
@@ -88,21 +89,21 @@ public class San_pham_Service {
         sanPham.setSo_luong_vote(sanPhamDTO.getSoLuongVote());
         sanPham.setDanh_gia_trung_binh(sanPhamDTO.getDanhGiaTrungBinh());
 
-        // Validate and set DanhMuc
+
         if (sanPhamDTO.getDanhMucId() != null) {
             DanhMuc danhMuc = danhMucRepository.findById(sanPhamDTO.getDanhMucId())
                     .orElseThrow(() -> new RuntimeException("DanhMuc not found with id: " + sanPhamDTO.getDanhMucId()));
             sanPham.setDanhMuc(danhMuc);
         }
 
-        // Validate and set BoSuuTap
+
         if (sanPhamDTO.getBoSuuTapId() != null) {
             BoSuuTap boSuuTap = boSuuTapRepository.findById(sanPhamDTO.getBoSuuTapId())
                     .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
             sanPham.setBoSuuTap(boSuuTap);
         }
 
-        // Validate and set KhuyenMai
+
         if (sanPhamDTO.getKhuyenMaiId() != null) {
             KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
                     .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
