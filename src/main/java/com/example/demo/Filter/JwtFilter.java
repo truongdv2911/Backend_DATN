@@ -1,6 +1,6 @@
 package com.example.demo.Filter;
 
-import com.example.demo.Component.JwtTokenUtil;
+import com.example.demo.Component.JwtTokenUntil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
-    private final JwtTokenUtil jwtTokenUntil;
+    private final JwtTokenUntil jwtTokenUntil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
