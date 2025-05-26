@@ -1,16 +1,20 @@
 package com.example.demo.Configuration;
 
+import com.example.demo.Filter.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,8 +23,15 @@ import java.util.List;
 @EnableWebMvc
 @EnableWebSecurity
 public class WebConfig {
+    private final JwtFilter jwtFilter;
+
+    public WebConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
                     request
@@ -47,4 +58,21 @@ public class WebConfig {
         });
         return http.build();
     }
+
+    // ✅ Cấu hình CORS cho phép truy cập từ các origin khác (frontend...)
+    private UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOrigins(List.of("*")); // hoặc thay * bằng domain cụ thể cho an toàn
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Auth-Token"));
+        corsConfiguration.setExposedHeaders(List.of("X-Auth-Token"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
+    }
+
+    // ✅ Khai báo AuthenticationManager (nếu bạn cần dùng để login controller)
+
+
 }

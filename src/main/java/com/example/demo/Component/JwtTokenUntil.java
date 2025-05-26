@@ -18,7 +18,7 @@ import java.util.function.Function;
 public class JwtTokenUntil {
     private final long expirationTime = 2592000;
     private String secretKey="ThisIsA256BitLongSecretKeyForJWTTokenjhvuugcy";
-    Hhihaiassda
+
 
     private Key key(){
         byte[] bytes = Decoders.BASE64.decode(secretKey);

@@ -1,15 +1,21 @@
 package com.example.demo.Filter;
 
+<<<<<<< HEAD
 import com.example.demo.Component.JwtTokenUntil;
+=======
+import com.example.demo.Entity.User;
+import com.nimbusds.jose.util.Pair;
+>>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.internal.Pair;
+<<<<<<< HEAD
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
+=======
+>>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -22,8 +28,14 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+<<<<<<< HEAD
     private final UserDetailsService userDetailsService;
     private final JwtTokenUntil jwtTokenUntil;
+=======
+
+    private final UserDetailsService userDetailsService;
+    private final JwtTokenUtil jwtTokenUtil;
+>>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -42,10 +54,17 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             if (authHeader.startsWith("Bearer ")){
                 final String token = authHeader.substring(7);
+<<<<<<< HEAD
                 final String sdt =jwtTokenUntil.extractEmail(token);
                 if (sdt != null && SecurityContextHolder.getContext().getAuthentication() ==null){
                     User user =(User) userDetailsService.loadUserByUsername(sdt);
                     if (jwtTokenUntil.validateToken(token, user)){
+=======
+                final String sdt =jwtTokenUtil.extractEmail(token);
+                if (sdt != null && SecurityContextHolder.getContext().getAuthentication() ==null){
+                    User user =(User) userDetailsService.loadUserByUsername(sdt);
+                    if (jwtTokenUtil.validateToken(token, user)){
+>>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
                         UsernamePasswordAuthenticationToken usernamePassword = new
                                 UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
 
@@ -63,6 +82,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private Boolean isPassToken(HttpServletRequest request){
         final List<Pair<String, String>> passTokens = Arrays.asList(
                 Pair.of("api/lego-store/user/login", "POST"),
+<<<<<<< HEAD
                 Pair.of("api/lego-store/user/register", "POST")
         );
         for (Pair<String, String> pair:
@@ -70,6 +90,15 @@ public class JwtFilter extends OncePerRequestFilter {
             if (request.getServletPath().contains(pair.getLeft()) &&
                     request.getMethod().equals(pair.getRight()))
             {
+=======
+                Pair.of("api/lego-store/user/register", "POST"),
+                Pair.of("api/sanpham", "GET") // Thêm dòng này
+        );
+        for (Pair<String, String> pair :
+                passTokens) {
+            if (request.getServletPath().contains(pair.getLeft()) &&
+                    request.getMethod().equals(pair.getRight())) {
+>>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
                 return true;
             }
         }

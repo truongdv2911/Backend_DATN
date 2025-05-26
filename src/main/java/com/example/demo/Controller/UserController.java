@@ -1,3 +1,4 @@
+
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.DTOlogin;
@@ -24,42 +25,40 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody DTOlogin dtOlogin, BindingResult result){
+    public ResponseEntity<?> login(@Valid @RequestBody DTOlogin dtOlogin, BindingResult result) {
         try {
-            if (result.hasErrors()){
+            if (result.hasErrors()) {
                 List<String> listErorrs = result.getFieldErrors().stream().
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
             }
             String token = userService.login(dtOlogin);
-            return ResponseEntity.ok(new LoginResponse(token,"Dang nhap thanh cong"));
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body(new LoginResponse(null,"Sai thong tin dang nhap"));
+            return ResponseEntity.ok(new LoginResponse(token, "Dang nhap thanh cong"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new LoginResponse(null, "Sai thong tin dang nhap"));
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@Valid @RequestBody DTOuser user, BindingResult result){
+    public ResponseEntity<?> createUser(@Valid @RequestBody DTOuser user, BindingResult result) {
         try {
-            if (result.hasErrors()){
+            if (result.hasErrors()) {
                 List<String> listErorrs = result.getFieldErrors().stream().
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
             }
             return ResponseEntity.ok(userService.createUser(user));
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+}
 //login basic
 //    @PostMapping("/loginBasic")
 //    public ResponseEntity<?> login1(@Valid @RequestBody DTOlogin dtOlogin, BindingResult result){
 //        try{
-//            if (result.hasErrors()){
-//                List<String> listErorrs = result.getFieldErrors().stream().
-//                        map(errors -> errors.getDefaultMessage()).toList();
-//                return ResponseEntity.badRequest().body(listErorrs);
-//            }
+
+
 //            String mess = userService.login1(dtOlogin);
 //            return ResponseEntity.ok(mess);
 //        }catch (Exception e){
@@ -67,5 +66,3 @@ public class UserController {
 //        }
 //    }
 
-
-}

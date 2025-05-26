@@ -1,7 +1,9 @@
 package com.example.demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Data
@@ -9,23 +11,25 @@ import lombok.*;
 @NoArgsConstructor
 @Setter
 @Getter
+@FieldDefaults(level = AccessLevel.PRIVATE )
+@JsonIgnoreProperties({"sanPham"})
 @Table(name = "Anh_sp")
-public class Anh_sp {
+public class AnhSp {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+     Integer id;
 
     @ManyToOne
     @JoinColumn(name = "san_pham_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_AnhSp_SanPham"))
-    private SanPham sanPham;
+     SanPham sanPham;
 
     @Column(nullable = false, length = 500)
-    private String url;
+     String url;
 
     @Column(columnDefinition = "TEXT")
-    private String moTa;
+     String mo_ta;
 
-    private Integer thuTu;
+     Integer thu_tu;
 
-    private Boolean anhChinh;
+     Boolean anh_chinh;
 }

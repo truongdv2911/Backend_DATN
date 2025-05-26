@@ -3,6 +3,7 @@ package com.example.demo.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 @Entity
 @Data
@@ -17,26 +18,26 @@ public class PhieuGiamGia {
     private Integer id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String maPhieu;
+    private String ma_phieu;
 
-    private Integer soLuong;
+    private Integer so_luong;
 
     @Column(length = 20)
-    private String loaiPhieuGiam;
+    private String loai_phieu_giam;
 
-    private Double giaTriGiam;
+    private BigDecimal gia_tri_giam;
 
-    private Double giamToiDa;
+    private BigDecimal giam_toi_da;
 
-    private Double giaTriToiThieu;
-
-    @Temporal(TemporalType.DATE)
-    private Date ngayBatDau;
+    private BigDecimal gia_tri_toi_thieu;
 
     @Temporal(TemporalType.DATE)
-    private Date ngayKetThuc;
+    private Date ngay_bat_dau;
+
+    @Temporal(TemporalType.DATE)
+    private Date ngay_ket_thuc;
 
     @Column(nullable = false, length = 20)
-    private String trangThai;
+    private String trang_thai;
 
 }

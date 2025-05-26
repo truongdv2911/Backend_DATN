@@ -1,7 +1,24 @@
 package com.example.demo.DTOs;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE )
 public class DanhMucDTO {
-    private Integer id;
-    private String tenDanhMuc;
-    private String moTa;
+
+     Integer id;
+
+    @NotBlank(message = "Tên danh mục không được để trống")
+    @Size(max = 100, message = "Tên danh mục không được vượt quá 100 ký tự")
+     String ten_danh_muc;
+
+    @Size(max = 1000, message = "Mô tả không được vượt quá 1000 ký tự")
+     String mo_ta;
 }
