@@ -1,4 +1,8 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> bc8ddfb1a9850f1a7a5081b1ea2d04921ba99482
     package com.example.demo.Controller;
 
     import com.example.demo.DTOs.DTOlogin;
@@ -31,6 +35,7 @@
         private final UserService userService;
         private final AuthenticationManager authenticationManager;
 
+
         @PostMapping("/login")
         public ResponseEntity<?> login(@Valid @RequestBody DTOlogin dtOlogin, BindingResult result, HttpServletRequest request) {
             try {
@@ -52,7 +57,9 @@
             }    catch (Exception e){
                 return ResponseEntity.badRequest().body(new LoginResponse(null,"Sai thong tin dang nhap"));
             }
+
         }
+
 
         @PostMapping("/register")
         public ResponseEntity<?> createUser(@Valid @RequestBody DTOuser user, BindingResult result){
@@ -76,6 +83,7 @@
 //                return ResponseEntity.ok(new LoginResponse(email, "Người dùng đã đăng nhập"));
 //            }
 //            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse(null, "Chưa đăng nhập"));
+
 //        }
     //login basic
     //    @PostMapping("/loginBasic")
@@ -95,6 +103,7 @@
 
 
     }
+<<<<<<< HEAD
 =======
 //package com.example.demo.Controller;
 //
@@ -152,3 +161,6 @@
 //
 //}
 >>>>>>> be_ky
+=======
+
+>>>>>>> bc8ddfb1a9850f1a7a5081b1ea2d04921ba99482

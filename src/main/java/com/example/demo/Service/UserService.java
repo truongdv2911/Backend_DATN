@@ -1,11 +1,18 @@
 package com.example.demo.Service;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 
 >>>>>>> be_ky
-import com.example.demo.Component.JwtTokenUtil;
+import com.example.demo.Component.JwtTokenUntil;
+=======
+
+
+=======
+>>>>>>> 754502382729bc327cdba87746de83b49a824e5a
+>>>>>>> bc8ddfb1a9850f1a7a5081b1ea2d04921ba99482
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
 import com.example.demo.Entity.User;
@@ -30,7 +37,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtTokenUtil jwtTokenUntil;
+    private final JwtTokenUntil jwtTokenUntil;
 
     @Transactional
     public User createUser(DTOuser dtoUser) {
