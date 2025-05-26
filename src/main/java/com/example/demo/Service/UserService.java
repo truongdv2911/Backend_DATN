@@ -1,11 +1,7 @@
 package com.example.demo.Service;
 
-<<<<<<< HEAD
 
-
-=======
 import com.example.demo.Component.JwtTokenUtil;
->>>>>>> 754502382729bc327cdba87746de83b49a824e5a
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
 import com.example.demo.Entity.User;
@@ -63,27 +59,7 @@ public class UserService {
                 dtOlogin.getEmail(), dtOlogin.getMatKhau(), user.get().getAuthorities()
         );
         authenticationManager.authenticate(passwordAuthenticationToken);
-        return jwtTokenUntil.generateToken(user.get());
-    }
-
-
-    //login username - password binh thuong
-    public String login1(DTOlogin dtoLogin) {
-        User user = userRepository.findByEmail(dtoLogin.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Sai thông tin đăng nhập"));
-
-        if (user.getFacebookId() == null && user.getGoogleId() == null) {
-            if (!passwordEncoder.matches(dtoLogin.getMatKhau(), user.getMatKhau())) {
-                throw new BadCredentialsException("Sai thông tin đăng nhập");
-            }
-        }
-
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(dtoLogin.getEmail(), dtoLogin.getMatKhau(), user.getAuthorities());
-
-        authenticationManager.authenticate(authToken);
-
-        return jwtTokenUntil.generateToken(user);
+        return jwtTokenUntil.generationToken(user.get());
     }
 
 
@@ -105,5 +81,25 @@ public class UserService {
 
         return jwtTokenUntil.generationToken(user);
     }
+
+
+//    //login username - password binh thuong
+//    public String login1(DTOlogin dtoLogin) {
+//        User user = userRepository.findByEmail(dtoLogin.getEmail())
+//                .orElseThrow(() -> new BadCredentialsException("Sai thông tin đăng nhập"));
+//
+//        if (user.getFacebookId() == null && user.getGoogleId() == null) {
+//            if (!passwordEncoder.matches(dtoLogin.getMatKhau(), user.getMatKhau())) {
+//                throw new BadCredentialsException("Sai thông tin đăng nhập");
+//            }
+//        }
+//
+//        UsernamePasswordAuthenticationToken authToken =
+//                new UsernamePasswordAuthenticationToken(dtoLogin.getEmail(), dtoLogin.getMatKhau(), user.getAuthorities());
+//
+//        authenticationManager.authenticate(authToken);
+//
+//        return jwtTokenUntil.generationToken(user);
+//    }
 }
 
