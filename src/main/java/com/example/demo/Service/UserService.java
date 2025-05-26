@@ -1,11 +1,5 @@
 package com.example.demo.Service;
-
-<<<<<<< HEAD
-
-
-=======
 import com.example.demo.Component.JwtTokenUntil;
->>>>>>> 754502382729bc327cdba87746de83b49a824e5a
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
 import com.example.demo.Entity.User;
