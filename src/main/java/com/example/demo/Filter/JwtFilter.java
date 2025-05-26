@@ -1,11 +1,14 @@
 package com.example.demo.Filter;
 
 <<<<<<< HEAD
-import com.example.demo.Component.JwtTokenUntil;
+<<<<<<< HEAD
 =======
 import com.example.demo.Entity.User;
 import com.nimbusds.jose.util.Pair;
 >>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
+=======
+import com.example.demo.Component.JwtTokenUtil;
+>>>>>>> 754502382729bc327cdba87746de83b49a824e5a
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,12 +33,17 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 <<<<<<< HEAD
     private final UserDetailsService userDetailsService;
+<<<<<<< HEAD
     private final JwtTokenUntil jwtTokenUntil;
 =======
 
     private final UserDetailsService userDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
 >>>>>>> e7549f567e9b08e96c00c2c1242f6fbb6b9d3dc7
+=======
+    private final JwtTokenUtil jwtTokenUntil;
+
+>>>>>>> 754502382729bc327cdba87746de83b49a824e5a
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

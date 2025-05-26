@@ -1,6 +1,10 @@
 package com.example.demo.Configuration;
 
 import com.example.demo.Filter.JwtFilter;
+import com.example.demo.Service.CustomOAuth2UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,6 +13,9 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -16,19 +23,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
-import java.util.Arrays;
-import java.util.List;
-
+    import java.util.Arrays;
+    import java.util.List;
 @Configuration
 @EnableWebMvc
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class WebConfig {
+
     private final JwtFilter jwtFilter;
 
     public WebConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
 
+
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -41,7 +52,14 @@ public class WebConfig {
                                     ("/api/lego-store/user/loginBasic")
                             ).permitAll()
                     .anyRequest().authenticated();
-                }).formLogin(form-> form.disable())
+                })
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oAuth2UserService())
+                        )
+                        //.successHandler(oAuth2SuccessHandler())
+                )
+                .formLogin(form-> form.disable())
                 .httpBasic(basic-> basic.disable());
         http.cors(new Customizer<CorsConfigurer<HttpSecurity>>() {
             @Override
@@ -59,6 +77,7 @@ public class WebConfig {
         return http.build();
     }
 
+
     // ✅ Cấu hình CORS cho phép truy cập từ các origin khác (frontend...)
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
@@ -75,4 +94,11 @@ public class WebConfig {
     // ✅ Khai báo AuthenticationManager (nếu bạn cần dùng để login controller)
 
 
+
+
+    @Bean
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
+        return customOAuth2UserService; // bạn định nghĩa service này
+    }
 }
+
