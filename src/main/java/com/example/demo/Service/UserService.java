@@ -57,27 +57,7 @@ public class UserService {
                 dtOlogin.getEmail(), dtOlogin.getMatKhau(), user.get().getAuthorities()
         );
         authenticationManager.authenticate(passwordAuthenticationToken);
-        return jwtTokenUntil.generateToken(user.get());
-    }
-
-
-    //login username - password binh thuong
-    public String login1(DTOlogin dtoLogin) {
-        User user = userRepository.findByEmail(dtoLogin.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Sai thông tin đăng nhập"));
-
-        if (user.getFacebookId() == null && user.getGoogleId() == null) {
-            if (!passwordEncoder.matches(dtoLogin.getMatKhau(), user.getMatKhau())) {
-                throw new BadCredentialsException("Sai thông tin đăng nhập");
-            }
-        }
-
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(dtoLogin.getEmail(), dtoLogin.getMatKhau(), user.getAuthorities());
-
-        authenticationManager.authenticate(authToken);
-
-        return jwtTokenUntil.generateToken(user);
+        return jwtTokenUntil.generationToken(user.get());
     }
 
 
