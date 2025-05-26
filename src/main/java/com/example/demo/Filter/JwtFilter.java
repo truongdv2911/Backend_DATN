@@ -1,26 +1,15 @@
 package com.example.demo.Filter;
 
-import com.example.demo.Component.JwtTokenUtil;
-<<<<<<< HEAD
-=======
-import com.example.demo.Entity.User;
-import com.example.demo.Service.UserService;
-import com.nimbusds.jose.util.Pair;
->>>>>>> be_ky
+import com.example.demo.Component.JwtTokenUntil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-<<<<<<< HEAD
 import org.modelmapper.internal.Pair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-=======
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
->>>>>>> be_ky
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -33,15 +22,9 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
-<<<<<<< HEAD
     private final UserDetailsService userDetailsService;
-    private final JwtTokenUtil jwtTokenUntil;
+    private final JwtTokenUntil jwtTokenUntil;
 
-=======
-
-    private final UserDetailsService userDetailsService;
-    private final JwtTokenUtil jwtTokenUtil;
->>>>>>> be_ky
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -60,17 +43,10 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             if (authHeader.startsWith("Bearer ")){
                 final String token = authHeader.substring(7);
-<<<<<<< HEAD
                 final String sdt =jwtTokenUntil.extractEmail(token);
                 if (sdt != null && SecurityContextHolder.getContext().getAuthentication() ==null){
                     User user =(User) userDetailsService.loadUserByUsername(sdt);
                     if (jwtTokenUntil.validateToken(token, user)){
-=======
-                final String sdt =jwtTokenUtil.extractEmail(token);
-                if (sdt != null && SecurityContextHolder.getContext().getAuthentication() ==null){
-                    User user =(User) userDetailsService.loadUserByUsername(sdt);
-                    if (jwtTokenUtil.validateToken(token, user)){
->>>>>>> be_ky
                         UsernamePasswordAuthenticationToken usernamePassword = new
                                 UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
 
@@ -88,7 +64,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private Boolean isPassToken(HttpServletRequest request){
         final List<Pair<String, String>> passTokens = Arrays.asList(
                 Pair.of("api/lego-store/user/login", "POST"),
-<<<<<<< HEAD
                 Pair.of("api/lego-store/user/register", "POST")
         );
         for (Pair<String, String> pair:
@@ -96,15 +71,6 @@ public class JwtFilter extends OncePerRequestFilter {
             if (request.getServletPath().contains(pair.getLeft()) &&
                     request.getMethod().equals(pair.getRight()))
             {
-=======
-                Pair.of("api/lego-store/user/register", "POST"),
-                Pair.of("api/sanpham", "GET") // Thêm dòng này
-        );
-        for (Pair<String, String> pair :
-                passTokens) {
-            if (request.getServletPath().contains(pair.getLeft()) &&
-                    request.getMethod().equals(pair.getRight())) {
->>>>>>> be_ky
                 return true;
             }
         }
