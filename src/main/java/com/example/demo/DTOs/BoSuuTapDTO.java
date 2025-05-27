@@ -11,9 +11,6 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class BoSuuTapDTO {
-
-     Integer id;
-
     @NotBlank(message = "Tên bộ sưu tập không được để trống")
     @Size(max = 100, message = "Tên bộ sưu tập không được vượt quá 100 ký tự")
      String tenBoSuuTap;
