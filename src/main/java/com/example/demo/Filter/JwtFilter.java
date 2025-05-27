@@ -1,5 +1,6 @@
 package com.example.demo.Filter;
 
+
 import com.example.demo.Component.JwtTokenUntil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -64,7 +65,15 @@ public class JwtFilter extends OncePerRequestFilter {
     private Boolean isPassToken(HttpServletRequest request){
         final List<Pair<String, String>> passTokens = Arrays.asList(
                 Pair.of("api/lego-store/user/login", "POST"),
-                Pair.of("api/lego-store/user/register", "POST")
+
+                Pair.of("api/lego-store/user/register", "POST"),
+                Pair.of("api/lego-store/user/register", "POST"),
+                Pair.of("/api/anhsp", "GET"),
+                Pair.of("/api/sanpham", "GET"),
+                Pair.of("/api/sanpham", "POST"),
+                Pair.of("/api/sanpham", "PUT"),
+                Pair.of("/api/sanpham", "DELETE")
+
         );
         for (Pair<String, String> pair:
                 passTokens) {

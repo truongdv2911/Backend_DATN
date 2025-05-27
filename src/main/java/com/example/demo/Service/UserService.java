@@ -1,4 +1,5 @@
 package com.example.demo.Service;
+
 import com.example.demo.Component.JwtTokenUntil;
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
@@ -79,5 +80,25 @@ public class UserService {
 
         return jwtTokenUntil.generationToken(user);
     }
+
+
+//    //login username - password binh thuong
+//    public String login1(DTOlogin dtoLogin) {
+//        User user = userRepository.findByEmail(dtoLogin.getEmail())
+//                .orElseThrow(() -> new BadCredentialsException("Sai thông tin đăng nhập"));
+//
+//        if (user.getFacebookId() == null && user.getGoogleId() == null) {
+//            if (!passwordEncoder.matches(dtoLogin.getMatKhau(), user.getMatKhau())) {
+//                throw new BadCredentialsException("Sai thông tin đăng nhập");
+//            }
+//        }
+//
+//        UsernamePasswordAuthenticationToken authToken =
+//                new UsernamePasswordAuthenticationToken(dtoLogin.getEmail(), dtoLogin.getMatKhau(), user.getAuthorities());
+//
+//        authenticationManager.authenticate(authToken);
+//
+//        return jwtTokenUntil.generationToken(user);
+//    }
 }
 
