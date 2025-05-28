@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface Phieu_giam_gia_Repo extends JpaRepository<PhieuGiamGia,Integer> {
+    boolean existsByMaPhieu(String maPhieu);
 }

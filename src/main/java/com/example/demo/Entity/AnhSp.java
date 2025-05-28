@@ -23,13 +23,13 @@ public class AnhSp {
     @JoinColumn(name = "san_pham_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_AnhSp_SanPham"))
      SanPham sanPham;
 
-    @Column(nullable = false, length = 500)
+    @Column(name = "url", nullable = false, length = 500)
      String url;
 
-    @Column(columnDefinition = "TEXT")
-     String mo_ta;
-
-     Integer thu_tu;
-
-     Boolean anh_chinh;
+    @Column(name = "mo_ta", columnDefinition = "TEXT")
+     String moTa;
+    @Column(name = "thu_tu")
+     Integer thuTu;
+    @Column(name = "anh_chinh")
+     Boolean anhChinh;
 }

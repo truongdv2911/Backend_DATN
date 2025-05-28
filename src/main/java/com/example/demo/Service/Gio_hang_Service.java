@@ -25,9 +25,9 @@ public class Gio_hang_Service {
     // Create
     public GioHang createGioHang(@Valid GioHangDTO gioHangDTO) {
         GioHang gioHang = new GioHang();
-        gioHang.setSo_tien_giam(BigDecimal.valueOf(gioHangDTO.getSoTienGiam()));
-        gioHang.setTong_tien(BigDecimal.valueOf(gioHangDTO.getTongTien()));
-        gioHang.setTrang_thai(gioHangDTO.getTrangThai());
+        gioHang.setSoTienGiam(BigDecimal.valueOf(gioHangDTO.getSoTienGiam()));
+        gioHang.setTongTien(BigDecimal.valueOf(gioHangDTO.getTongTien()));
+        gioHang.setTrangThai(gioHangDTO.getTrangThai());
 
         // Validate and set User
         User user = userRepository.findById(gioHangDTO.getUserId())
@@ -58,9 +58,9 @@ public class Gio_hang_Service {
     // Update
     public GioHang updateGioHang(Integer id, @Valid GioHangDTO gioHangDTO) {
         GioHang gioHang = getGioHangById(id);
-        gioHang.setSo_tien_giam(BigDecimal.valueOf(gioHangDTO.getSoTienGiam()));
-        gioHang.setTong_tien(BigDecimal.valueOf(gioHangDTO.getTongTien()));
-        gioHang.setTrang_thai(gioHangDTO.getTrangThai());
+        gioHang.setSoTienGiam(BigDecimal.valueOf(gioHangDTO.getSoTienGiam()));
+        gioHang.setTongTien(BigDecimal.valueOf(gioHangDTO.getTongTien()));
+        gioHang.setTrangThai(gioHangDTO.getTrangThai());
 
         // Validate and set User
         User user = userRepository.findById(gioHangDTO.getUserId())

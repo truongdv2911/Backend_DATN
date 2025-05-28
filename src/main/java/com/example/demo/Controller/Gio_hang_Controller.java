@@ -4,45 +4,81 @@ import com.example.demo.DTOs.GioHangDTO;
 import com.example.demo.Entity.GioHang;
 import com.example.demo.Service.Gio_hang_Service;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/giohang")
+@RequiredArgsConstructor
 public class Gio_hang_Controller {
 
-    @Autowired
-    private Gio_hang_Service gioHangService;
 
-    // Create
-    @PostMapping
-    public GioHang createGioHang(@Valid @RequestBody GioHangDTO gioHangDTO) {
-        return gioHangService.createGioHang(gioHangDTO);
+    private final Gio_hang_Service gioHangService;
+
+
+    @PostMapping("/Create")
+    public ResponseEntity<?> createGioHang(@Valid @RequestBody GioHangDTO gioHangDTO, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            }
+            GioHang result = gioHangService.createGioHang(gioHangDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Read All
-    @GetMapping
-    public List<GioHang> getAllGioHangs() {
-        return gioHangService.getAllGioHangs();
+
+    @GetMapping("/ReadAll")
+    public ResponseEntity<?> getAllGioHangs() {
+        try {
+            List<GioHang> list = gioHangService.getAllGioHangs();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Read One
-    @GetMapping("/{id}")
-    public GioHang getGioHangById(@PathVariable Integer id) {
-        return gioHangService.getGioHangById(id);
+
+    @GetMapping("/ReadOne/{id}")
+    public ResponseEntity<?> getGioHangById(@PathVariable Integer id) {
+        try {
+            GioHang result = gioHangService.getGioHangById(id);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
-    // Update
-    @PutMapping("/{id}")
-    public GioHang updateGioHang(@PathVariable Integer id, @Valid @RequestBody GioHangDTO gioHangDTO) {
-        return gioHangService.updateGioHang(id, gioHangDTO);
+
+    @PutMapping("/Update/{id}")
+    public ResponseEntity<?> updateGioHang(@PathVariable Integer id, @Valid @RequestBody GioHangDTO gioHangDTO, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            }
+            GioHang result = gioHangService.updateGioHang(id, gioHangDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Delete
-    @DeleteMapping("/{id}")
-    public void deleteGioHang(@PathVariable Integer id) {
-        gioHangService.deleteGioHang(id);
+
+    @DeleteMapping("/Delete/{id}")
+    public ResponseEntity<?> deleteGioHang(@PathVariable Integer id) {
+        try {
+            gioHangService.deleteGioHang(id);
+            return ResponseEntity.ok("Xóa thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }

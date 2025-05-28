@@ -3,7 +3,9 @@ package com.example.demo.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -13,60 +15,64 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
+@FieldDefaults(level = AccessLevel.PRIVATE )
 @Table(name = "San_pham")
 public class SanPham {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+     Integer id;
 
-    @Column(nullable = false, length = 200)
-    private String ten_san_pham;
+    @Column(name = "ten_san_pham", nullable = false, length = 200)
+     String tenSanPham;
 
-    @Column(nullable = false, length = 200)
-    private String ma_san_pham;
+    @Column(name = "ma_san_pham", nullable = false, length = 200)
+     String maSanPham;
+    @Column(name = "do_tuoi")
+     Integer doTuoi;
 
-    private Integer do_tuoi;
+    @Column(name = "mo_ta", columnDefinition = "TEXT")
+     String moTa;
+    @Column(name = "gia")
+     BigDecimal gia;
+    @Column(name = "gia_khuyen_mai")
+     BigDecimal giaKhuyenMai;
+    @Column(name ="so_luong" )
+     Integer soLuong;
+    @Column(name = "so_luong_manh_ghep")
+     Integer soLuongManhGhep;
+    @Column(name = "so_luong_ton")
+     Integer soLuongTon;
 
-    @Column(columnDefinition = "TEXT")
-    private String mo_ta;
-
-    private Double gia;
-
-    private Double gia_khuyen_mai;
-
-    private Integer so_luong;
-
-    private Integer so_luong_manh_ghep;
-
-    private Integer so_luong_ton;
-
-    @Column(length = 255)
-    private String anh_dai_dien;
-
-    private Integer so_luong_vote;
-
-    private Double danh_gia_trung_binh;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date ngay_tao = new Date();
+    @Column(name = "anh_dai_dien", length = 255)
+     String anhDaiDien;
+    @Column(name = "so_luong_vote")
+     Integer soLuongVote;
+    @Column(name = "danh_gia_trung_binh")
+     Double danhGiaTrungBinh;
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngay_sua = new Date();
+    @Column(name = "ngay_tao")
+     Date ngayTao = new Date();
+    @Column(name = "ngay_sua")
+    @Temporal(TemporalType.TIMESTAMP)
+     Date ngaySua = new Date();
 
     @ManyToOne
     @JsonIgnore // Bỏ qua khi tuần tự hóa
     @JoinColumn(name = "khuyen_mai_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_KhuyenMai"))
-    private KhuyenMai khuyenMai;
+     KhuyenMai khuyenMai;
 
     @ManyToOne
     @JoinColumn(name = "danh_muc_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_DanhMuc"))
-    private DanhMuc danhMuc;
+     DanhMuc danhMuc;
 
     @ManyToOne
     @JoinColumn(name = "bo_suu_tap_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_BoSuuTap"))
-    private BoSuuTap boSuuTap;
+     BoSuuTap boSuuTap;
 
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnhSp> anhSps;
+     List<AnhSp> anhSps;
+
+     String trang_thai;
 
 }

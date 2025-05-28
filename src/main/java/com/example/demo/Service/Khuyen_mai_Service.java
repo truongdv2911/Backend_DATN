@@ -19,12 +19,13 @@ public class Khuyen_mai_Service {
     // Create
     public KhuyenMai createKhuyenMai(@Valid KhuyenMaiDTO khuyenMaiDTO) {
         KhuyenMai khuyenMai = new KhuyenMai();
-        khuyenMai.setMa_khuyen_mai(khuyenMaiDTO.getMa_khuyen_mai());
-        khuyenMai.setSo_luong(khuyenMaiDTO.getSo_luong());
-        khuyenMai.setGia_tri_giam(khuyenMaiDTO.getGia_tri_giam() );
-        khuyenMai.setGia_tri_toi_da(khuyenMaiDTO.getGia_tri_toi_da());
-        khuyenMai.setMo_ta(khuyenMaiDTO.getMo_ta());
-        khuyenMai.setPhan_tram_giam(khuyenMaiDTO.getPhan_tram_giam());
+        khuyenMai.setMaKhuyenMai(khuyenMaiDTO.getMaKhuyenMai());
+        khuyenMai.setSoLuong(khuyenMaiDTO.getSoluong());
+        khuyenMai.setGiaTriGiam(khuyenMaiDTO.getGiaTriGiam() );
+        khuyenMai.setGiaTriToiDa(khuyenMaiDTO.getGiaTriToiDa());
+        khuyenMai.setMoTa(khuyenMaiDTO.getMoTa());
+        khuyenMai.setPhanTramGiam(khuyenMaiDTO.getPhanTramGiam());
+        khuyenMai.setTrangThai(khuyenMaiDTO.getTrangThai());
         return khuyenMaiRepo.save(khuyenMai);
     }
 
@@ -42,12 +43,13 @@ public class Khuyen_mai_Service {
     // Update
     public KhuyenMai updateKhuyenMai(Integer id, @Valid KhuyenMaiDTO khuyenMaiDTO) {
         KhuyenMai khuyenMai = getKhuyenMaiById(id);
-        khuyenMai.setMa_khuyen_mai(khuyenMaiDTO.getMa_khuyen_mai());
-        khuyenMai.setSo_luong(khuyenMaiDTO.getSo_luong());
-        khuyenMai.setGia_tri_giam(khuyenMaiDTO.getGia_tri_giam() );
-        khuyenMai.setGia_tri_toi_da(khuyenMaiDTO.getGia_tri_toi_da());
-        khuyenMai.setMo_ta(khuyenMaiDTO.getMo_ta());
-        khuyenMai.setPhan_tram_giam(khuyenMaiDTO.getPhan_tram_giam());
+        khuyenMai.setMaKhuyenMai(khuyenMaiDTO.getMaKhuyenMai());
+        khuyenMai.setSoLuong(khuyenMaiDTO.getSoluong());
+        khuyenMai.setGiaTriGiam(khuyenMaiDTO.getGiaTriGiam() );
+        khuyenMai.setGiaTriToiDa(khuyenMaiDTO.getGiaTriToiDa());
+        khuyenMai.setMoTa(khuyenMaiDTO.getMoTa());
+        khuyenMai.setPhanTramGiam(khuyenMaiDTO.getPhanTramGiam());
+        khuyenMai.setTrangThai(khuyenMaiDTO.getTrangThai());
         return khuyenMaiRepo.save(khuyenMai);
     }
 

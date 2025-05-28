@@ -5,6 +5,9 @@ import com.example.demo.Entity.DanhMuc;
 import com.example.demo.Service.Danh_muc_Service;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,33 +19,64 @@ public class Danh_muc_Controller {
     @Autowired
     private Danh_muc_Service danhMucService;
 
-    // Create
-    @PostMapping
-    public DanhMuc createDanhMuc(@Valid @RequestBody DanhMucDTO danhMucDTO) {
-        return danhMucService.createDanhMuc(danhMucDTO);
+
+    @PostMapping("/Create")
+    public ResponseEntity<?> createDanhMuc(@Valid @RequestBody DanhMucDTO danhMucDTO, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            }
+            DanhMuc result = danhMucService.createDanhMuc(danhMucDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Read All
-    @GetMapping
-    public List<DanhMuc> getAllDanhMuc() {
-        return danhMucService.getAllDanhMuc();
+
+    @GetMapping("/ReadAll")
+    public ResponseEntity<?> getAllDanhMuc() {
+        try {
+            List<DanhMuc> list = danhMucService.getAllDanhMuc();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Read One
-    @GetMapping("/{id}")
-    public DanhMuc getDanhMucById(@PathVariable Integer id) {
-        return danhMucService.getDanhMucById(id);
+
+    @GetMapping("/ReadOne/{id}")
+    public ResponseEntity<?> getDanhMucById(@PathVariable Integer id) {
+        try {
+            DanhMuc result = danhMucService.getDanhMucById(id);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
-    // Update
-    @PutMapping("/{id}")
-    public DanhMuc updateDanhMuc(@PathVariable Integer id, @Valid @RequestBody DanhMucDTO danhMucDTO) {
-        return danhMucService.updateDanhMuc(id, danhMucDTO);
+
+    @PutMapping("/Update/{id}")
+    public ResponseEntity<?> updateDanhMuc(@PathVariable Integer id, @Valid @RequestBody DanhMucDTO danhMucDTO, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            }
+            DanhMuc result = danhMucService.updateDanhMuc(id, danhMucDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Delete
-    @DeleteMapping("/{id}")
-    public void deleteDanhMuc(@PathVariable Integer id) {
-        danhMucService.deleteDanhMuc(id);
+
+    @DeleteMapping("/Delete/{id}")
+    public ResponseEntity<?> deleteDanhMuc(@PathVariable Integer id) {
+        try {
+            danhMucService.deleteDanhMuc(id);
+            return ResponseEntity.ok("Xóa thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }
