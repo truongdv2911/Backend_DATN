@@ -18,8 +18,8 @@ public class Danh_muc_Service {
     // Create
     public DanhMuc createDanhMuc(@Valid DanhMucDTO danhMucDTO) {
         DanhMuc danhMuc = new DanhMuc();
-        danhMuc.setTen_danh_muc(danhMucDTO.getTen_danh_muc());
-        danhMuc.setMo_ta(danhMucDTO.getMo_ta());
+        danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
+        danhMuc.setMoTa(danhMucDTO.getMoTa());
         return danhMucRepo.save(danhMuc);
     }
 
@@ -38,8 +38,8 @@ public class Danh_muc_Service {
     // Update
     public DanhMuc updateDanhMuc(Integer id, @Valid DanhMucDTO danhMucDTO) {
         DanhMuc danhMuc = getDanhMucById(id);
-        danhMuc.setTen_danh_muc(danhMucDTO.getTen_danh_muc());
-        danhMuc.setMo_ta(danhMucDTO.getMo_ta());
+        danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
+        danhMuc.setMoTa(danhMucDTO.getMoTa());
         return danhMucRepo.save(danhMuc);
     }
 

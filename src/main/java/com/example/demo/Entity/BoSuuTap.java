@@ -19,12 +19,12 @@ public class BoSuuTap {
     @Column(name = "id")
      Integer id;
     @Column(name = "ten_bo_suu_tap")
-     String ten_bo_suu_tap;
+     String tenBoSuuTap;
     @Column(name = "mo_ta")
-     String mo_ta;
+     String moTa;
     @Column(name = "nam_phat_hanh")
-     Integer nam_phat_hanh;
+     Integer namPhatHanh;
     @Column(name = "ngay_tao")
-     Date ngay_tao;
+     Date ngayTao;
 
 }

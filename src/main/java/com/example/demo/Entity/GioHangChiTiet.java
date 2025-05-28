@@ -15,19 +15,17 @@ public class GioHangChiTiet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     @ManyToOne
     @JoinColumn(name = "gio_hang_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHangChiTiet_GioHang"))
     private GioHang gioHang;
-
     @ManyToOne
     @JoinColumn(name = "san_pham_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHangChiTiet_SanPham"))
     private SanPham sanPham;
-
+    @Column(name = "gia")
     private BigDecimal gia;
-
-    private  BigDecimal tong_tien;
-
-    private Integer so_luong;
+    @Column(name = "tong_tien")
+    private  BigDecimal tongTien;
+    @Column(name = "so_luong")
+    private Integer soLuong;
 
 }

@@ -70,7 +70,24 @@ public class JwtFilter extends OncePerRequestFilter {
                 Pair.of("/api/sanpham", "GET"),
                 Pair.of("/api/sanpham", "POST"),
                 Pair.of("/api/sanpham", "PUT"),
-                Pair.of("/api/sanpham", "DELETE")
+                Pair.of("/api/sanpham", "DELETE"),
+                Pair.of("/api/anhsp/create", "POST"),
+                Pair.of("/api/bosuutap", "GET"),
+                Pair.of("/api/bosuutap/Create", "POST"),
+                Pair.of("/api/bosuutap/Update", "PUT"),
+                Pair.of("/api/bosuutap", "DELETE"),
+                Pair.of("/api/danhmuc", "GET"),
+                Pair.of("/api/danhmuc/Create", "POST"),
+                Pair.of("/api/danhmuc", "PUT"),
+                Pair.of("/api/danhmuc", "DELETE"),
+                Pair.of("/api/phieugiamgia", "GET"),
+                Pair.of("/api/phieugiamgia", "POST"),
+                Pair.of("/api/phieugiamgia", "PUT"),
+                Pair.of("/api/phieugiamgia", "DELETE"),
+                Pair.of("/api/giohang", "GET"),
+                Pair.of("/api/giohang", "POST"),
+                Pair.of("/api/giohang", "PUT"),
+                Pair.of("/api/giohang", "DELETE")
 
 
 

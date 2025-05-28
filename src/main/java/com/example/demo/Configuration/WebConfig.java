@@ -48,7 +48,10 @@ public class WebConfig {
                                 "/api/sanpham/**",
                                 "/api/khuyenmai/**",
                                 "/api/danhmuc/**",
-                                "/api/anhsp/**"
+                                "/api/anhsp/**",
+                                "/api/bosuutap/**",
+                                "/api/phieugiamgia/**",
+                                "/api/giohang/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

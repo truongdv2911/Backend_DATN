@@ -37,9 +37,9 @@ public class Anh_sp_Service {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
         AnhSp anh = new AnhSp();
         anh.setUrl(dto.getUrl());
-        anh.setMo_ta(dto.getMoTa());
-        anh.setThu_tu(dto.getThuTu());
-        anh.setAnh_chinh(dto.getAnhChinh());
+        anh.setMoTa(dto.getMoTa());
+        anh.setThuTu(dto.getThuTu());
+        anh.setAnhChinh(dto.getAnhChinh());
         anh.setSanPham(sanPham);
         return anhSpRepository.save(anh);
     }
@@ -55,9 +55,9 @@ public class Anh_sp_Service {
 
     public AnhSp updateAnhSp(Integer id, Anh_sp_DTO dto) {
         AnhSp anh = getAnhSpById(id);
-        anh.setMo_ta(dto.getMoTa());
-        anh.setThu_tu(dto.getThuTu());
-        anh.setAnh_chinh(dto.getAnhChinh());
+        anh.setMoTa(dto.getMoTa());
+        anh.setThuTu(dto.getThuTu());
+        anh.setAnhChinh(dto.getAnhChinh());
         anh.setUrl(dto.getUrl());
         return anhSpRepository.save(anh);
     }
@@ -109,9 +109,9 @@ public class Anh_sp_Service {
             // Tạo đối tượng AnhSp và lưu vào database
             AnhSp anhSp = new AnhSp();
             anhSp.setUrl(url);
-            anhSp.setMo_ta(moTa);
-            anhSp.setThu_tu(thuTu);
-            anhSp.setAnh_chinh(anhChinh);
+            anhSp.setMoTa(moTa);
+            anhSp.setThuTu(thuTu);
+            anhSp.setAnhChinh(anhChinh);
             anhSp.setSanPham(sanPham);
 
             return anhSpRepository.save(anhSp);

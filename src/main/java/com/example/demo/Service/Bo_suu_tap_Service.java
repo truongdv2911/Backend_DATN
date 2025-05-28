@@ -19,10 +19,10 @@ public class Bo_suu_tap_Service {
     // Create
     public BoSuuTap createBoSuuTap(@Valid BoSuuTapDTO boSuuTapDTO) {
         BoSuuTap boSuuTap = new BoSuuTap();
-        boSuuTap.setTen_bo_suu_tap(boSuuTapDTO.getTenBoSuuTap());
-        boSuuTap.setMo_ta(boSuuTapDTO.getMoTa());
-        boSuuTap.setNam_phat_hanh(boSuuTapDTO.getNamPhatHanh());
-        boSuuTap.setNgay_tao(new Date());
+        boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
+        boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
+        boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());
+        boSuuTap.setNgayTao(new Date());
         return boSuuTapRepo.save(boSuuTap);
     }
 
@@ -40,9 +40,9 @@ public class Bo_suu_tap_Service {
     // Update
     public BoSuuTap updateBoSuuTap(Integer id, @Valid BoSuuTapDTO boSuuTapDTO) {
         BoSuuTap boSuuTap = getBoSuuTapById(id);
-        boSuuTap.setTen_bo_suu_tap(boSuuTapDTO.getTenBoSuuTap());
-        boSuuTap.setMo_ta(boSuuTapDTO.getMoTa());
-        boSuuTap.setNam_phat_hanh(boSuuTapDTO.getNamPhatHanh());
+        boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
+        boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
+        boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());
         return boSuuTapRepo.save(boSuuTap);
     }
 

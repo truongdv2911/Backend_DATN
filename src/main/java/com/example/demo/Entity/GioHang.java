@@ -16,13 +16,13 @@ public class GioHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(name = "so_tien_giam")
+    private BigDecimal soTienGiam;
+    @Column(name = "tong_tien")
+    private BigDecimal tongTien;
 
-    private BigDecimal so_tien_giam;
-
-    private BigDecimal tong_tien;
-
-    @Column(nullable = false, length = 20)
-    private String trang_thai;
+    @Column(name = "trang_thai", nullable = false, length = 20)
+    private String trangThai;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHang_User"))

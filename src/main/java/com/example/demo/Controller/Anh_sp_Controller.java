@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,45 +24,87 @@ public class Anh_sp_Controller {
     @Autowired
     private Anh_sp_Service anhSpService;
 
-    // Create
-    @PostMapping
-    public AnhSp createAnhSp(@Valid @RequestBody Anh_sp_DTO anhSpDTO) {
-        return anhSpService.createAnhSp(anhSpDTO);
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createAnhSp(@Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            }
+            AnhSp result = anhSpService.createAnhSp(anhSpDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     // Read All
     @GetMapping
-    public List<AnhSp> getAllAnhSp() {
-        return anhSpService.getAllAnhSp();
+    public ResponseEntity<?> getAllAnhSp() {
+        try {
+            List<AnhSp> list = anhSpService.getAllAnhSp();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Read One
-    @GetMapping("/{id}")
-    public AnhSp getAnhSpById(@PathVariable Integer id) {
-        return anhSpService.getAnhSpById(id);
+
+    @GetMapping("/Readone/{id}")
+    public ResponseEntity<?> getAnhSpById(@PathVariable Integer id) {
+        try {
+            AnhSp result = anhSpService.getAnhSpById(id);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
-    // Update
-    @PutMapping("/update/{id}")
-    public AnhSp updateAnhSp(@PathVariable Integer id, @Valid @RequestBody Anh_sp_DTO anhSpDTO) {
-        return anhSpService.updateAnhSp(id, anhSpDTO);
+
+    @PutMapping("/Update/{id}")
+    public ResponseEntity<?> updateAnhSp(@PathVariable Integer id, @Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            }
+            AnhSp result = anhSpService.updateAnhSp(id, anhSpDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    // Delete
-    @DeleteMapping("/{id}")
-    public void deleteAnhSp(@PathVariable Integer id) {
-        anhSpService.deleteAnhSp(id);
+
+    @DeleteMapping("/Delete/{id}")
+    public ResponseEntity<?> deleteAnhSp(@PathVariable Integer id) {
+        try {
+            anhSpService.deleteAnhSp(id);
+            return ResponseEntity.ok("Xóa thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
-    // Upload and Create
+
     @PostMapping("/upload-image")
-    public AnhSp uploadAndCreateAnhSp(
+    public ResponseEntity<?> uploadAndCreateAnhSp(
             @RequestParam("file") MultipartFile file,
             @RequestParam("moTa") String moTa,
             @RequestParam("thuTu") Integer thuTu,
             @RequestParam("anhChinh") Boolean anhChinh,
             @RequestParam("sanpham") Integer sanphamId) {
-        return anhSpService.uploadAndCreateAnhSp(file, moTa, thuTu, anhChinh, sanphamId);
+        try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File không được để trống");
+            }
+            if (moTa != null && moTa.length() > 1000) {
+                return ResponseEntity.badRequest().body("Mô tả không được vượt quá 1000 ký tự");
+            }
+            AnhSp result = anhSpService.uploadAndCreateAnhSp(file, moTa, thuTu, anhChinh, sanphamId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     // View image
@@ -74,7 +118,7 @@ public class Anh_sp_Controller {
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ảnh: " + e.getMessage());
         }
     }
 }
