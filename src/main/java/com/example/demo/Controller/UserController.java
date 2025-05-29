@@ -68,7 +68,6 @@ public class UserController {
             return ResponseEntity.ok(userService.createUser(user));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-
         }
     }
 //        @GetMapping("/me")

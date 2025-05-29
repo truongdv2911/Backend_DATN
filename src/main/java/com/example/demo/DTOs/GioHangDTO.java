@@ -12,8 +12,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class GioHangDTO {
 
-     Integer id;
-
     @NotNull(message = "Số tiền giảm không được để trống")
     @DecimalMin(value = "0.0", message = "Số tiền giảm phải lớn hơn hoặc bằng 0")
      Double soTienGiam;

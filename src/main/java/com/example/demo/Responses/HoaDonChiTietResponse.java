@@ -1,11 +1,11 @@
-package com.example.demo.DTOs;
+package com.example.demo.Responses;
 
 import com.example.demo.Entity.HoaDon;
+import com.example.demo.Entity.SanPham;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,17 +17,14 @@ import java.math.BigDecimal;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DTOhoaDonChiTiet {
-    @NotNull(message = "Khong am so luong")
-    @Min(value = 0)
+@MappedSuperclass
+public class HoaDonChiTietResponse {
+    private Integer id;
     private Integer soLuong;
-    @NotNull(message = "Khong am so luong")
-    @Min(value = 0)
     private BigDecimal gia;
-    @NotNull(message = "Khong am so luong")
-    @Min(value = 0)
     private BigDecimal tongTien;
 
     private Integer hdId;
+
     private Integer spId;
 }

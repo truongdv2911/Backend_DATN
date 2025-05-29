@@ -15,8 +15,6 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class PhieuGiamGiaDTO {
 
-     Integer id;
-
     @NotBlank(message = "Mã phiếu không được để trống")
     @Size(max = 50, message = "Mã phiếu không được vượt quá 50 ký tự")
      String ma_phieu;

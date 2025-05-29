@@ -12,8 +12,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class SanPhamDTO {
 
-     Integer id;
-
     @NotBlank(message = "Tên sản phẩm không được để trống")
     @Size(max = 200, message = "Tên sản phẩm không được vượt quá 200 ký tự")
      String tenSanPham;

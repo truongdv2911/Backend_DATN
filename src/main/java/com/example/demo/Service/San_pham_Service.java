@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class San_pham_Service {
     private final Khuyen_mai_Repo khuyenMaiRepository;
 
     // Create
+    @Transactional
     public SanPham createSanPham(@Valid SanPhamDTO sanPhamDTO) {
         SanPham sanPham = new SanPham();
         sanPham.setTen_san_pham(sanPhamDTO.getTenSanPham());
@@ -73,7 +75,7 @@ public class San_pham_Service {
                 .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + id));
     }
 
-
+    @Transactional
     public SanPham updateSanPham(Integer id, @Valid SanPhamDTO sanPhamDTO) {
         SanPham sanPham = getSanPhamById(id);
         sanPham.setTen_san_pham(sanPhamDTO.getTenSanPham());
@@ -112,7 +114,7 @@ public class San_pham_Service {
 
         return sanPhamRepository.save(sanPham);
     }
-
+    @Transactional
     // Delete
     public void deleteSanPham(Integer id) {
         SanPham sanPham = getSanPhamById(id);

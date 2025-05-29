@@ -12,9 +12,6 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class DanhMucDTO {
-
-     Integer id;
-
     @NotBlank(message = "Tên danh mục không được để trống")
     @Size(max = 100, message = "Tên danh mục không được vượt quá 100 ký tự")
      String ten_danh_muc;
