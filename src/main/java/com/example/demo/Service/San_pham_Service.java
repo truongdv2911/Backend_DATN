@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,8 @@ public class San_pham_Service {
     private final Bo_suu_tap_Repo boSuuTapRepository;
     private final Khuyen_mai_Repo khuyenMaiRepository;
 
+    // Create
+    @Transactional
     public SanPham createSanPham(@Valid SanPhamDTO sanPhamDTO) {
         // Kiểm tra trùng mã sản phẩm
         if (sanPhamRepository.existsByMaSanPham(sanPhamDTO.getMaSanPham())) {
@@ -82,6 +85,8 @@ public class San_pham_Service {
         }
     }
 
+    @Transactional
+
     public SanPham updateSanPham(Integer id, @Valid SanPhamDTO sanPhamDTO) {
         try {
             SanPham sanPham = getSanPhamById(id);
@@ -122,7 +127,8 @@ public class San_pham_Service {
         }
     }
 
-
+    @Transactional
+    // Delete
     public void deleteSanPham(Integer id) {
         try {
             SanPham sanPham = getSanPhamById(id);

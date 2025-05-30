@@ -28,7 +28,7 @@ public class HoaDonChiTiet {
     @JoinColumn(name = "hoa_don_id", referencedColumnName = "id")
     private HoaDon hd;
 
-//    @ManyToOne
-//    @JoinColumn(name = "san_pham_id", referencedColumnName = "id")
-//    private SanPham sp;
+   @ManyToOne
+   @JoinColumn(name = "san_pham_id", referencedColumnName = "id")
+    private SanPham sp;
 }

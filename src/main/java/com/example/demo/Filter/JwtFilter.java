@@ -63,43 +63,47 @@ public class JwtFilter extends OncePerRequestFilter {
 
     }
     private Boolean isPassToken(HttpServletRequest request){
-        final List<Pair<String, String>> passTokens = Arrays.asList(
-                Pair.of("api/lego-store/user/login", "POST"),
-
-                Pair.of("api/lego-store/user/register", "POST"),
-                Pair.of("api/lego-store/user/register", "POST"),
-                Pair.of("/api/anhsp", "GET"),
-                Pair.of("/api/sanpham", "GET"),
-                Pair.of("/api/sanpham", "POST"),
-                Pair.of("/api/sanpham", "PUT"),
-                Pair.of("/api/sanpham", "DELETE"),
-                Pair.of("/api/anhsp/create", "POST"),
-                Pair.of("/api/bosuutap", "GET"),
-                Pair.of("/api/bosuutap/Create", "POST"),
-                Pair.of("/api/bosuutap/Update", "PUT"),
-                Pair.of("/api/bosuutap", "DELETE"),
-                Pair.of("/api/danhmuc", "GET"),
-                Pair.of("/api/danhmuc/Create", "POST"),
-                Pair.of("/api/danhmuc", "PUT"),
-                Pair.of("/api/danhmuc", "DELETE"),
-                Pair.of("/api/phieugiamgia", "GET"),
-                Pair.of("/api/phieugiamgia", "POST"),
-                Pair.of("/api/phieugiamgia", "PUT"),
-                Pair.of("/api/phieugiamgia", "DELETE"),
-                Pair.of("/api/giohang", "GET"),
-                Pair.of("/api/giohang", "POST"),
-                Pair.of("/api/giohang", "PUT"),
-                Pair.of("/api/giohang", "DELETE")
-
-        );
-        for (Pair<String, String> pair:
-                passTokens) {
-            if (request.getServletPath().contains(pair.getLeft()) &&
-                    request.getMethod().equals(pair.getRight()))
-            {
-                return true;
-            }
-        }
-        return false;
+//        final List<Pair<String, String>> passTokens = Arrays.asList(
+//                Pair.of("api/lego-store/user/login", "POST"),
+//
+//                Pair.of("api/lego-store/user/register", "POST"),
+//                Pair.of("api/lego-store/user/register", "POST"),
+//                Pair.of("/api/anhsp", "GET"),
+//                Pair.of("/api/sanpham", "GET"),
+//                Pair.of("/api/sanpham", "POST"),
+//                Pair.of("/api/sanpham", "PUT"),
+//                Pair.of("/api/sanpham", "DELETE"),
+//                Pair.of("/api/anhsp/create", "POST"),
+//                Pair.of("/api/bosuutap", "GET"),
+//                Pair.of("/api/bosuutap/Create", "POST"),
+//                Pair.of("/api/bosuutap/Update", "PUT"),
+//                Pair.of("/api/bosuutap", "DELETE"),
+//                Pair.of("/api/danhmuc", "GET"),
+//                Pair.of("/api/danhmuc/Create", "POST"),
+//                Pair.of("/api/danhmuc", "PUT"),
+//                Pair.of("/api/danhmuc", "DELETE"),
+//                Pair.of("/api/phieugiamgia", "GET"),
+//                Pair.of("/api/phieugiamgia", "POST"),
+//                Pair.of("/api/phieugiamgia", "PUT"),
+//                Pair.of("/api/phieugiamgia", "DELETE"),
+//                Pair.of("/api/giohang", "GET"),
+//                Pair.of("/api/giohang", "POST"),
+//                Pair.of("/api/giohang", "PUT"),
+//                Pair.of("/api/giohang", "DELETE"),
+//
+//                Pair.of("api/lego-store/hoa-don/create", "POST"),
+//                Pair.of("api/lego-store/hoa-don/user/**", "GET"),
+//                Pair.of("api/lego-store/hoa-don/**", "GET")
+//
+//        );
+//        for (Pair<String, String> pair:
+//                passTokens) {
+//            if (request.getServletPath().contains(pair.getLeft()) &&
+//                    request.getMethod().equals(pair.getRight()))
+//            {
+//                return true;
+//            }
+//        }
+        return true;
     }
 }
