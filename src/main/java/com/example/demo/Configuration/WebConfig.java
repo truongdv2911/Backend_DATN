@@ -48,7 +48,12 @@ public class WebConfig {
                                 "/api/sanpham/**",
                                 "/api/khuyenmai/**",
                                 "/api/danhmuc/**",
-                                "/api/anhsp/**"
+                                "/api/anhsp/**",
+                                "/api/bosuutap/**",
+                                "/api/phieugiamgia/**",
+                                "/api/giohang/**",
+                                "api/lego-store/hoa-don/**",
+                                "api/lego-store/hoa-don-chi-tiet/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

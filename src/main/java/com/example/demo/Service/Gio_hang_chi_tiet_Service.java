@@ -39,8 +39,8 @@ public class Gio_hang_chi_tiet_Service {
         gioHangChiTiet.setSanPham(sanPham);
 
         gioHangChiTiet.setGia(BigDecimal.valueOf(gioHangChiTietDTO.getGia()));
-        gioHangChiTiet.setTong_tien(BigDecimal.valueOf(gioHangChiTietDTO.getTongTien()));
-        gioHangChiTiet.setSo_luong(gioHangChiTietDTO.getSoLuong());
+        gioHangChiTiet.setTongTien(BigDecimal.valueOf(gioHangChiTietDTO.getTongTien()));
+        gioHangChiTiet.setSoLuong(gioHangChiTietDTO.getSoLuong());
 
         return gioHangChiTietRepo.save(gioHangChiTiet);
     }
@@ -71,8 +71,8 @@ public class Gio_hang_chi_tiet_Service {
         gioHangChiTiet.setSanPham(sanPham);
 
         gioHangChiTiet.setGia(BigDecimal.valueOf(gioHangChiTietDTO.getGia()));
-        gioHangChiTiet.setTong_tien(BigDecimal.valueOf(gioHangChiTietDTO.getTongTien()));
-        gioHangChiTiet.setSo_luong(gioHangChiTietDTO.getSoLuong());
+        gioHangChiTiet.setTongTien(BigDecimal.valueOf(gioHangChiTietDTO.getTongTien()));
+        gioHangChiTiet.setSoLuong(gioHangChiTietDTO.getSoLuong());
 
         return gioHangChiTietRepo.save(gioHangChiTiet);
     }

@@ -10,6 +10,8 @@ import com.example.demo.Repository.UserRepository;
 import com.example.demo.Responses.HoaDonResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeMap;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,50 +29,62 @@ public class HoaDonService {
     private final UserRepository userRepository;
     private final San_pham_Repo san_pham_repo;
     private final HoaDonChiTietRepository hoaDonChiTietRepository;
-    private final ModelMapper modelMapper;
+
     @Transactional
-    public HoaDon createOrder(DTOhoaDon dtOhoaDon) throws Exception {
+    public HoaDon createHoaDon(DTOhoaDon dtOhoaDon) throws Exception {
         try {
-            User user = userRepository.findById(dtOhoaDon.getUserId()).orElseThrow(() -> new Exception("khong tim thay nguoi dung"));
-            modelMapper.typeMap(DTOhoaDon.class, HoaDon.class)
-                    .addMappings(mapper -> mapper.skip(HoaDon::setId));
+            // 1. Lấy thông tin user
+            User user = userRepository.findById(dtOhoaDon.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + dtOhoaDon.getUserId()));
+
+            // 2. Tạo hóa đơn
             HoaDon hoaDon = new HoaDon();
-            modelMapper.map(dtOhoaDon, hoaDon);
             hoaDon.setUser(user);
             hoaDon.setNv(null);
             hoaDon.setNgayTao(LocalDateTime.now());
-            hoaDon.setDiaChiGiaoHang("hehe hanoi");
-            hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0,10));
-            hoaDon.setNgayGiao(null);
+            hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
+            hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 10));
+            hoaDon.setNgayGiao(dtOhoaDon.getNgayGiao());
             hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
-            hoaDon.setPhuongThucThanhToan("cod");
-            hoaDonRepository.save(hoaDon);
+            hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
 
+            // 3. Tạo các chi tiết hóa đơn
             List<HoaDonChiTiet> donChiTiets = new ArrayList<>();
-            for (CartItemDTO cartItemDto:
-                    dtOhoaDon.getCartItems()) {
+            for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
+                SanPham sanPham = san_pham_repo.findById(cartItemDto.getIdSanPham())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + cartItemDto.getIdSanPham()));
+
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
                 hoaDonChiTiet.setHd(hoaDon);
-
-                Integer idSanPham = cartItemDto.getIdSanPham();
-                Integer soLuong = cartItemDto.getSoLuong();
-                SanPham sanPham = san_pham_repo.findById(idSanPham).
-                        orElseThrow(() -> new Exception("Khong tim thay san pham"));
-                BigDecimal gia = sanPham.getGia();
                 hoaDonChiTiet.setSp(sanPham);
-                hoaDonChiTiet.setGia(gia);
-                hoaDonChiTiet.setSoLuong(soLuong);
-                hoaDonChiTiet.setTongTien(gia*soLuong);
+                hoaDonChiTiet.setGia(sanPham.getGia());
+                hoaDonChiTiet.setSoLuong(cartItemDto.getSoLuong());
+                hoaDonChiTiet.setTongTien(sanPham.getGia().multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
                 donChiTiets.add(hoaDonChiTiet);
             }
+
+            // 4. Tính tổng tiền
+            BigDecimal totalHd = donChiTiets.stream()
+                    .map(HoaDonChiTiet::getTongTien)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            hoaDon.setTamTinh(totalHd);
+            hoaDon.setSoTienGiam(BigDecimal.ZERO);
+            hoaDon.setTongTien(totalHd.subtract(BigDecimal.ZERO));
+
+            // 5. Lưu vào database (transaction sẽ commit tại đây nếu không có lỗi)
+            HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
             hoaDonChiTietRepository.saveAll(donChiTiets);
-            return hoaDon;
-        }catch (Exception e){
-            throw new Exception(e.getMessage());
+
+            return savedHoaDon;
+        } catch (RuntimeException e) {
+            // Transaction sẽ tự động rollback khi có RuntimeException
+            throw new RuntimeException("Lỗi khi tạo hóa đơn: " + e.getMessage(), e);
         }
     }
 
     public HoaDonResponse findById(Integer id) throws Exception {
+        ModelMapper modelMapper = new ModelMapper();
         modelMapper.typeMap(HoaDon.class, HoaDonResponse.class).addMappings(mapper ->{
             mapper.map(src -> src.getUser().getId(), HoaDonResponse::setUserId);
             mapper.map(src -> src.getNv().getId(), HoaDonResponse::setNvId);
@@ -94,18 +108,57 @@ public class HoaDonService {
     }
 
     @Transactional
-    public HoaDon updateOrder(Integer id, DTOhoaDon dtOhoaDon) throws Exception {
-        HoaDon order = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
+    public HoaDon updateHoaDon(Integer id, DTOhoaDon dtOhoaDon, Integer idNV) throws Exception {
+
+        HoaDon hoaDon = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
         User user = userRepository.findById(dtOhoaDon.getUserId()).orElseThrow(() -> new Exception("khong tim thay nguoi dung"));
-        modelMapper.typeMap(OrderDTO.class, Order.class).addMappings(mapper ->
-                mapper.skip(Order::setId));
-        modelMapper.map(orderDTO, order);
-        order.setUser(user);
-        return orderRepository.save(order);
+        User nv = userRepository.findById(idNV).orElseThrow(() -> new Exception("khong tim thay Nhan vien"));
+
+        hoaDon.setTamTinh(dtOhoaDon.getTamTinh());
+        hoaDon.setTongTien(dtOhoaDon.getTongTien());
+        hoaDon.setTrangThai(dtOhoaDon.getTrangThai());
+        hoaDon.setSoTienGiam(dtOhoaDon.getSoTienGiam());
+        hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
+        hoaDon.setNgayGiao(dtOhoaDon.getNgayGiao());
+        hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
+        hoaDon.setNv(nv);
+
+        // Xoá danh sách chi tiết cũ
+        List<HoaDonChiTiet> oldDetails = hoaDonChiTietRepository.findByIdOrder(id);
+        hoaDonChiTietRepository.deleteAll(oldDetails);
+
+        // Tạo lại danh sách chi tiết mới
+        List<HoaDonChiTiet> newDetails = new ArrayList<>();
+        for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
+            SanPham sanPham = san_pham_repo.findById(cartItemDto.getIdSanPham())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + cartItemDto.getIdSanPham()));
+
+            HoaDonChiTiet chiTiet = new HoaDonChiTiet();
+            chiTiet.setHd(hoaDon);
+            chiTiet.setSp(sanPham);
+            chiTiet.setGia(sanPham.getGia());
+            chiTiet.setSoLuong(cartItemDto.getSoLuong());
+            chiTiet.setTongTien(sanPham.getGia().multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
+
+            newDetails.add(chiTiet);
+        }
+
+        // Tính lại tổng tiền nếu cần
+        BigDecimal tong = newDetails.stream()
+                .map(HoaDonChiTiet::getTongTien)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        hoaDon.setTamTinh(tong);
+        hoaDon.setTongTien(tong.subtract(hoaDon.getSoTienGiam() != null ? hoaDon.getSoTienGiam() : BigDecimal.ZERO));
+
+        // Lưu hoá đơn + chi tiết
+        hoaDonRepository.save(hoaDon);
+        hoaDonChiTietRepository.saveAll(newDetails);
+
+        return hoaDon;
     }
 
     @Transactional
-    public void deleteOrder(Integer id) throws Exception {
+    public void deleteHoaDon(Integer id) throws Exception {
         HoaDon hoaDon = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
         hoaDon.setTrangThai(TrangThaiHoaDon.CANCELLED);
         hoaDonRepository.save(hoaDon);

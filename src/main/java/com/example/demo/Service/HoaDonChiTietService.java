@@ -22,7 +22,7 @@ public class HoaDonChiTietService {
     private final HoaDonRepository hoaDonRepository;
 
     @Transactional
-    public HoaDonChiTietResponse createOrderDetail(DTOhoaDonChiTiet dtOhoaDonChiTiet) throws Exception {
+    public HoaDonChiTietResponse createHoaDonChiTiet(DTOhoaDonChiTiet dtOhoaDonChiTiet) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
         HoaDon hoaDon = hoaDonRepository.findById(dtOhoaDonChiTiet.getHdId()).orElseThrow(() ->
                 new Exception("Khong thay hoa don"));
@@ -49,7 +49,7 @@ public class HoaDonChiTietService {
     }
 
     @Transactional
-    public HoaDonChiTiet updateOrder(Integer id, DTOhoaDonChiTiet dtOhoaDonChiTiet) throws Exception {
+    public HoaDonChiTiet updateHoaDonChiTiet(Integer id, DTOhoaDonChiTiet dtOhoaDonChiTiet) throws Exception {
         HoaDon hoaDon = hoaDonRepository.findById(dtOhoaDonChiTiet.getHdId()).orElseThrow(() ->
                 new Exception("Khong thay hoa don"));
         SanPham sanPham = san_pham_repo.findById(dtOhoaDonChiTiet.getSpId()).orElseThrow(() ->
@@ -60,7 +60,7 @@ public class HoaDonChiTietService {
     }
 
     @Transactional
-    public void deleteOrderDetail(Integer id) throws Exception {
+    public void deleteHoaDonChiTiet(Integer id) throws Exception {
         hoaDonChiTietRepository.deleteById(id);
     }
 }

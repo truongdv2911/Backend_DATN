@@ -17,27 +17,29 @@ public class PhieuGiamGia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String ma_phieu;
+    @Column(name = "ma_phieu", nullable = false, unique = true, length = 50)
+    private String maPhieu;
+    @Column(name = "so_luong")
+    private Integer soLuong;
 
-    private Integer so_luong;
-
-    @Column(length = 20)
-    private String loai_phieu_giam;
-
-    private BigDecimal gia_tri_giam;
-
-    private BigDecimal giam_toi_da;
-
-    private BigDecimal gia_tri_toi_thieu;
-
-    @Temporal(TemporalType.DATE)
-    private Date ngay_bat_dau;
+    @Column(name = "loai_phieu_giam", length = 20)
+    private String loaiPhieuGiam;
+    @Column(name = "gia_tri_giam")
+    private BigDecimal giaTriGiam;
+    @Column(name = "giam_toi_da")
+    private BigDecimal giamToiDa;
+    @Column(name = "gia_tri_toi_thieu")
+    private BigDecimal giaTriToiThieu;
 
     @Temporal(TemporalType.DATE)
-    private Date ngay_ket_thuc;
+    @Column(name = "ngay_bat_dau")
+    private Date ngayBatDau;
 
-    @Column(nullable = false, length = 20)
-    private String trang_thai;
+    @Temporal(TemporalType.DATE)
+    @Column(name = "ngay_ket_thuc")
+    private Date ngayKetThuc;
+
+    @Column(name = "trang_thai", nullable = false, length = 20)
+    private String trangThai;
 
 }

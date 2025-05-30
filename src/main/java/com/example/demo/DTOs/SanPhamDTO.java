@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,7 +13,6 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class SanPhamDTO {
-
     @NotBlank(message = "Tên sản phẩm không được để trống")
     @Size(max = 200, message = "Tên sản phẩm không được vượt quá 200 ký tự")
      String tenSanPham;
@@ -28,10 +29,10 @@ public class SanPhamDTO {
 
     @NotNull(message = "Giá không được để trống")
     @DecimalMin(value = "0.0", message = "Giá phải lớn hơn hoặc bằng 0")
-     Double gia;
+     BigDecimal gia;
 
     @DecimalMin(value = "0.0", message = "Giá khuyến mãi phải lớn hơn hoặc bằng 0")
-     Double giaKhuyenMai;
+    BigDecimal giaKhuyenMai;
 
     @Min(value = 0, message = "Số lượng phải lớn hơn hoặc bằng 0")
      Integer soLuong;
@@ -57,5 +58,5 @@ public class SanPhamDTO {
 
     @NotBlank(message = "Trạng thái không được để trống")
     @Size(max = 50, message = "Trạng thái không được vượt quá 50 ký tự")
-     String trangThai;
+    String trangThai;
 }

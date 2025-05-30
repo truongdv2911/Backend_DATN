@@ -24,28 +24,30 @@ public class KhuyenMai {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String ma_khuyen_mai;
+    @Column(name = "ma_khuyen_mai", nullable = false, unique = true, length = 50)
+    private String maKhuyenMai;
+    @Column(name = "so_luong")
+    private Integer soLuong;
+    @Column(name = "gia_tri_giam")
+    private BigDecimal giaTriGiam;
+    @Column(name = "gia_tri_toi_da")
+    private BigDecimal giaTriToiDa;
 
-    private Integer so_luong;
-
-    private BigDecimal gia_tri_giam;
-
-    private BigDecimal gia_tri_toi_da;
-
-    @Column(columnDefinition = "TEXT")
-    private String mo_ta;
-
-    private Integer phan_tram_giam;
-
-    @Temporal(TemporalType.DATE)
-    private Date ngay_bat_dau;
+    @Column(name = "mo_ta", columnDefinition = "TEXT")
+    private String moTa;
+    @Column(name = "phan_tram_giam")
+    private Integer phanTramGiam;
 
     @Temporal(TemporalType.DATE)
-    private Date ngay_ket_thuc;
+    @Column(name = "ngay_bat_dau")
+    private Date ngayBatDau;
 
-    @Column(nullable = false, length = 20)
-    private String trang_thai;
+    @Temporal(TemporalType.DATE)
+    @Column(name = "ngay_ket_thuc")
+    private Date ngayKetThuc;
+
+    @Column(name = "trang_thai", nullable = false, length = 20)
+    private String trangThai;
 
     @OneToMany(mappedBy = "khuyenMai", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference // Quản lý phía cha
