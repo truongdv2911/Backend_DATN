@@ -1,10 +1,12 @@
 package com.example.demo.DTOs;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Data
@@ -36,11 +38,15 @@ public class PhieuGiamGiaDTO {
     @DecimalMin(value = "0.0", message = "Giá trị tối thiểu phải lớn hơn hoặc bằng 0")
      BigDecimal giaTriToiThieu;
 
+    @JsonFormat(pattern = "dd-MM-yyyy")
     @NotNull(message = "Ngày bắt đầu không được để trống")
-     Date ngayBatDau;
+    @FutureOrPresent(message = "Ngày bắt đầu ít nhất từ bây giờ")
+     LocalDate ngayBatDau;
 
+    @JsonFormat(pattern = "dd-MM-yyyy")
     @NotNull(message = "Ngày kết thúc không được để trống")
-     Date ngayKetThuc;
+    @Future(message = "Ngày kết thúc ít nhất phải ngày mai")
+    LocalDate ngayKetThuc;
 
     @NotBlank(message = "Trạng thái không được để trống")
     @Size(max = 20, message = "Trạng thái không được vượt quá 20 ký tự")

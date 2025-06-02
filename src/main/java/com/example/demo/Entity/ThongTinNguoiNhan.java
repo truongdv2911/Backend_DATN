@@ -29,4 +29,9 @@ public class ThongTinNguoiNhan extends BaseEntity{
     private String thanhPho;
     @Column(name = "mac_dinh")
     private Integer isMacDinh;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id",referencedColumnName = "id")
+    private User user;
+
 }

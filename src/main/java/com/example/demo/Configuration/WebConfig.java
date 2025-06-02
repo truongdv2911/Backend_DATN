@@ -53,7 +53,8 @@ public class WebConfig {
                                 "/api/phieugiamgia/**",
                                 "/api/giohang/**",
                                 "api/lego-store/hoa-don/**",
-                                "api/lego-store/hoa-don-chi-tiet/**"
+                                "api/lego-store/hoa-don-chi-tiet/**",
+                                "api/lego-store/thong-tin-nguoi-nhan/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -70,7 +71,7 @@ public class WebConfig {
     // ✅ Cấu hình CORS cho phép truy cập từ các origin khác (frontend...)
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("*")); // hoặc thay * bằng domain cụ thể cho an toàn
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000"));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Auth-Token"));
         corsConfiguration.setExposedHeaders(List.of("X-Auth-Token"));
@@ -82,6 +83,6 @@ public class WebConfig {
 
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
-        return customOAuth2UserService; // bạn định nghĩa service này
+        return customOAuth2UserService; 
     }
 }
