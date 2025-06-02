@@ -62,7 +62,7 @@ public class Khuyen_mai_Controller {
         }
     }
 
-
+//1111
     @PutMapping("/Update/{id}")
     public ResponseEntity<?> updateKhuyenMai(@PathVariable Integer id, @Valid @RequestBody KhuyenMaiDTO khuyenMaiDTO, BindingResult bindingResult) {
         try {
