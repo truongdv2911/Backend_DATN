@@ -2,19 +2,49 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.DanhMucDTO;
 import com.example.demo.Entity.DanhMuc;
+import com.example.demo.Repository.Danh_muc_Repo;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public interface  Danh_muc_Service {
-    DanhMuc createDanhMuc(DanhMucDTO danhMucDTO);
+@RequiredArgsConstructor
+public class   Danh_muc_Service {
 
-    List<DanhMuc> getAllDanhMuc();
+    private final Danh_muc_Repo danhMucRepo;
 
-    DanhMuc getDanhMucById(Integer id);
 
-    DanhMuc updateDanhMuc(Integer id, DanhMucDTO danhMucDTO);
+    public DanhMuc createDanhMuc(@Valid DanhMucDTO danhMucDTO) {
+        DanhMuc danhMuc = new DanhMuc();
+        danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
+        danhMuc.setMoTa(danhMucDTO.getMoTa());
+        return danhMucRepo.save(danhMuc);
+    }
 
-    void deleteDanhMuc(Integer id);
+
+    public List<DanhMuc> getAllDanhMuc() {
+        return danhMucRepo.findAll();
+    }
+
+
+    public DanhMuc getDanhMucById(Integer id) {
+        return danhMucRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục với id: " + id));
+    }
+
+
+    public DanhMuc updateDanhMuc(Integer id, @Valid DanhMucDTO danhMucDTO) {
+        DanhMuc danhMuc = getDanhMucById(id);
+        danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
+        danhMuc.setMoTa(danhMucDTO.getMoTa());
+        return danhMucRepo.save(danhMuc);
+    }
+
+
+    public void deleteDanhMuc(Integer id) {
+        DanhMuc danhMuc = getDanhMucById(id);
+        danhMucRepo.delete(danhMuc);
+    }
 }

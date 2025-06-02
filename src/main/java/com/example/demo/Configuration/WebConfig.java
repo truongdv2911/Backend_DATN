@@ -53,7 +53,10 @@ public class WebConfig {
                                 "/api/bosuutap/**",
                                 "/api/phieugiamgia/**",
                                 "/api/giohang/**",
-                                "/api/khuyenmai/**"
+
+                                "api/lego-store/hoa-don/**",
+                                "api/lego-store/hoa-don-chi-tiet/**"
+
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

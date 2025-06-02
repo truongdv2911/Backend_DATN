@@ -1,5 +1,6 @@
 package com.example.demo.Entity;
 
+import com.example.demo.DTOs.CartItemDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -38,7 +40,6 @@ public class HoaDon {
     private String trangThai;
     @Column(name = "phuong_thuc_thanh_toan")
     private String phuongThucThanhToan;
-
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;

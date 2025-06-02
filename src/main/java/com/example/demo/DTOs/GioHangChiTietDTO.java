@@ -13,7 +13,6 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class GioHangChiTietDTO {
-
     @NotNull(message = "GioHang ID không được để trống")
      Integer gioHangId;
 

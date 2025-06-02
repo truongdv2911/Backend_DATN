@@ -12,14 +12,105 @@ import java.util.List;
 import java.util.Random;
 
 @Service
+@RequiredArgsConstructor
+public class Phieu_giam_gia_Service {
 
-public interface Phieu_giam_gia_Service {
+    private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
 
-    PhieuGiamGia createPhieuGiamGia(@Valid PhieuGiamGiaDTO phieuGiamGiaDTO);
-    List<PhieuGiamGia> getAllPhieuGiamGia();
-    PhieuGiamGia getPhieuGiamGiaById(Integer id);
-    PhieuGiamGia updatePhieuGiamGia(Integer id, @Valid PhieuGiamGiaDTO phieuGiamGiaDTO);
-    void deletePhieuGiamGia(Integer id);
-    String generateMaPhieu();
-    List<PhieuGiamGia> getByLoaiPhieuGiam(String loaiPhieuGiam);
+
+    public PhieuGiamGia createPhieuGiamGia(@Valid PhieuGiamGiaDTO phieuGiamGiaDTO) {
+        String maPhieu = phieuGiamGiaDTO.getMaPhieu();
+        if (maPhieu == null || maPhieu.isBlank()) {
+            int maxTry = 10;
+            int count = 0;
+            do {
+                maPhieu = generateMaPhieu();
+                count++;
+                if (count > maxTry) {
+                    throw new RuntimeException("Không thể sinh mã phiếu mới, vui lòng thử lại!");
+                }
+            } while (phieuGiamGiaRepo.existsByMaPhieu(maPhieu));
+        } else {
+            if (phieuGiamGiaRepo.existsByMaPhieu(maPhieu)) {
+                throw new RuntimeException("Mã phiếu đã tồn tại!");
+            }
+        }
+
+        PhieuGiamGia phieuGiamGia = new PhieuGiamGia();
+        phieuGiamGia.setMaPhieu(maPhieu);
+        phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
+        phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
+        phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
+        phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
+        phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
+        phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
+        phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
+        phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
+        return phieuGiamGiaRepo.save(phieuGiamGia);
+    }
+
+
+    public List<PhieuGiamGia> getAllPhieuGiamGia() {
+        return phieuGiamGiaRepo.findAll();
+    }
+
+
+    public PhieuGiamGia getPhieuGiamGiaById(Integer id) {
+        return phieuGiamGiaRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("PhieuGiamGia not found with id: " + id));
+    }
+
+
+    public PhieuGiamGia updatePhieuGiamGia(Integer id, @Valid PhieuGiamGiaDTO phieuGiamGiaDTO) {
+        String maPhieu = phieuGiamGiaDTO.getMaPhieu();
+        if (maPhieu == null || maPhieu.isBlank()) {
+            int maxTry = 10;
+            int count = 0;
+            do {
+                maPhieu = generateMaPhieu();
+                count++;
+                if (count > maxTry) {
+                    throw new RuntimeException("Không thể sinh mã phiếu mới, vui lòng thử lại!");
+                }
+            } while (phieuGiamGiaRepo.existsByMaPhieu(maPhieu));
+        } else {
+            if (phieuGiamGiaRepo.existsByMaPhieu(maPhieu)) {
+                throw new RuntimeException("Mã phiếu đã tồn tại!");
+            }
+        }
+
+        PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
+        phieuGiamGia.setMaPhieu(maPhieu);
+        phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
+        phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
+        phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
+        phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
+        phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
+        phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
+        phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
+        phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
+        return phieuGiamGiaRepo.save(phieuGiamGia);
+    }
+
+
+    public void deletePhieuGiamGia(Integer id) {
+        PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
+        phieuGiamGiaRepo.delete(phieuGiamGia);
+    }
+
+
+    public String generateMaPhieu() {
+        String chars = "0123456789";
+        StringBuilder sb = new StringBuilder("PGG");
+        Random random = new Random();
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
+
+
+    public List<PhieuGiamGia> getByLoaiPhieuGiam(String loaiPhieuGiam) {
+        return phieuGiamGiaRepo.findByLoaiPhieuGiam(loaiPhieuGiam);
+    }
 }
