@@ -3,10 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.CartItemDTO;
 import com.example.demo.DTOs.DTOhoaDon;
 import com.example.demo.Entity.*;
-import com.example.demo.Repository.HoaDonChiTietRepository;
-import com.example.demo.Repository.HoaDonRepository;
-import com.example.demo.Repository.San_pham_Repo;
-import com.example.demo.Repository.UserRepository;
+import com.example.demo.Repository.*;
 import com.example.demo.Responses.HoaDonResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -16,11 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +24,7 @@ public class HoaDonService {
     private final UserRepository userRepository;
     private final San_pham_Repo san_pham_repo;
     private final HoaDonChiTietRepository hoaDonChiTietRepository;
+    private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
 
     @Transactional
     public HoaDon createHoaDon(DTOhoaDon dtOhoaDon) throws Exception {
@@ -48,6 +44,9 @@ public class HoaDonService {
             hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
 
+            PhieuGiamGia phieuGiamGia = phieuGiamGiaRepo.findById(dtOhoaDon.getIdPhieuGiam()).orElseThrow(()-> new RuntimeException("Không tìm thấy id phiếu giảm"));
+            hoaDon.setPhieuGiamGia(phieuGiamGia);
+
             // 3. Tạo các chi tiết hóa đơn
             List<HoaDonChiTiet> donChiTiets = new ArrayList<>();
             for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
@@ -63,14 +62,49 @@ public class HoaDonService {
                 donChiTiets.add(hoaDonChiTiet);
             }
 
+            BigDecimal soTienGiam = BigDecimal.ZERO;
+            LocalDate now = LocalDate.now();
+
             // 4. Tính tổng tiền
             BigDecimal totalHd = donChiTiets.stream()
                     .map(HoaDonChiTiet::getTongTien)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+            boolean isValidPhieu = phieuGiamGia.getSoLuong() > 0
+                    && phieuGiamGia.getNgayKetThuc().isAfter(now)
+                    && "Đang hoạt động".equals(phieuGiamGia.getTrangThai())
+                    && totalHd.compareTo(phieuGiamGia.getGiaTriToiThieu()) >= 0;
+
+            if (isValidPhieu) {
+                String loai = phieuGiamGia.getLoaiPhieuGiam();
+
+                switch (loai) {
+                    case "Theo %":
+                        soTienGiam = totalHd.multiply(phieuGiamGia.getGiaTriGiam().divide(BigDecimal.valueOf(100)));
+                        if (soTienGiam.compareTo(phieuGiamGia.getGiamToiDa()) > 0) {
+                            soTienGiam = phieuGiamGia.getGiamToiDa();
+                        }
+                        break;
+
+                    case "Theo số tiền":
+                        soTienGiam = phieuGiamGia.getGiaTriGiam();
+                        if (soTienGiam.compareTo(phieuGiamGia.getGiamToiDa()) > 0) {
+                            soTienGiam = phieuGiamGia.getGiamToiDa();; // không thể giảm nhiều hơn tổng hóa đơn
+                        }
+                        break;
+                    default:
+                        break; // không áp dụng nếu loại không hợp lệ
+                }
+
+                // Trừ số lượng nếu giảm hợp lệ
+                if (soTienGiam.compareTo(BigDecimal.ZERO) > 0) {
+                    phieuGiamGia.setSoLuong(phieuGiamGia.getSoLuong() - 1);
+                    phieuGiamGiaRepo.save(phieuGiamGia);
+                }
+            }
             hoaDon.setTamTinh(totalHd);
-            hoaDon.setSoTienGiam(BigDecimal.ZERO);
-            hoaDon.setTongTien(totalHd.subtract(BigDecimal.ZERO));
+            hoaDon.setSoTienGiam(soTienGiam);
+            hoaDon.setTongTien(totalHd.subtract(soTienGiam));
 
             // 5. Lưu vào database (transaction sẽ commit tại đây nếu không có lỗi)
             HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
@@ -78,7 +112,6 @@ public class HoaDonService {
 
             return savedHoaDon;
         } catch (RuntimeException e) {
-            // Transaction sẽ tự động rollback khi có RuntimeException
             throw new RuntimeException("Lỗi khi tạo hóa đơn: " + e.getMessage(), e);
         }
     }
@@ -110,28 +143,25 @@ public class HoaDonService {
     @Transactional
     public HoaDon updateHoaDon(Integer id, DTOhoaDon dtOhoaDon, Integer idNV) throws Exception {
 
-        HoaDon hoaDon = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
-        User user = userRepository.findById(dtOhoaDon.getUserId()).orElseThrow(() -> new Exception("khong tim thay nguoi dung"));
-        User nv = userRepository.findById(idNV).orElseThrow(() -> new Exception("khong tim thay Nhan vien"));
+        // 1. Lấy dữ liệu
+        HoaDon hoaDon = hoaDonRepository.findById(id)
+                .orElseThrow(() -> new Exception("Không tìm thấy hoá đơn"));
 
-        hoaDon.setTamTinh(dtOhoaDon.getTamTinh());
-        hoaDon.setTongTien(dtOhoaDon.getTongTien());
-        hoaDon.setTrangThai(dtOhoaDon.getTrangThai());
-        hoaDon.setSoTienGiam(dtOhoaDon.getSoTienGiam());
-        hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
-        hoaDon.setNgayGiao(dtOhoaDon.getNgayGiao());
-        hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
-        hoaDon.setNv(nv);
+        User user = userRepository.findById(dtOhoaDon.getUserId())
+                .orElseThrow(() -> new Exception("Không tìm thấy người dùng"));
 
-        // Xoá danh sách chi tiết cũ
+        User nv = userRepository.findById(idNV)
+                .orElseThrow(() -> new Exception("Không tìm thấy nhân viên"));
+
+        // 2. Xoá chi tiết cũ
         List<HoaDonChiTiet> oldDetails = hoaDonChiTietRepository.findByIdOrder(id);
         hoaDonChiTietRepository.deleteAll(oldDetails);
 
-        // Tạo lại danh sách chi tiết mới
+        // 3. Tạo lại danh sách chi tiết mới
         List<HoaDonChiTiet> newDetails = new ArrayList<>();
         for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
             SanPham sanPham = san_pham_repo.findById(cartItemDto.getIdSanPham())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + cartItemDto.getIdSanPham()));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + cartItemDto.getIdSanPham()));
 
             HoaDonChiTiet chiTiet = new HoaDonChiTiet();
             chiTiet.setHd(hoaDon);
@@ -143,14 +173,54 @@ public class HoaDonService {
             newDetails.add(chiTiet);
         }
 
-        // Tính lại tổng tiền nếu cần
+        // 4. Tính lại tổng tiền
         BigDecimal tong = newDetails.stream()
                 .map(HoaDonChiTiet::getTongTien)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        hoaDon.setTamTinh(tong);
-        hoaDon.setTongTien(tong.subtract(hoaDon.getSoTienGiam() != null ? hoaDon.getSoTienGiam() : BigDecimal.ZERO));
 
-        // Lưu hoá đơn + chi tiết
+        BigDecimal soTienGiam = BigDecimal.ZERO;
+
+        // 5. Áp dụng lại phiếu giảm giá nếu có (optional)
+        if (dtOhoaDon.getIdPhieuGiam() != null) {
+            PhieuGiamGia phieu = phieuGiamGiaRepo.findById(dtOhoaDon.getIdPhieuGiam())
+                    .orElseThrow(() -> new Exception("Không tìm thấy phiếu giảm giá"));
+
+            boolean isValid = phieu.getSoLuong() > 0
+                    && phieu.getNgayKetThuc().isAfter(LocalDate.now())
+                    && "Đang hoạt động".equals(phieu.getTrangThai())
+                    && tong.compareTo(phieu.getGiaTriToiThieu()) >= 0;
+
+            if (isValid) {
+                switch (phieu.getLoaiPhieuGiam()) {
+                    case "Theo %":
+                        soTienGiam = tong.multiply(phieu.getGiaTriGiam().divide(BigDecimal.valueOf(100)));
+                        if (soTienGiam.compareTo(phieu.getGiamToiDa()) > 0) {
+                            soTienGiam = phieu.getGiamToiDa();
+                        }
+                        break;
+
+                    case "Theo số tiền":
+                        soTienGiam = phieu.getGiaTriGiam();
+                        if (soTienGiam.compareTo(phieu.getGiamToiDa()) > 0) {
+                            soTienGiam = phieu.getGiamToiDa();// không thể giảm nhiều hơn tổng hóa đơn
+                        }
+                        break;
+                }
+            }
+        }
+
+        // 6. Gán dữ liệu vào hoá đơn
+        hoaDon.setUser(user);
+        hoaDon.setNv(nv);
+        hoaDon.setTamTinh(tong);
+        hoaDon.setSoTienGiam(soTienGiam);
+        hoaDon.setTongTien(tong.subtract(soTienGiam));
+        hoaDon.setTrangThai(dtOhoaDon.getTrangThai());
+        hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
+        hoaDon.setNgayGiao(dtOhoaDon.getNgayGiao());
+        hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
+
+        // 7. Lưu dữ liệu
         hoaDonRepository.save(hoaDon);
         hoaDonChiTietRepository.saveAll(newDetails);
 

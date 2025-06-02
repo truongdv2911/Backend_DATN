@@ -6,21 +6,20 @@ import com.example.demo.Repository.Phieu_giam_gia_Repo;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
+@Transactional
 public class Phieu_giam_gia_Service {
 
     @Autowired
     private Phieu_giam_gia_Repo phieuGiamGiaRepo;
 
-
-
-
-
-    public PhieuGiamGia createPhieuGiamGia(@Valid PhieuGiamGiaDTO phieuGiamGiaDTO) {
+    public PhieuGiamGia createPhieuGiamGia(PhieuGiamGiaDTO phieuGiamGiaDTO) {
         String maPhieu = phieuGiamGiaDTO.getMaPhieu();
         if (maPhieu == null || maPhieu.isBlank()) {
             // Giới hạn số lần thử sinh mã để tránh vòng lặp vô hạn
@@ -46,6 +45,10 @@ public class Phieu_giam_gia_Service {
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
         phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
         phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
+
+        if (phieuGiamGiaDTO.getNgayKetThuc().isBefore(phieuGiamGiaDTO.getNgayBatDau())){
+            throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
+        }
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
         phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
@@ -64,20 +67,36 @@ public class Phieu_giam_gia_Service {
     }
 
 
-    public PhieuGiamGia updatePhieuGiamGia(Integer id, @Valid PhieuGiamGiaDTO phieuGiamGiaDTO) {
+    public PhieuGiamGia updatePhieuGiamGia(Integer id, PhieuGiamGiaDTO phieuGiamGiaDTO) {
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
-        phieuGiamGia.setMaPhieu(phieuGiamGiaDTO.getMaPhieu());
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
         phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
         phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
+        if (phieuGiamGiaDTO.getNgayKetThuc().isBefore(phieuGiamGiaDTO.getNgayBatDau())){
+            throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
+        }
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
         phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
         return phieuGiamGiaRepo.save(phieuGiamGia);
     }
 
+    public PhieuGiamGia ThayDoiTrangThaiPhieuGiamGia(Integer id) throws Exception {
+        Optional<PhieuGiamGia> phieuGiamGia = phieuGiamGiaRepo.findById(id);
+        if (phieuGiamGia.isEmpty()){
+            throw new Exception("Khong tim thay id phieu giam gia");
+        }
+
+        if (phieuGiamGia.get().getTrangThai().equals("Ngừng")){
+            phieuGiamGia.get().setTrangThai("Đang hoạt động");
+            return phieuGiamGiaRepo.save(phieuGiamGia.get());
+        }else{
+            phieuGiamGia.get().setTrangThai("Ngừng");
+            return phieuGiamGiaRepo.save(phieuGiamGia.get());
+        }
+    }
 
     public void deletePhieuGiamGia(Integer id) {
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);

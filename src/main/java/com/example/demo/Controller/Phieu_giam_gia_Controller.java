@@ -21,13 +21,14 @@ public class Phieu_giam_gia_Controller {
 
 
     @PostMapping("/Create")
-    public ResponseEntity<?> createPhieuGiamGia(@Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult bindingResult) {
+    public ResponseEntity<?> createPhieuGiamGia(@Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult result) {
         try {
-            if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            if (result.hasErrors()) {
+                List<String> listErorrs = result.getFieldErrors().stream().
+                        map(errors -> errors.getDefaultMessage()).toList();
+                return ResponseEntity.badRequest().body(listErorrs);
             }
-            PhieuGiamGia result = phieuGiamGiaService.createPhieuGiamGia(phieuGiamGiaDTO);
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(phieuGiamGiaService.createPhieuGiamGia(phieuGiamGiaDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -57,18 +58,27 @@ public class Phieu_giam_gia_Controller {
 
 
     @PutMapping("/Update/{id}")
-    public ResponseEntity<?> updatePhieuGiamGia(@PathVariable Integer id, @Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult bindingResult) {
+    public ResponseEntity<?> updatePhieuGiamGia(@PathVariable Integer id, @Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult result) {
         try {
-            if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            if (result.hasErrors()) {
+                List<String> listErorrs = result.getFieldErrors().stream().
+                        map(errors -> errors.getDefaultMessage()).toList();
+                return ResponseEntity.badRequest().body(listErorrs);
             }
-            PhieuGiamGia result = phieuGiamGiaService.updatePhieuGiamGia(id, phieuGiamGiaDTO);
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(phieuGiamGiaService.updatePhieuGiamGia(id, phieuGiamGiaDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
+    @DeleteMapping("/changeStatus/{id}")
+    public ResponseEntity<?> changeStatus(@PathVariable Integer id){
+        try {
+            return ResponseEntity.ok(phieuGiamGiaService.ThayDoiTrangThaiPhieuGiamGia(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
 
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deletePhieuGiamGia(@PathVariable Integer id) {

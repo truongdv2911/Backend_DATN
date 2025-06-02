@@ -1,9 +1,11 @@
 package com.example.demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 @Entity
 @Data
@@ -31,13 +33,13 @@ public class PhieuGiamGia {
     @Column(name = "gia_tri_toi_thieu")
     private BigDecimal giaTriToiThieu;
 
-    @Temporal(TemporalType.DATE)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(name = "ngay_bat_dau")
-    private Date ngayBatDau;
+    private LocalDate ngayBatDau;
 
-    @Temporal(TemporalType.DATE)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(name = "ngay_ket_thuc")
-    private Date ngayKetThuc;
+    private LocalDate ngayKetThuc;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;

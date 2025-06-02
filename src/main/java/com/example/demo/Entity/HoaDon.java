@@ -48,7 +48,7 @@ public class HoaDon {
     @JoinColumn(name = "nv_id", referencedColumnName = "id")
     private User nv;
 
-//    @ManyToOne
-//    @JoinColumn(name = "id_phieu_khuyen_mai", referencedColumnName = "id")
-//    private KhuyenMai km;
+    @ManyToOne
+    @JoinColumn(name = "id_phieu_khuyen_mai", referencedColumnName = "id")
+    private PhieuGiamGia phieuGiamGia;
 }
