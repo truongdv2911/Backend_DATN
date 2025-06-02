@@ -34,17 +34,17 @@ public class Anh_sp_Service {
     private final San_pham_Repo san_pham_Repo;
 
 
-    public AnhSp createAnhSp(Anh_sp_DTO dto) {
-        SanPham sanPham = sanPhamRepository.findById(dto.getSanpham())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        AnhSp anh = new AnhSp();
-        anh.setUrl(dto.getUrl());
-        anh.setMoTa(dto.getMoTa());
-        anh.setThuTu(dto.getThuTu());
-        anh.setAnhChinh(dto.getAnhChinh());
-        anh.setSanPham(sanPham);
-        return anhSpRepository.save(anh);
-    }
+//    public AnhSp createAnhSp(Anh_sp_DTO dto) {
+//        SanPham sanPham = sanPhamRepository.findById(dto.getSanpham())
+//                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+//        AnhSp anh = new AnhSp();
+//        anh.setUrl(dto.getUrl());
+//        anh.setMoTa(dto.getMoTa());
+//        anh.setThuTu(dto.getThuTu());
+//        anh.setAnhChinh(dto.getAnhChinh());
+//        anh.setSanPham(sanPham);
+//        return anhSpRepository.save(anh);
+//    }
 
 
     public List<AnhSp> getAllAnhSp() {
@@ -98,46 +98,76 @@ public class Anh_sp_Service {
     }
 
 
-    public AnhSp uploadAndCreateAnhSp(MultipartFile file, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
-        try {
-            if (file.getSize() > MAX_FILE_SIZE) {
-                throw new RuntimeException("Kích thước file vượt quá 10 MB");
-            }
+    public List<AnhSp> uploadAndCreateAnhSp(MultipartFile[] files, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
+        if (files == null || files.length == 0) {
+            throw new RuntimeException("Chưa chọn ảnh để upload.");
+        }
 
+        try {
+            // Kiểm tra thư mục tồn tại
             if (!Files.exists(uploadDir)) {
                 Files.createDirectories(uploadDir);
             }
 
+            // Lấy sản phẩm
             SanPham sanPham = sanPhamRepository.findById(sanPhamId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
-            String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-            if (originalFilename.contains("..")) {
-                throw new RuntimeException("Tên file không hợp lệ");
+            // Lấy danh sách ảnh đã có của sản phẩm
+            List<AnhSp> existingImages = anhSpRepository.findBySanPhamId(sanPhamId);
+            int totalImagesAfterUpload = existingImages.size() + files.length;
+
+            if (totalImagesAfterUpload > 5) {
+                throw new RuntimeException("Sản phẩm đã có " + existingImages.size() + " ảnh. "
+                        + "Chỉ được upload tối đa 5 ảnh. Chỉ có thể thêm " + (5 - existingImages.size()) + " ảnh nữa.");
             }
 
-            String randomString = generateRandomString(10);
-            String uniqueFilename = "anh_" + randomString + "_" + originalFilename;
-            Path destination = uploadDir.resolve(uniqueFilename);
-            if (Files.exists(destination)) {
-                throw new RuntimeException("File đã tồn tại: " + uniqueFilename);
+            List<AnhSp> anhSpList = new ArrayList<>();
+            boolean daSetAnhDaiDien = existingImages.isEmpty(); // Chỉ gán ảnh đại diện nếu chưa có
+
+            for (int i = 0; i < files.length; i++) {
+                MultipartFile file = files[i];
+
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new RuntimeException("Kích thước file vượt quá 10 MB: " + file.getOriginalFilename());
+                }
+
+                String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+                if (originalFilename.contains("..")) {
+                    throw new RuntimeException("Tên file không hợp lệ: " + originalFilename);
+                }
+
+                String randomString = generateRandomString(10);
+                String uniqueFilename = "anh_" + randomString + "_" + originalFilename;
+                Path destination = uploadDir.resolve(uniqueFilename);
+
+                if (Files.exists(destination)) {
+                    throw new RuntimeException("File đã tồn tại: " + uniqueFilename);
+                }
+
+                Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+
+                String url = "/api/anhsp/images/" + uniqueFilename;
+
+                AnhSp anhSp = new AnhSp();
+                anhSp.setUrl(url);
+                anhSp.setMoTa(moTa);
+                anhSp.setThuTu(thuTu != null ? thuTu + i : existingImages.size() + i);
+                anhSp.setAnhChinh(anhChinh != null && i == 0 && anhChinh);
+                anhSp.setSanPham(sanPham);
+
+                // Gán ảnh đại diện nếu ảnh đầu tiên và chưa có ảnh đại diện
+                if ((Boolean.TRUE.equals(anhChinh) || daSetAnhDaiDien) && i == 0 && !sanPham.getAnhDaiDien().isEmpty()) {
+                    sanPham.setAnhDaiDien(url);
+                    sanPhamRepository.save(sanPham);
+                    daSetAnhDaiDien = false;
+                }
+
+                anhSpList.add(anhSpRepository.save(anhSp));
             }
 
-            Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+            return anhSpList;
 
-            String url = "/api/anhsp/images/" + uniqueFilename;
-
-            AnhSp anhSp = new AnhSp();
-            anhSp.setUrl(url);
-            anhSp.setMoTa(moTa);
-            anhSp.setThuTu(thuTu);
-            anhSp.setAnhChinh(anhChinh);
-            anhSp.setSanPham(sanPham);
-            SanPham sanpham = san_pham_Repo.findById(sanPhamId).orElseThrow(()->
-                    new RuntimeException("ko thay san pham"));
-            sanpham.setAnhDaiDien(url);
-            sanPhamRepository.save(sanpham);
-            return anhSpRepository.save(anhSp);
         } catch (IOException e) {
             throw new RuntimeException("Lỗi khi upload ảnh", e);
         }
@@ -157,9 +187,9 @@ public class Anh_sp_Service {
             throw new RuntimeException("Lỗi khi load ảnh", e);
         }
     }
-    public List<AnhSp> getAnhBySanPhamId(Integer sanPhamId) {
-        return anhSpRepository.findBySanPham_Id(sanPhamId);
-    }
+//    public List<AnhSp> getAnhBySanPhamId(Integer sanPhamId) {
+//        return anhSpRepository.findBySanPham_Id(sanPhamId);
+//    }
 
     private String generateRandomString(int length) {
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -3,10 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.SanPhamDTO;
 
 import com.example.demo.Entity.*;
-import com.example.demo.Repository.Bo_suu_tap_Repo;
-import com.example.demo.Repository.Danh_muc_Repo;
-import com.example.demo.Repository.Khuyen_mai_Repo;
-import com.example.demo.Repository.San_pham_Repo;
+import com.example.demo.Repository.*;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +13,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class San_pham_Service {
     private final San_pham_Repo sanPhamRepository;
+    private final Anh_sp_Repo anhSpRepo;
     private final Danh_muc_Repo danhMucRepository;
     private final Bo_suu_tap_Repo boSuuTapRepository;
     private final Khuyen_mai_Repo khuyenMaiRepository;
@@ -80,13 +80,43 @@ public class San_pham_Service {
         return sanPhamRepository.save(sanPham);
     }
 
-    public Page<SanPham> getAllSanPhams(int page, int size) {
-        try {
-            Pageable pageable = PageRequest.of(page, size);
-            return sanPhamRepository.findAll(pageable);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while fetching paginated SanPham list: " + e.getMessage(), e);
+    public List<SanPhamResponseDTO> getAllSanPhamResponses(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<SanPham> pageSanPhams = sanPhamRepository.findAll(pageable);
+
+        List<SanPhamResponseDTO> dtoList = new ArrayList<>();
+
+        for (SanPham sp : pageSanPhams.getContent()) {
+            List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(sp.getId());
+
+            List<String> anhUrls = listAnh.stream()
+                    .map(AnhSp::getUrl)
+                    .collect(Collectors.toList());
+
+            SanPhamResponseDTO dto = new SanPhamResponseDTO();
+            dto.setId(sp.getId());
+            dto.setTenSanPham(sp.getTenSanPham());
+            dto.setMaSanPham(sp.getMaSanPham());
+            dto.setDoTuoi(sp.getDoTuoi());
+            dto.setMoTa(sp.getMoTa());
+            dto.setGia(sp.getGia());
+            dto.setGiaKhuyenMai(sp.getGiaKhuyenMai());
+            dto.setSoLuong(sp.getSoLuong());
+            dto.setSoLuongManhGhep(sp.getSoLuongManhGhep());
+            dto.setSoLuongTon(sp.getSoLuongTon());
+            dto.setAnhDaiDien(sp.getAnhDaiDien());
+            dto.setSoLuongVote(sp.getSoLuongVote());
+            dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
+            dto.setDanhMucId(sp.getDanhMuc().getId());
+            dto.setBoSuuTapId(sp.getBoSuuTap().getId());
+            dto.setKhuyenMaiId(sp.getKhuyenMai().getId());
+            dto.setTrangThai(sp.getTrangThai());
+            dto.setAnhUrls(anhUrls);
+
+            dtoList.add(dto);
         }
+
+        return dtoList;
     }
 
     public SanPham getSanPhamById(Integer id) {
@@ -197,10 +227,10 @@ public class San_pham_Service {
         return convertToResponseDTO(sanPham);
     }
 
-    public List<SanPhamResponseDTO> getAllSanPhamResponses(int page, int size) {
-        Page<SanPham> sanPhams = getAllSanPhams(page, size);
-        return sanPhams.stream().map(this::convertToResponseDTO).toList();
-    }
+//    public List<SanPhamResponseDTO> getAllSanPhamResponses(int page, int size) {
+//        Page<SanPham> sanPhams = sanPhamRepository.getAllSanPhams(page, size);
+//        return sanPhams.stream().map(this::convertToResponseDTO).toList();
+//    }
     public String generateMaPhieu() {
         String chars = "0123456789";
         StringBuilder sb = new StringBuilder("SP");

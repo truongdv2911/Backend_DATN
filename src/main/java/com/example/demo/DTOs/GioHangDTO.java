@@ -1,10 +1,12 @@
 package com.example.demo.DTOs;
 
+import com.example.demo.Entity.GioHangChiTiet;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -30,4 +32,8 @@ public class GioHangDTO {
      Integer userId;
 
      Integer phieuGiamGiaId;
+
+     List<GioHangChiTiet> gioHangItems (){
+         return null;
+     }
 }

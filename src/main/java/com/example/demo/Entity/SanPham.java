@@ -1,5 +1,6 @@
 package com.example.demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -70,8 +71,9 @@ public class SanPham {
     @JoinColumn(name = "bo_suu_tap_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_BoSuuTap"))
      BoSuuTap boSuuTap;
 
-    @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, orphanRemoval = true)
-     List<AnhSp> anhSps;
+    @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("sanPham")
+    List<AnhSp> anhSps;
     @Column(name = "trang_thai")
      String trangThai;
 

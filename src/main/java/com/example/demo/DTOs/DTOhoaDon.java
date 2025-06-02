@@ -43,5 +43,5 @@ public class DTOhoaDon {
 
     private Integer nvId;
 
-//    private Integer kmId;
+    private Integer idPhieuGiam;
 }

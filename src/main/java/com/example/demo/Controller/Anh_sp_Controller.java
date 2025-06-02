@@ -23,15 +23,15 @@ public class Anh_sp_Controller {
     @Autowired
     private Anh_sp_Service anhSpService;
 
-    @GetMapping("/sanpham/{sanPhamId}")
-    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
-        try {
-            List<AnhSp> list = anhSpService.getAnhBySanPhamId(sanPhamId);
-            return ResponseEntity.ok(list);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Không tìm thấy ảnh cho sản phẩm id: " + sanPhamId);
-        }
-    }
+//    @GetMapping("/sanpham/{sanPhamId}")
+//    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
+//        try {
+//            List<AnhSp> list = anhSpService.getAnhBySanPhamId(sanPhamId);
+//            return ResponseEntity.ok(list);
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body("Không tìm thấy ảnh cho sản phẩm id: " + sanPhamId);
+//        }
+//    }
 
 //    @PostMapping("/create")
 //    public ResponseEntity<?> createAnhSp(@Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
@@ -93,22 +93,21 @@ public class Anh_sp_Controller {
     }
 
 
-    @PostMapping("/upload-image")
-    public ResponseEntity<?> uploadAndCreateAnhSp(
-            @RequestParam("file") MultipartFile file,
+    @PostMapping("/upload-images")
+    public ResponseEntity<?> uploadMultipleAnhSp(
+            @RequestParam("files") MultipartFile[] files,
             @RequestParam("moTa") String moTa,
             @RequestParam("thuTu") Integer thuTu,
             @RequestParam("anhChinh") Boolean anhChinh,
             @RequestParam("sanpham") Integer sanphamId) {
         try {
-            if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body("File không được để trống");
+            if (files == null || files.length == 0) {
+                return ResponseEntity.badRequest().body("Không có file nào được gửi lên.");
             }
-            if (moTa != null && moTa.length() > 1000) {
-                return ResponseEntity.badRequest().body("Mô tả không được vượt quá 1000 ký tự");
-            }
-            AnhSp result = anhSpService.uploadAndCreateAnhSp(file, moTa, thuTu, anhChinh, sanphamId);
+
+            List<AnhSp> result = anhSpService.uploadAndCreateAnhSp(files, moTa, thuTu, anhChinh, sanphamId);
             return ResponseEntity.ok(result);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
