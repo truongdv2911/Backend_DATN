@@ -4,6 +4,7 @@ import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
+
 @Transactional
 public class Phieu_giam_gia_Service {
 
@@ -20,9 +22,9 @@ public class Phieu_giam_gia_Service {
     private Phieu_giam_gia_Repo phieuGiamGiaRepo;
 
     public PhieuGiamGia createPhieuGiamGia(PhieuGiamGiaDTO phieuGiamGiaDTO) {
+
         String maPhieu = phieuGiamGiaDTO.getMaPhieu();
         if (maPhieu == null || maPhieu.isBlank()) {
-            // Giới hạn số lần thử sinh mã để tránh vòng lặp vô hạn
             int maxTry = 10;
             int count = 0;
             do {
@@ -67,6 +69,7 @@ public class Phieu_giam_gia_Service {
     }
 
 
+
     public PhieuGiamGia updatePhieuGiamGia(Integer id, PhieuGiamGiaDTO phieuGiamGiaDTO) {
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
@@ -102,6 +105,8 @@ public class Phieu_giam_gia_Service {
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
         phieuGiamGiaRepo.delete(phieuGiamGia);
     }
+
+
     public String generateMaPhieu() {
         String chars = "0123456789";
         StringBuilder sb = new StringBuilder("PGG");
@@ -110,5 +115,10 @@ public class Phieu_giam_gia_Service {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+
+    public List<PhieuGiamGia> getByLoaiPhieuGiam(String loaiPhieuGiam) {
+        return phieuGiamGiaRepo.findByLoaiPhieuGiam(loaiPhieuGiam);
     }
 }

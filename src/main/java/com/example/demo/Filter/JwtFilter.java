@@ -63,6 +63,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     }
     private Boolean isPassToken(HttpServletRequest request){
+
 //        final List<Pair<String, String>> passTokens = Arrays.asList(
 //                Pair.of("api/lego-store/user/login", "POST"),
 //
@@ -105,5 +106,6 @@ public class JwtFilter extends OncePerRequestFilter {
 //            }
 //        }
         return true;
+
     }
 }

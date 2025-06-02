@@ -24,7 +24,7 @@ public class GioHang {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;
 
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_GioHang_User"))
     private User user;
 

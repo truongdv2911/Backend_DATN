@@ -1,8 +1,9 @@
-package com.example.demo.DTOs.dtoRespone;
+package com.example.demo.Responses;
 
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 public class SanPhamResponseDTO {
@@ -23,4 +24,5 @@ public class SanPhamResponseDTO {
     private Integer boSuuTapId;
     private Integer khuyenMaiId;
     private String trangThai;
+    private List<String> anhUrls;
 }
