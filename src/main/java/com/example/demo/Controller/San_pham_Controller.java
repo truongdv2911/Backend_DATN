@@ -1,13 +1,11 @@
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.SanPhamDTO;
-import com.example.demo.DTOs.dtoRespone.SanPhamResponseDTO;
-import com.example.demo.Entity.SanPham;
+
+import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Service.San_pham_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -70,7 +68,7 @@ public class San_pham_Controller {
                         .map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErrors);
             }
-            return ResponseEntity.ok(sanPhamService.updateSanPham(id, sanPhamDTO));
+            return ResponseEntity.ok(sanPhamService.updateSanPhamResponse(id, sanPhamDTO));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -85,4 +83,6 @@ public class San_pham_Controller {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+
 }

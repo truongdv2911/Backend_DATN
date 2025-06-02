@@ -11,44 +11,14 @@ import java.util.Date;
 import java.util.List;
 
 @Service
-public class Bo_suu_tap_Service {
+public interface Bo_suu_tap_Service {
+    BoSuuTap createBoSuuTap(BoSuuTapDTO boSuuTapDTO);
 
-    @Autowired
-    private Bo_suu_tap_Repo boSuuTapRepo;
+    List<BoSuuTap> getAllBoSuuTap();
 
-    // Create
-    public BoSuuTap createBoSuuTap(@Valid BoSuuTapDTO boSuuTapDTO) {
-        BoSuuTap boSuuTap = new BoSuuTap();
-        boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
-        boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
-        boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());
-        boSuuTap.setNgayTao(new Date());
-        return boSuuTapRepo.save(boSuuTap);
-    }
+    BoSuuTap getBoSuuTapById(Integer id);
 
-    // Read All
-    public List<BoSuuTap> getAllBoSuuTap() {
-        return boSuuTapRepo.findAll();
-    }
+    BoSuuTap updateBoSuuTap(Integer id, BoSuuTapDTO boSuuTapDTO);
 
-    // Read One
-    public BoSuuTap getBoSuuTapById(Integer id) {
-        return boSuuTapRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + id));
-    }
-
-    // Update
-    public BoSuuTap updateBoSuuTap(Integer id, @Valid BoSuuTapDTO boSuuTapDTO) {
-        BoSuuTap boSuuTap = getBoSuuTapById(id);
-        boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
-        boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
-        boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());
-        return boSuuTapRepo.save(boSuuTap);
-    }
-
-    // Delete
-    public void deleteBoSuuTap(Integer id) {
-        BoSuuTap boSuuTap = getBoSuuTapById(id);
-        boSuuTapRepo.delete(boSuuTap);
-    }
+    void deleteBoSuuTap(Integer id);
 }

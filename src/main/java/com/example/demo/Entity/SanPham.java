@@ -72,7 +72,7 @@ public class SanPham {
 
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, orphanRemoval = true)
      List<AnhSp> anhSps;
-
-     String trang_thai;
+    @Column(name = "trang_thai")
+     String trangThai;
 
 }

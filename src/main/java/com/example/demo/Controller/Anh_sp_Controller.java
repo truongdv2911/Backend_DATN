@@ -20,26 +20,33 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/anhsp")
 public class Anh_sp_Controller {
-
     @Autowired
     private Anh_sp_Service anhSpService;
 
-
-    @PostMapping("/create")
-    public ResponseEntity<?> createAnhSp(@Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
+    @GetMapping("/sanpham/{sanPhamId}")
+    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
         try {
-            if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
-            }
-            AnhSp result = anhSpService.createAnhSp(anhSpDTO);
-            return ResponseEntity.ok(result);
+            List<AnhSp> list = anhSpService.getAnhBySanPhamId(sanPhamId);
+            return ResponseEntity.ok(list);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.badRequest().body("Không tìm thấy ảnh cho sản phẩm id: " + sanPhamId);
         }
     }
 
-    // Read All
-    @GetMapping
+//    @PostMapping("/create")
+//    public ResponseEntity<?> createAnhSp(@Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
+//        try {
+//            if (bindingResult.hasErrors()) {
+//                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+//            }
+//            AnhSp result = anhSpService.createAnhSp(anhSpDTO);
+//            return ResponseEntity.ok(result);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
+
+    @GetMapping("/ReadAll")
     public ResponseEntity<?> getAllAnhSp() {
         try {
             List<AnhSp> list = anhSpService.getAllAnhSp();
@@ -61,18 +68,18 @@ public class Anh_sp_Controller {
     }
 
 
-    @PutMapping("/Update/{id}")
-    public ResponseEntity<?> updateAnhSp(@PathVariable Integer id, @Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
-        try {
-            if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
-            }
-            AnhSp result = anhSpService.updateAnhSp(id, anhSpDTO);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
+//    @PutMapping("/Update/{id}")
+//    public ResponseEntity<?> updateAnhSp(@PathVariable Integer id, @Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
+//        try {
+//            if (bindingResult.hasErrors()) {
+//                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+//            }
+//            AnhSp result = anhSpService.updateAnhSp(id, anhSpDTO);
+//            return ResponseEntity.ok(result);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
 
 
     @DeleteMapping("/Delete/{id}")
@@ -119,6 +126,23 @@ public class Anh_sp_Controller {
                     .body(resource);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ảnh: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/update-image/{id}")
+    public ResponseEntity<?> updateImage(
+            @PathVariable Integer id,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("moTa") String moTa,
+            @RequestParam("thuTu") Integer thuTu,
+            @RequestParam("anhChinh") Boolean anhChinh,
+            @RequestParam("sanpham") Integer sanPhamId
+    ) {
+        try {
+            AnhSp anhSp = anhSpService.updateAnhSp(id, file, moTa, thuTu, anhChinh, sanPhamId);
+            return ResponseEntity.ok(anhSp);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 }

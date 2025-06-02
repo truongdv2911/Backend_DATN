@@ -43,6 +43,7 @@ public class WebConfig {
                                 "/api/lego-store/user/register",
                                 "/api/lego-store/user/login",
                                 "/api/lego-store/user/loginBasic"
+
                         ).permitAll()
                         .requestMatchers(
                                 "/api/sanpham/**",
@@ -51,7 +52,8 @@ public class WebConfig {
                                 "/api/anhsp/**",
                                 "/api/bosuutap/**",
                                 "/api/phieugiamgia/**",
-                                "/api/giohang/**"
+                                "/api/giohang/**",
+                                "/api/khuyenmai/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

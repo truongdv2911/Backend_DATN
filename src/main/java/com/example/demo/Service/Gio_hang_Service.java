@@ -15,71 +15,15 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
-public class Gio_hang_Service {
+public interface Gio_hang_Service {
 
-    private final Gio_Hang_Repo gioHangRepository;
-    private final UserRepository userRepository;
-    private final Phieu_giam_gia_Repo phieuGiamGiaRepository;
+    GioHang createGioHang(GioHangDTO gioHangDTO);
 
-    // Create
-    public GioHang createGioHang(@Valid GioHangDTO gioHangDTO) {
-        GioHang gioHang = new GioHang();
-        gioHang.setSoTienGiam(BigDecimal.valueOf(gioHangDTO.getSoTienGiam()));
-        gioHang.setTongTien(BigDecimal.valueOf(gioHangDTO.getTongTien()));
-        gioHang.setTrangThai(gioHangDTO.getTrangThai());
+    List<GioHang> getAllGioHangs();
 
-        // Validate and set User
-        User user = userRepository.findById(gioHangDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + gioHangDTO.getUserId()));
-        gioHang.setUser(user);
+    GioHang getGioHangById(Integer id);
 
-        // Validate and set PhieuGiamGia
-        if (gioHangDTO.getPhieuGiamGiaId() != null) {
-            PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(gioHangDTO.getPhieuGiamGiaId())
-                    .orElseThrow(() -> new RuntimeException("PhieuGiamGia not found with id: " + gioHangDTO.getPhieuGiamGiaId()));
-            gioHang.setPhieuGiamGia(phieuGiamGia);
-        }
+    GioHang updateGioHang(Integer id, GioHangDTO gioHangDTO);
 
-        return gioHangRepository.save(gioHang);
-    }
-
-    // Read All
-    public List<GioHang> getAllGioHangs() {
-        return gioHangRepository.findAll();
-    }
-
-    // Read One
-    public GioHang getGioHangById(Integer id) {
-        return gioHangRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("GioHang not found with id: " + id));
-    }
-
-    // Update
-    public GioHang updateGioHang(Integer id, @Valid GioHangDTO gioHangDTO) {
-        GioHang gioHang = getGioHangById(id);
-        gioHang.setSoTienGiam(BigDecimal.valueOf(gioHangDTO.getSoTienGiam()));
-        gioHang.setTongTien(BigDecimal.valueOf(gioHangDTO.getTongTien()));
-        gioHang.setTrangThai(gioHangDTO.getTrangThai());
-
-        // Validate and set User
-        User user = userRepository.findById(gioHangDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + gioHangDTO.getUserId()));
-        gioHang.setUser(user);
-
-        // Validate and set PhieuGiamGia
-        if (gioHangDTO.getPhieuGiamGiaId() != null) {
-            PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(gioHangDTO.getPhieuGiamGiaId())
-                    .orElseThrow(() -> new RuntimeException("PhieuGiamGia not found with id: " + gioHangDTO.getPhieuGiamGiaId()));
-            gioHang.setPhieuGiamGia(phieuGiamGia);
-        }
-
-        return gioHangRepository.save(gioHang);
-    }
-
-    // Delete
-    public void deleteGioHang(Integer id) {
-        GioHang gioHang = getGioHangById(id);
-        gioHangRepository.delete(gioHang);
-    }
+    void deleteGioHang(Integer id);
 }

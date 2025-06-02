@@ -2,50 +2,19 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.DanhMucDTO;
 import com.example.demo.Entity.DanhMuc;
-import com.example.demo.Repository.Danh_muc_Repo;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class Danh_muc_Service {
+public interface  Danh_muc_Service {
+    DanhMuc createDanhMuc(DanhMucDTO danhMucDTO);
 
-    @Autowired
-    private Danh_muc_Repo danhMucRepo;
+    List<DanhMuc> getAllDanhMuc();
 
-    // Create
-    public DanhMuc createDanhMuc(@Valid DanhMucDTO danhMucDTO) {
-        DanhMuc danhMuc = new DanhMuc();
-        danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
-        danhMuc.setMoTa(danhMucDTO.getMoTa());
-        return danhMucRepo.save(danhMuc);
-    }
+    DanhMuc getDanhMucById(Integer id);
 
-    // Read All
-    public List<DanhMuc> getAllDanhMuc() {
+    DanhMuc updateDanhMuc(Integer id, DanhMucDTO danhMucDTO);
 
-        return danhMucRepo.findAll();
-    }
-
-    // Read One
-    public DanhMuc getDanhMucById(Integer id) {
-        return danhMucRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("DanhMuc not found with id: " + id));
-    }
-
-    // Update
-    public DanhMuc updateDanhMuc(Integer id, @Valid DanhMucDTO danhMucDTO) {
-        DanhMuc danhMuc = getDanhMucById(id);
-        danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
-        danhMuc.setMoTa(danhMucDTO.getMoTa());
-        return danhMucRepo.save(danhMuc);
-    }
-
-    // Delete
-    public void deleteDanhMuc(Integer id) {
-        DanhMuc danhMuc = getDanhMucById(id);
-        danhMucRepo.delete(danhMuc);
-    }
+    void deleteDanhMuc(Integer id);
 }

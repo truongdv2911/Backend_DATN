@@ -55,7 +55,15 @@ public class Phieu_giam_gia_Controller {
         }
     }
 
-
+    @GetMapping("/loai")
+    public ResponseEntity<?> getByLoaiPhieuGiam(@RequestParam String loaiPhieuGiam) {
+        try {
+            List<PhieuGiamGia> list = phieuGiamGiaService.getByLoaiPhieuGiam(loaiPhieuGiam);
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     @PutMapping("/Update/{id}")
     public ResponseEntity<?> updatePhieuGiamGia(@PathVariable Integer id, @Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult bindingResult) {
         try {

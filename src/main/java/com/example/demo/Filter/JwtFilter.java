@@ -67,6 +67,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 Pair.of("api/lego-store/user/login", "POST"),
                 Pair.of("api/lego-store/user/register", "POST"),
                 Pair.of("/api/anhsp", "GET"),
+                Pair.of("/api/anhsp", "POST"),
+                Pair.of("/api/anhsp", "PUT"),
                 Pair.of("/api/sanpham", "GET"),
                 Pair.of("/api/sanpham", "POST"),
                 Pair.of("/api/sanpham", "PUT"),
@@ -87,7 +89,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 Pair.of("/api/giohang", "GET"),
                 Pair.of("/api/giohang", "POST"),
                 Pair.of("/api/giohang", "PUT"),
-                Pair.of("/api/giohang", "DELETE")
+                Pair.of("/api/giohang", "DELETE"),
+                Pair.of("/api/khuyenmai", "DELETE"),
+                Pair.of("/api/khuyenmai", "POST"),
+                Pair.of("/api/khuyenmai", "PUT"),
+                Pair.of("/api/khuyenmai", "GET")
 
 
 

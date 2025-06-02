@@ -1,5 +1,7 @@
 package com.example.demo.DTOs;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -20,11 +22,11 @@ public class GioHangChiTietDTO {
 
     @NotNull(message = "Giá không được để trống")
     @DecimalMin(value = "0.0", message = "Giá phải lớn hơn hoặc bằng 0")
-     Double gia;
+     BigDecimal gia;
 
     @NotNull(message = "Tổng tiền không được để trống")
     @DecimalMin(value = "0.0", message = "Tổng tiền phải lớn hơn hoặc bằng 0")
-     Double tongTien;
+     BigDecimal tongTien;
 
     @NotNull(message = "Số lượng không được để trống")
     @Min(value = 1, message = "Số lượng phải lớn hơn hoặc bằng 1")
