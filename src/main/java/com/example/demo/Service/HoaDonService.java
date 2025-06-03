@@ -202,7 +202,7 @@ public class HoaDonService {
                     case "Theo số tiền":
                         soTienGiam = phieu.getGiaTriGiam();
                         if (soTienGiam.compareTo(phieu.getGiamToiDa()) > 0) {
-                            soTienGiam = phieu.getGiamToiDa();// không thể giảm nhiều hơn tổng hóa đơn
+                            soTienGiam = phieu.getGiamToiDa();
                         }
                         break;
                 }
