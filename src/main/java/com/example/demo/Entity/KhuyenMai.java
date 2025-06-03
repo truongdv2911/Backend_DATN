@@ -1,5 +1,6 @@
 package com.example.demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,10 +42,12 @@ public class KhuyenMai {
 
     @Temporal(TemporalType.DATE)
     @Column(name = "ngay_bat_dau")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate ngayBatDau;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "ngay_ket_thuc")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate ngayKetThuc;
 
     @Column(name = "trang_thai", nullable = false, length = 20)

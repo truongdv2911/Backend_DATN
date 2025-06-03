@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.SanPhamDTO;
 
+import com.example.demo.Entity.SanPham;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Service.San_pham_Service;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ public class San_pham_Controller {
                         .map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErrors);
             }
-            SanPhamResponseDTO responseDTO = sanPhamService.createSanPhamResponse(sanPhamDTO);
+            SanPhamResponseDTO responseDTO = sanPhamService.createSanPham(sanPhamDTO);
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -53,7 +54,7 @@ public class San_pham_Controller {
     @GetMapping("/ReadOne/{id}")
     public ResponseEntity<?> getSanPhamById(@PathVariable Integer id) {
         try {
-            SanPhamResponseDTO responseDTO = sanPhamService.getSanPhamResponseById(id);
+            SanPham responseDTO = sanPhamService.getSanPhamById(id);
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -68,7 +69,7 @@ public class San_pham_Controller {
                         .map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErrors);
             }
-            return ResponseEntity.ok(sanPhamService.updateSanPhamResponse(id, sanPhamDTO));
+            return ResponseEntity.ok(sanPhamService.updateSanPham(id, sanPhamDTO));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
