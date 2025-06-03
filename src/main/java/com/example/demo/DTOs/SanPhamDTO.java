@@ -17,7 +17,7 @@ public class SanPhamDTO {
     @Size(max = 200, message = "Tên sản phẩm không được vượt quá 200 ký tự")
      String tenSanPham;
 
-    @NotBlank(message = "Mã sản phẩm không được để trống")
+//    @NotBlank(message = "Mã sản phẩm không được để trống")
     @Size(max = 200, message = "Mã sản phẩm không được vượt quá 200 ký tự")
      String maSanPham;
 

@@ -19,67 +19,60 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class Gio_hang_chi_tiet_Service {
-
     private final Gio_hang_chi_tiet_Repo gioHangChiTietRepo;
     private final Gio_Hang_Repo gioHangRepo;
     private final San_pham_Repo sanPhamRepo;
 
-    // Create
-    public GioHangChiTiet createGioHangChiTiet(@Valid GioHangChiTietDTO gioHangChiTietDTO) {
-        GioHangChiTiet gioHangChiTiet = new GioHangChiTiet();
 
-        // Validate and set GioHang
-        GioHang gioHang = gioHangRepo.findById(gioHangChiTietDTO.getGioHangId())
-                .orElseThrow(() -> new RuntimeException("GioHang not found with id: " + gioHangChiTietDTO.getGioHangId()));
-        gioHangChiTiet.setGioHang(gioHang);
+    public GioHangChiTiet createGioHangChiTiet(@Valid GioHangChiTietDTO dto) {
+        GioHangChiTiet chiTiet = new GioHangChiTiet();
 
-        // Validate and set SanPham
-        SanPham sanPham = sanPhamRepo.findById(gioHangChiTietDTO.getSanPhamId())
-                .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + gioHangChiTietDTO.getSanPhamId()));
-        gioHangChiTiet.setSanPham(sanPham);
+        GioHang gioHang = gioHangRepo.findById(dto.getGioHangId())
+                .orElseThrow(() -> new RuntimeException("GioHang not found with id: " + dto.getGioHangId()));
+        SanPham sanPham = sanPhamRepo.findById(dto.getSanPhamId())
+                .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + dto.getSanPhamId()));
 
-        gioHangChiTiet.setGia(BigDecimal.valueOf(gioHangChiTietDTO.getGia()));
-        gioHangChiTiet.setTongTien(BigDecimal.valueOf(gioHangChiTietDTO.getTongTien()));
-        gioHangChiTiet.setSoLuong(gioHangChiTietDTO.getSoLuong());
+        chiTiet.setGioHang(gioHang);
+        chiTiet.setSanPham(sanPham);
+        chiTiet.setGia(dto.getGia());
+        chiTiet.setSoLuong(dto.getSoLuong());
+        chiTiet.setTongTien(dto.getTongTien());
 
-        return gioHangChiTietRepo.save(gioHangChiTiet);
+        return gioHangChiTietRepo.save(chiTiet);
     }
 
-    // Read All
+
     public List<GioHangChiTiet> getAllGioHangChiTiet() {
         return gioHangChiTietRepo.findAll();
     }
 
-    // Read One
+
     public GioHangChiTiet getGioHangChiTietById(Integer id) {
         return gioHangChiTietRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("GioHangChiTiet not found with id: " + id));
     }
 
-    // Update
-    public GioHangChiTiet updateGioHangChiTiet(Integer id, @Valid GioHangChiTietDTO gioHangChiTietDTO) {
-        GioHangChiTiet gioHangChiTiet = getGioHangChiTietById(id);
 
-        // Validate and set GioHang
-        GioHang gioHang = gioHangRepo.findById(gioHangChiTietDTO.getGioHangId())
-                .orElseThrow(() -> new RuntimeException("GioHang not found with id: " + gioHangChiTietDTO.getGioHangId()));
-        gioHangChiTiet.setGioHang(gioHang);
+    public GioHangChiTiet updateGioHangChiTiet(Integer id, @Valid GioHangChiTietDTO dto) {
+        GioHangChiTiet chiTiet = getGioHangChiTietById(id);
 
-        // Validate and set SanPham
-        SanPham sanPham = sanPhamRepo.findById(gioHangChiTietDTO.getSanPhamId())
-                .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + gioHangChiTietDTO.getSanPhamId()));
-        gioHangChiTiet.setSanPham(sanPham);
+        GioHang gioHang = gioHangRepo.findById(dto.getGioHangId())
+                .orElseThrow(() -> new RuntimeException("GioHang not found with id: " + dto.getGioHangId()));
+        SanPham sanPham = sanPhamRepo.findById(dto.getSanPhamId())
+                .orElseThrow(() -> new RuntimeException("SanPham not found with id: " + dto.getSanPhamId()));
 
-        gioHangChiTiet.setGia(BigDecimal.valueOf(gioHangChiTietDTO.getGia()));
-        gioHangChiTiet.setTongTien(BigDecimal.valueOf(gioHangChiTietDTO.getTongTien()));
-        gioHangChiTiet.setSoLuong(gioHangChiTietDTO.getSoLuong());
+        chiTiet.setGioHang(gioHang);
+        chiTiet.setSanPham(sanPham);
+        chiTiet.setGia(dto.getGia());
+        chiTiet.setSoLuong(dto.getSoLuong());
+        chiTiet.setTongTien(dto.getTongTien());
 
-        return gioHangChiTietRepo.save(gioHangChiTiet);
+        return gioHangChiTietRepo.save(chiTiet);
     }
 
-    // Delete
+
     public void deleteGioHangChiTiet(Integer id) {
-        GioHangChiTiet gioHangChiTiet = getGioHangChiTietById(id);
-        gioHangChiTietRepo.delete(gioHangChiTiet);
+        GioHangChiTiet chiTiet = getGioHangChiTietById(id);
+        gioHangChiTietRepo.delete(chiTiet);
     }
 }

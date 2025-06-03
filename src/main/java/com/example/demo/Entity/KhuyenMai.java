@@ -1,5 +1,6 @@
 package com.example.demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -40,11 +42,13 @@ public class KhuyenMai {
 
     @Temporal(TemporalType.DATE)
     @Column(name = "ngay_bat_dau")
-    private Date ngayBatDau;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate ngayBatDau;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "ngay_ket_thuc")
-    private Date ngayKetThuc;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate ngayKetThuc;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;

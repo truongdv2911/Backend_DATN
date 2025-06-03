@@ -44,6 +44,7 @@ public class WebConfig {
                                 "/api/lego-store/user/register",
                                 "/api/lego-store/user/login",
                                 "/api/lego-store/user/loginBasic"
+
                         ).permitAll()
                         .requestMatchers(
                                 "/api/sanpham/**",
@@ -53,15 +54,16 @@ public class WebConfig {
                                 "/api/bosuutap/**",
                                 "/api/phieugiamgia/**",
                                 "/api/giohang/**",
+
                                 "api/lego-store/hoa-don/**",
+
                                 "api/lego-store/hoa-don-chi-tiet/**",
                                 "api/lego-store/thong-tin-nguoi-nhan/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                .httpBasic(AbstractHttpConfigurer::disable);
 
         // ✅ Thêm JWT Filter trước UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

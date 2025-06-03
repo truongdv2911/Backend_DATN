@@ -1,8 +1,12 @@
 package com.example.demo.DTOs;
 
+import com.example.demo.Entity.GioHangChiTiet;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -14,11 +18,11 @@ public class GioHangDTO {
 
     @NotNull(message = "Số tiền giảm không được để trống")
     @DecimalMin(value = "0.0", message = "Số tiền giảm phải lớn hơn hoặc bằng 0")
-     Double soTienGiam;
+    BigDecimal soTienGiam;
 
     @NotNull(message = "Tổng tiền không được để trống")
     @DecimalMin(value = "0.0", message = "Tổng tiền phải lớn hơn hoặc bằng 0")
-     Double tongTien;
+     BigDecimal tongTien;
 
     @NotBlank(message = "Trạng thái không được để trống")
     @Size(max = 20, message = "Trạng thái không được vượt quá 20 ký tự")
@@ -28,4 +32,8 @@ public class GioHangDTO {
      Integer userId;
 
      Integer phieuGiamGiaId;
+
+     List<GioHangChiTiet> gioHangItems (){
+         return null;
+     }
 }
