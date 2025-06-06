@@ -77,7 +77,7 @@ public class San_pham_Service {
 
         sanPham.setGiaKhuyenMai(giaKhuyenMai);
         sanPham.setSoLuong(sanPhamDTO.getSoLuong());
-        sanPham.setSoLuongManhGhep(0);
+        sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
         sanPham.setAnhDaiDien(sanPhamDTO.getAnhDaiDien());
         sanPham.setSoLuongVote(0);
@@ -192,7 +192,7 @@ public class San_pham_Service {
             sanPham.setGiaKhuyenMai(giaKhuyenMai);
 
             sanPham.setSoLuong(sanPhamDTO.getSoLuong());
-            sanPham.setSoLuongManhGhep(0);
+            sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
             sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
             sanPham.setAnhDaiDien(null);
             sanPham.setSoLuongVote(0);

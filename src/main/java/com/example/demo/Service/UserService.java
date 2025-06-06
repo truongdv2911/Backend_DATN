@@ -8,6 +8,8 @@ import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -81,8 +84,7 @@ public class UserService {
         return jwtTokenUntil.generationToken(user);
     }
 
-
-//    //login username - password binh thuong
+//    //login token
 //    public String login1(DTOlogin dtoLogin) {
 //        User user = userRepository.findByEmail(dtoLogin.getEmail())
 //                .orElseThrow(() -> new BadCredentialsException("Sai thông tin đăng nhập"));
@@ -100,5 +102,35 @@ public class UserService {
 //
 //        return jwtTokenUntil.generationToken(user);
 //    }
+
+    public User updateUser(Integer id, DTOuser dtOuser) throws Exception {
+        try {
+            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Khong tim thay id user"));
+            if (userRepository.existsByEmail(dtOuser.getEmail())
+                    && !user.getEmail().equals(dtOuser.getEmail())){
+                throw new Exception("Email da ton tai");
+            }
+            if (userRepository.findById(id).isEmpty()){
+                throw new Exception("Khong tim thay id user");
+            }
+            user.setTen(dtOuser.getTen());
+            user.setEmail(dtOuser.getEmail());
+            user.setMatKhau(passwordEncoder.encode(dtOuser.getMatKhau()));
+            user.setDiaChi(dtOuser.getDiaChi());
+            user.setSdt(dtOuser.getSdt());
+            user.setNgaySinh(dtOuser.getNgaySinh());
+            user.setTrangThai(dtOuser.getTrangThai());
+            user.setRole(roleRepository.findById(dtOuser.getRole_id()).orElseThrow(()->
+                    new RuntimeException("role khong ton tai")));
+            return userRepository.save(user);
+        }catch (Exception e){
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public Page<User> pageUser(PageRequest pageRequest){
+        return userRepository.pageUser(pageRequest);
+    }
+
 }
 
