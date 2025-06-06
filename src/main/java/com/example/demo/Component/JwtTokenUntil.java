@@ -31,6 +31,7 @@ public class JwtTokenUntil {
         public String generationToken(User user) {
             Map<String, Object> claims = new HashMap<>();
             claims.put("email", user.getEmail());
+            claims.put("role", "role_" + user.getRole().getName());
             claims.put("userId", user.getId());
             try {
                 String token = Jwts.builder()

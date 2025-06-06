@@ -33,7 +33,5 @@ public class GioHangDTO {
 
      Integer phieuGiamGiaId;
 
-     List<GioHangChiTiet> gioHangItems (){
-         return null;
-     }
+     List<GioHangChiTiet> gioHangItems;
 }

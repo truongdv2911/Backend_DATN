@@ -1,6 +1,7 @@
 package com.example.demo.DTOs;
 
 import com.example.demo.Entity.Role;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -10,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -34,7 +36,9 @@ public class DTOuser {
     )
     private String matKhau;
     private String sdt;
-    private Date ngaySinh;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    private LocalDate ngaySinh;
     private LocalDateTime ngayTao;
     private String diaChi;
     private Integer trangThai;

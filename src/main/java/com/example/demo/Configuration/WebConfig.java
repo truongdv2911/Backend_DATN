@@ -58,9 +58,15 @@ public class WebConfig {
                                 "api/lego-store/hoa-don/**",
 
                                 "api/lego-store/hoa-don-chi-tiet/**",
-                                "api/lego-store/thong-tin-nguoi-nhan/**"
+                                "api/lego-store/thong-tin-nguoi-nhan/**",
+                                "api/**"
                         ).permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth -> oauth
+                    .loginPage("/api/lego-store/user/login")
+                    .defaultSuccessUrl("/api/lego-store/user/success", true)
+                    .failureUrl("/api/lego-store/user/login?error=true")
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable);
