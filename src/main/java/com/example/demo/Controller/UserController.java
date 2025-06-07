@@ -83,13 +83,10 @@ public class UserController {
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
             }
-            //            tạm comment token nhé
-            //            String token = userService.login(dtOlogin);
-            //            return ResponseEntity.ok(new LoginResponse(token,"Dang nhap thanh cong"));
+//                        tạm comment token nhé
+                        String token = userService.login(dtOlogin);
 
             //Lưu vào session or localStogare
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(dtOlogin.getEmail(), dtOlogin.getMatKhau()));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
             HttpSession hs= request.getSession(true);
             hs.setAttribute("username", dtOlogin.getEmail());
 
