@@ -28,7 +28,7 @@ public class GioHangService {
         if (gioHang == null) {
             gioHang = new GioHang();
             gioHang.setUser(userRepository.findById(userId).orElseThrow(()-> new RuntimeException("khong tim thay id user"))); // Giả định UserService có findById
-            gioHang.setTrangThai("ACTIVE");
+            gioHang.setTrangThai("Chưa thanh toán");
             gioHang.setTongTien(BigDecimal.ZERO);
             gioHang.setSoTienGiam(BigDecimal.ZERO);
             gioHang = gioHangRepository.save(gioHang);
