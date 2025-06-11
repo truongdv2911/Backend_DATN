@@ -20,8 +20,8 @@ public class SanPhamResponseDTO {
     private String anhDaiDien;
     private Integer soLuongVote;
     private Double danhGiaTrungBinh;
-    private Integer danhMucId;
-    private Integer boSuuTapId;
+    private String tenDanhMuc;
+    private String tenBoSuuTap;
     private Integer khuyenMaiId;
     private String trangThai;
     private List<String> anhUrls;
