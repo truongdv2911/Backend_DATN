@@ -130,8 +130,8 @@ public class San_pham_Service {
             dto.setAnhDaiDien(sp.getAnhDaiDien());
             dto.setSoLuongVote(sp.getSoLuongVote());
             dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
-            dto.setDanhMucId(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
-            dto.setBoSuuTapId(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null);
+            dto.setTenDanhMuc(sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDanhMuc() : null);
+            dto.setTenBoSuuTap(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getTenBoSuuTap() : null);
             dto.setKhuyenMaiId(sp.getKhuyenMai() != null ? sp.getKhuyenMai().getId() : null);
             dto.setTrangThai(sp.getTrangThai());
             dto.setAnhUrls(anhUrls);
@@ -248,8 +248,8 @@ public class San_pham_Service {
         dto.setAnhDaiDien(sanPham.getAnhDaiDien());
         dto.setSoLuongVote(sanPham.getSoLuongVote());
         dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
-        dto.setDanhMucId(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
-        dto.setBoSuuTapId(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
+        dto.setTenDanhMuc(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getTenDanhMuc() : null);
+        dto.setTenBoSuuTap(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getTenBoSuuTap() : null);
         dto.setKhuyenMaiId(sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
         dto.setAnhUrls(anhUrls);
