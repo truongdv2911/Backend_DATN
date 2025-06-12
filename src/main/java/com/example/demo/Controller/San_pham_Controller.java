@@ -74,7 +74,7 @@ public class San_pham_Controller {
                 return ResponseEntity.badRequest().body(listErrors);
             }
             SanPham sanPham = san_pham_repo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id san pham"));
-            if (isDifferent(sanPhamDTO, sanPham)){
+            if (!isDifferent(sanPhamDTO, sanPham)){
                 return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
             }
             return ResponseEntity.ok(sanPhamService.updateSanPham(id, sanPhamDTO));
@@ -94,18 +94,15 @@ public class San_pham_Controller {
     }
     public static boolean isDifferent(SanPhamDTO sanPhamDTO, SanPham sanPham) {
         return !Objects.equals(sanPhamDTO.getTenSanPham(), sanPham.getTenSanPham()) ||
-                !Objects.equals(sanPhamDTO.getMaSanPham(), sanPham.getMaSanPham()) ||
                 !Objects.equals(sanPhamDTO.getDoTuoi(), sanPham.getDoTuoi()) ||
                 !Objects.equals(sanPhamDTO.getMoTa(), sanPham.getMoTa()) ||
-                !Objects.equals(sanPhamDTO.getGia(), sanPham.getGia()) ||
-                !Objects.equals(sanPhamDTO.getGiaKhuyenMai(), sanPham.getGiaKhuyenMai()) ||
+                !(sanPhamDTO.getGia().compareTo(sanPham.getGia()) == 0) ||
+                !(sanPhamDTO.getGiaKhuyenMai().compareTo(sanPham.getGiaKhuyenMai()) ==0) ||
                 !Objects.equals(sanPhamDTO.getSoLuong(), sanPham.getSoLuong()) ||
                 !Objects.equals(sanPhamDTO.getSoLuongManhGhep(), sanPham.getSoLuongManhGhep()) ||
                 !Objects.equals(sanPhamDTO.getSoLuongTon(), sanPham.getSoLuongTon()) ||
-                !Objects.equals(sanPhamDTO.getAnhDaiDien(), sanPham.getAnhDaiDien()) ||
                 !Objects.equals(sanPhamDTO.getSoLuongVote(), sanPham.getSoLuongVote()) ||
                 !Objects.equals(sanPhamDTO.getDanhGiaTrungBinh(), sanPham.getDanhGiaTrungBinh()) ||
-                !Objects.equals(sanPhamDTO.getKhuyenMaiId(), sanPham.getKhuyenMai().getId()) ||
                 !Objects.equals(sanPhamDTO.getDanhMucId(), sanPham.getDanhMuc().getId()) ||
                 !Objects.equals(sanPhamDTO.getBoSuuTapId(), sanPham.getBoSuuTap().getId()) ||
                 !Objects.equals(sanPhamDTO.getTrangThai(), sanPham.getTrangThai());

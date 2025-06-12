@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -103,12 +104,17 @@ public class Khuyen_mai_Controller {
         if (dto == null || entity == null) return true;
 
         return !Objects.equals(dto.getSoLuong(), entity.getSoLuong())
-                || !Objects.equals(dto.getGiaTriGiam(), entity.getGiaTriGiam())
-                || !Objects.equals(dto.getGiaTriToiDa(), entity.getGiaTriToiDa())
+                || compareBigDecimal(dto.getGiaTriGiam(), entity.getGiaTriGiam())
+                || compareBigDecimal(dto.getGiaTriToiDa(), entity.getGiaTriToiDa())
                 || !Objects.equals(dto.getMoTa(), entity.getMoTa())
                 || !Objects.equals(dto.getPhanTramGiam(), entity.getPhanTramGiam())
                 || !Objects.equals(dto.getNgayBatDau(), entity.getNgayBatDau())
                 || !Objects.equals(dto.getNgayKetThuc(), entity.getNgayKetThuc())
                 || !Objects.equals(dto.getTrangThai(), entity.getTrangThai());
+    }
+    private static boolean compareBigDecimal(BigDecimal a, BigDecimal b) {
+        if (a == null && b == null) return false; // giống nhau
+        if (a == null || b == null) return true;  // khác nhau
+        return a.compareTo(b) != 0;
     }
 }

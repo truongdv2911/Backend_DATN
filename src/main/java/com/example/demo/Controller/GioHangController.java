@@ -113,8 +113,8 @@ public class GioHangController {
     }
 
     // Xem giỏ hàng
-    @GetMapping
-    public ResponseEntity<?> getCart(HttpServletRequest request) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCart(@PathVariable Integer id, HttpServletRequest request) {
         try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("username") == null) {
@@ -123,7 +123,7 @@ public class GioHangController {
             String email = (String) session.getAttribute("username");
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
-            GioHang gioHang = gioHangService.getCart(userId);
+            GioHang gioHang = gioHangService.getCart(id);
             return ResponseEntity.ok(gioHang);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
