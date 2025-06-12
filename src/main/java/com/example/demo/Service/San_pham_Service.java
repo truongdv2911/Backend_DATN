@@ -130,8 +130,8 @@ public class San_pham_Service {
             dto.setAnhDaiDien(sp.getAnhDaiDien());
             dto.setSoLuongVote(sp.getSoLuongVote());
             dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
-            dto.setTenDanhMuc(sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDanhMuc() : null);
-            dto.setTenBoSuuTap(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getTenBoSuuTap() : null);
+            dto.setIdDanhMuc(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
+            dto.setIdBoSuuTap(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null);
             dto.setKhuyenMaiId(sp.getKhuyenMai() != null ? sp.getKhuyenMai().getId() : null);
             dto.setTrangThai(sp.getTrangThai());
             dto.setAnhUrls(anhUrls);
@@ -152,22 +152,9 @@ public class San_pham_Service {
     }
 
     public SanPhamResponseDTO updateSanPham(Integer id, @Valid SanPhamDTO sanPhamDTO) {
-        String maSanPham = sanPhamDTO.getMaSanPham();
-        if (maSanPham == null || maSanPham.isBlank()) {
-            int maxTry = 10;
-            int count = 0;
-            do {
-                maSanPham = generateMaPhieu();
-                count++;
-                if (count > maxTry) {
-                    throw new RuntimeException("Không thể sinh mã san pham mới, vui lòng thử lại!");
-                }
-            } while (sanPhamRepository.existsByMaSanPham(maSanPham));
-        }
         try {
             SanPham sanPham = getSanPhamById(id);
             sanPham.setTenSanPham(sanPhamDTO.getTenSanPham());
-            sanPham.setMaSanPham(maSanPham);
             sanPham.setDoTuoi(sanPhamDTO.getDoTuoi());
             sanPham.setMoTa(sanPhamDTO.getMoTa());
             sanPham.setGia(sanPhamDTO.getGia());
@@ -248,8 +235,8 @@ public class San_pham_Service {
         dto.setAnhDaiDien(sanPham.getAnhDaiDien());
         dto.setSoLuongVote(sanPham.getSoLuongVote());
         dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
-        dto.setTenDanhMuc(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getTenDanhMuc() : null);
-        dto.setTenBoSuuTap(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getTenBoSuuTap() : null);
+        dto.setIdDanhMuc(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
+        dto.setIdBoSuuTap(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
         dto.setKhuyenMaiId(sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
         dto.setAnhUrls(anhUrls);

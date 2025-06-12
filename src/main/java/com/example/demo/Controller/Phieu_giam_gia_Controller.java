@@ -12,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -112,11 +113,16 @@ public class Phieu_giam_gia_Controller {
 
         return !Objects.equals(phieuGiamGia.getSoLuong(), other.getSoLuong())
                 || !Objects.equals(phieuGiamGia.getLoaiPhieuGiam(), other.getLoaiPhieuGiam())
-                || !Objects.equals(phieuGiamGia.getGiaTriGiam(), other.getGiaTriGiam())
-                || !Objects.equals(phieuGiamGia.getGiamToiDa(), other.getGiamToiDa())
-                || !Objects.equals(phieuGiamGia.getGiaTriToiThieu(), other.getGiaTriToiThieu())
+                || compareBigDecimal(phieuGiamGia.getGiaTriGiam(), other.getGiaTriGiam())
+                || compareBigDecimal(phieuGiamGia.getGiamToiDa(), other.getGiamToiDa())
+                || compareBigDecimal(phieuGiamGia.getGiaTriToiThieu(), other.getGiaTriToiThieu())
                 || !Objects.equals(phieuGiamGia.getNgayBatDau(), other.getNgayBatDau())
                 || !Objects.equals(phieuGiamGia.getNgayKetThuc(), other.getNgayKetThuc())
                 || !Objects.equals(phieuGiamGia.getTrangThai(), other.getTrangThai());
+    }
+    private static boolean compareBigDecimal(BigDecimal a, BigDecimal b) {
+        if (a == null && b == null) return false; // giống nhau
+        if (a == null || b == null) return true;  // khác nhau
+        return a.compareTo(b) != 0;
     }
 }

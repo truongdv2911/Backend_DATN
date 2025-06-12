@@ -86,6 +86,9 @@ public class Phieu_giam_gia_Service {
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
         phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
+        if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0){
+            throw new IllegalArgumentException("Gia tri giam khong duoc lon hon gia tri giam toi da");
+        }
         return phieuGiamGiaRepo.save(phieuGiamGia);
     }
 
