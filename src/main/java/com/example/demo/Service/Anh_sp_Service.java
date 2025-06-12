@@ -6,6 +6,7 @@ import com.example.demo.Entity.SanPham;
 
 import com.example.demo.Repository.Anh_sp_Repo;
 import com.example.demo.Repository.San_pham_Repo;
+import io.jsonwebtoken.lang.Strings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -33,6 +34,8 @@ public class Anh_sp_Service {
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
     private final San_pham_Repo san_pham_Repo;
 
+    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/png", "image/jpeg", "image/jpg", "image/gif");
+    private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "gif");
 
 //    public AnhSp createAnhSp(Anh_sp_DTO dto) {
 //        SanPham sanPham = sanPhamRepository.findById(dto.getSanpham())
@@ -135,6 +138,18 @@ public class Anh_sp_Service {
                 String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
                 if (originalFilename.contains("..")) {
                     throw new RuntimeException("Tên file không hợp lệ: " + originalFilename);
+                }
+
+                // Kiểm tra MIME type
+                String contentType = file.getContentType();
+                if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+                    throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (.jpg, .jpeg, .png, .gif)");
+                }
+
+                // Kiểm tra đuôi file
+                String extension = Strings.getFilenameExtension(originalFilename);
+                if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+                    throw new IllegalArgumentException("Định dạng file ảnh không hợp lệ: ." + extension);
                 }
 
                 String randomString = generateRandomString(10);

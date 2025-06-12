@@ -2,8 +2,10 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
+import com.example.demo.Repository.Phieu_giam_gia_Repo;
 import com.example.demo.Service.Phieu_giam_gia_Service;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -11,13 +13,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/phieugiamgia")
+@RequiredArgsConstructor
 public class Phieu_giam_gia_Controller {
-
-    @Autowired
-    private Phieu_giam_gia_Service phieuGiamGiaService;
+    private final Phieu_giam_gia_Service phieuGiamGiaService;
+    private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
 
 
     @PostMapping("/Create")
@@ -66,12 +69,18 @@ public class Phieu_giam_gia_Controller {
         }
     }
     @PutMapping("/Update/{id}")
-    public ResponseEntity<?> updatePhieuGiamGia(@PathVariable Integer id, @Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult result) {
+    public ResponseEntity<?> updatePhieuGiamGia(@PathVariable Integer id,
+                                                @Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO,
+                                                BindingResult result) {
         try {
             if (result.hasErrors()) {
                 List<String> listErorrs = result.getFieldErrors().stream().
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
+            }
+            PhieuGiamGia phieuGiamGia = phieuGiamGiaRepo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id phieu giam"));
+            if (!isDifferent(phieuGiamGiaDTO, phieuGiamGia)){
+                return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
             }
             return ResponseEntity.ok(phieuGiamGiaService.updatePhieuGiamGia(id, phieuGiamGiaDTO));
         } catch (Exception e) {
@@ -96,5 +105,18 @@ public class Phieu_giam_gia_Controller {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    public static boolean isDifferent(PhieuGiamGiaDTO other, PhieuGiamGia phieuGiamGia) {
+        if (other == null) return true;
+
+        return !Objects.equals(phieuGiamGia.getSoLuong(), other.getSoLuong())
+                || !Objects.equals(phieuGiamGia.getLoaiPhieuGiam(), other.getLoaiPhieuGiam())
+                || !Objects.equals(phieuGiamGia.getGiaTriGiam(), other.getGiaTriGiam())
+                || !Objects.equals(phieuGiamGia.getGiamToiDa(), other.getGiamToiDa())
+                || !Objects.equals(phieuGiamGia.getGiaTriToiThieu(), other.getGiaTriToiThieu())
+                || !Objects.equals(phieuGiamGia.getNgayBatDau(), other.getNgayBatDau())
+                || !Objects.equals(phieuGiamGia.getNgayKetThuc(), other.getNgayKetThuc())
+                || !Objects.equals(phieuGiamGia.getTrangThai(), other.getTrangThai());
     }
 }

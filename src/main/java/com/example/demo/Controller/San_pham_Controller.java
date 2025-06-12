@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.DTOs.SanPhamDTO;
 
 import com.example.demo.Entity.SanPham;
+import com.example.demo.Repository.San_pham_Repo;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Service.San_pham_Service;
 import jakarta.validation.Valid;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/sanpham")
@@ -20,6 +23,7 @@ import java.util.Map;
 public class San_pham_Controller {
 
     private final San_pham_Service sanPhamService;
+    private final San_pham_Repo san_pham_repo;
 
     @PostMapping("/Create")
     public ResponseEntity<?> createSanPham(@Valid @RequestBody SanPhamDTO sanPhamDTO, BindingResult result) {
@@ -69,6 +73,10 @@ public class San_pham_Controller {
                         .map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErrors);
             }
+            SanPham sanPham = san_pham_repo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id san pham"));
+            if (isDifferent(sanPhamDTO, sanPham)){
+                return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
+            }
             return ResponseEntity.ok(sanPhamService.updateSanPham(id, sanPhamDTO));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -84,6 +92,23 @@ public class San_pham_Controller {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
-
+    public static boolean isDifferent(SanPhamDTO sanPhamDTO, SanPham sanPham) {
+        return !Objects.equals(sanPhamDTO.getTenSanPham(), sanPham.getTenSanPham()) ||
+                !Objects.equals(sanPhamDTO.getMaSanPham(), sanPham.getMaSanPham()) ||
+                !Objects.equals(sanPhamDTO.getDoTuoi(), sanPham.getDoTuoi()) ||
+                !Objects.equals(sanPhamDTO.getMoTa(), sanPham.getMoTa()) ||
+                !Objects.equals(sanPhamDTO.getGia(), sanPham.getGia()) ||
+                !Objects.equals(sanPhamDTO.getGiaKhuyenMai(), sanPham.getGiaKhuyenMai()) ||
+                !Objects.equals(sanPhamDTO.getSoLuong(), sanPham.getSoLuong()) ||
+                !Objects.equals(sanPhamDTO.getSoLuongManhGhep(), sanPham.getSoLuongManhGhep()) ||
+                !Objects.equals(sanPhamDTO.getSoLuongTon(), sanPham.getSoLuongTon()) ||
+                !Objects.equals(sanPhamDTO.getAnhDaiDien(), sanPham.getAnhDaiDien()) ||
+                !Objects.equals(sanPhamDTO.getSoLuongVote(), sanPham.getSoLuongVote()) ||
+                !Objects.equals(sanPhamDTO.getDanhGiaTrungBinh(), sanPham.getDanhGiaTrungBinh()) ||
+                !Objects.equals(sanPhamDTO.getKhuyenMaiId(), sanPham.getKhuyenMai().getId()) ||
+                !Objects.equals(sanPhamDTO.getDanhMucId(), sanPham.getDanhMuc().getId()) ||
+                !Objects.equals(sanPhamDTO.getBoSuuTapId(), sanPham.getBoSuuTap().getId()) ||
+                !Objects.equals(sanPhamDTO.getTrangThai(), sanPham.getTrangThai());
+    }
 
 }
