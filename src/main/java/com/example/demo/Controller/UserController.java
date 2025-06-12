@@ -67,12 +67,12 @@ public class UserController {
                 // Lưu thông tin vào session
                 HttpSession session = request.getSession(true);
                 session.setAttribute("username", email);
-                return ResponseEntity.ok(new LoginResponse(email, "Đăng nhập bằng Google thành công"));
+                return ResponseEntity.ok(new LoginResponse(user.get().getId(), user.get().getTen(), user.get().getEmail(), "Đăng nhập bằng Google thành công"));
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(new LoginResponse(null, "Lỗi khi xử lý đăng nhập Google"));
+                return ResponseEntity.badRequest().body(new LoginResponse(null, null,null, "Lỗi khi xử lý đăng nhập Google"));
             }
         }
-        return ResponseEntity.badRequest().body(new LoginResponse(null, "Xác thực không hợp lệ"));
+        return ResponseEntity.badRequest().body(new LoginResponse(null, null,null, "Xác thực không hợp lệ"));
     }
 
     @PostMapping("/login")
@@ -93,9 +93,9 @@ public class UserController {
             User user = userRepository.findByEmail(dtOlogin.getEmail()).orElseThrow(()-> new RuntimeException("khong tim thay email user"));
             gioHangService.getOrCreateCart(user.getId());
 
-            return ResponseEntity.ok(new LoginResponse(dtOlogin.getEmail(), "Dang nhap thanh cong"));
+            return ResponseEntity.ok(new LoginResponse(user.getId(), user.getTen(), dtOlogin.getEmail(), "Dang nhap thanh cong"));
         }    catch (Exception e){
-            return ResponseEntity.badRequest().body(new LoginResponse(null,"Sai thong tin dang nhap"));
+            return ResponseEntity.badRequest().body("Sai thong tin dang nhap");
         }
 
     }

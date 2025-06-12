@@ -18,9 +18,9 @@ import java.util.Random;
 public class Khuyen_mai_Service {
     private final Khuyen_mai_Repo khuyenMaiRepo;
 
-    public KhuyenMai createKhuyenMai(@Valid KhuyenMaiDTO khuyenMaiDTO) {
-        String maKhuyenMai = khuyenMaiDTO.getMaKhuyenMai();
-        if (maKhuyenMai == null || maKhuyenMai.isBlank()) {
+    public KhuyenMai createKhuyenMai(@Valid KhuyenMaiDTO khuyenMaiDTO) throws Exception {
+        try {
+            String maKhuyenMai = "";
             int maxTry = 10;
             int count = 0;
             do {
@@ -30,23 +30,24 @@ public class Khuyen_mai_Service {
                     throw new RuntimeException("Không thể sinh mã phiếu mới, vui lòng thử lại!");
                 }
             } while (khuyenMaiRepo.existsByMaKhuyenMai(maKhuyenMai));
-        } else {
-            if (khuyenMaiRepo.existsByMaKhuyenMai(maKhuyenMai)) {
-                throw new RuntimeException("Mã phiếu đã tồn tại!");
-            }
-        }
 
-        KhuyenMai khuyenMai = new KhuyenMai();
-        khuyenMai.setMaKhuyenMai(maKhuyenMai);
-        khuyenMai.setSoLuong(khuyenMaiDTO.getSoLuong());
-        khuyenMai.setGiaTriGiam(khuyenMaiDTO.getGiaTriGiam());
-        khuyenMai.setGiaTriToiDa(khuyenMaiDTO.getGiaTriToiDa());
-        khuyenMai.setMoTa(khuyenMaiDTO.getMoTa());
-        khuyenMai.setPhanTramGiam(khuyenMaiDTO.getPhanTramGiam());
-        khuyenMai.setNgayBatDau(khuyenMaiDTO.getNgayBatDau());
-        khuyenMai.setNgayKetThuc(khuyenMaiDTO.getNgayKetThuc());
-        khuyenMai.setTrangThai(tinhTrangThai(khuyenMaiDTO));
-        return khuyenMaiRepo.save(khuyenMai);
+            KhuyenMai khuyenMai = new KhuyenMai();
+            khuyenMai.setMaKhuyenMai(maKhuyenMai);
+            khuyenMai.setSoLuong(khuyenMaiDTO.getSoLuong());
+            khuyenMai.setGiaTriGiam(khuyenMaiDTO.getGiaTriGiam());
+            khuyenMai.setGiaTriToiDa(khuyenMaiDTO.getGiaTriToiDa());
+            khuyenMai.setMoTa(khuyenMaiDTO.getMoTa());
+            khuyenMai.setPhanTramGiam(khuyenMaiDTO.getPhanTramGiam());
+            khuyenMai.setNgayBatDau(khuyenMaiDTO.getNgayBatDau());
+            khuyenMai.setNgayKetThuc(khuyenMaiDTO.getNgayKetThuc());
+            khuyenMai.setTrangThai(tinhTrangThai(khuyenMaiDTO));
+            if (khuyenMaiDTO.getGiaTriGiam().compareTo(khuyenMaiDTO.getGiaTriToiDa())>0){
+                throw new IllegalArgumentException("Gia tri giam khong duoc lon hon gia tri giam toi da");
+            }
+            return khuyenMaiRepo.save(khuyenMai);
+        }catch (Exception e){
+            throw new Exception("Loi khi tao phieu giam gia", e);
+        }
     }
 
     public List<KhuyenMai> getAllKhuyenMai() {
@@ -108,13 +109,21 @@ public class Khuyen_mai_Service {
         if (dto.getSoLuong() == 0) {
             return "Ngừng";
         }
-
         LocalDate today = LocalDate.now();
+        LocalDate ngayBatDau = dto.getNgayBatDau();
+        LocalDate ngayKetThuc = dto.getNgayKetThuc();
 
-        if (dto.getNgayBatDau() != null && dto.getNgayKetThuc() != null) {
-            if (!dto.getNgayBatDau().isAfter(today) && !dto.getNgayKetThuc().isBefore(today)) {
+        if (ngayBatDau != null && ngayKetThuc != null) {
+            if ((today.isEqual(ngayBatDau) || today.isAfter(ngayBatDau)) &&
+                    (today.isEqual(ngayKetThuc) || today.isBefore(ngayKetThuc))) {
                 return "Đang hoạt động";
-            } else if (dto.getNgayKetThuc().isBefore(today)) {
+            }
+
+            if (today.isBefore(ngayBatDau)) {
+                return "Ngừng";
+            }
+
+            if (today.isAfter(ngayKetThuc)) {
                 return "Hết hạn";
             }
         }

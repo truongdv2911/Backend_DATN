@@ -53,8 +53,5 @@ public class KhuyenMai {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;
 
-    @OneToMany(mappedBy = "khuyenMai", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // Quản lý phía cha
-    private List<SanPham> sanPhams;
 
 }

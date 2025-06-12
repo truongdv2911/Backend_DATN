@@ -1,6 +1,7 @@
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.DTOthongTinNguoiNhan;
+import com.example.demo.Entity.ThongTinNguoiNhan;
 import com.example.demo.Repository.ThongTinNguoiNhanRepository;
 import com.example.demo.Service.ThongTinNguoiNhanService;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/lego-store/thong-tin-nguoi-nhan")
@@ -53,6 +55,12 @@ public class ThongTinNguoiNhanController {
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
             }
+            ThongTinNguoiNhan entity =thongTinNguoiNhanRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi"));
+
+            if (!isDifferent(dtOthongTinNguoiNhan, entity)) {
+                throw new IllegalArgumentException("Không có gì thay đổi để cập nhật");
+            }
             return ResponseEntity.ok(thongTinNguoiNhanService.updateThongTin(id, dtOthongTinNguoiNhan));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -67,5 +75,16 @@ public class ThongTinNguoiNhanController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    public boolean isDifferent(DTOthongTinNguoiNhan dto, ThongTinNguoiNhan entity) {
+        if (!Objects.equals(dto.getHoTen(), entity.getHoTen())) return true;
+        if (!Objects.equals(dto.getSdt(), entity.getSdt())) return true;
+        if (!Objects.equals(dto.getDuong(), entity.getDuong())) return true;
+        if (!Objects.equals(dto.getXa(), entity.getXa())) return true;
+        if (!Objects.equals(dto.getHuyen(), entity.getHuyen())) return true;
+        if (!Objects.equals(dto.getThanhPho(), entity.getThanhPho())) return true;
+        if (!Objects.equals(dto.getIsMacDinh(), entity.getIsMacDinh())) return true;
+        if (!Objects.equals(dto.getIdUser(), entity.getUser().getId())) return true;
 
+        return false; // tất cả giống nhau
+    }
 }

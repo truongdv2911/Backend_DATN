@@ -1,7 +1,9 @@
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.KhuyenMaiDTO;
+import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.KhuyenMai;
+import com.example.demo.Repository.Khuyen_mai_Repo;
 import com.example.demo.Service.Khuyen_mai_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/khuyenmai")
@@ -20,6 +23,7 @@ public class Khuyen_mai_Controller {
 
 
     private final Khuyen_mai_Service khuyenMaiService;
+    private final Khuyen_mai_Repo khuyenMaiRepo;
 
 
     @PostMapping("/Create")
@@ -73,6 +77,10 @@ public class Khuyen_mai_Controller {
                     && khuyenMaiDTO.getNgayBatDau().isAfter(khuyenMaiDTO.getNgayKetThuc())) {
                 return ResponseEntity.badRequest().body("Ngày bắt đầu phải trước ngày kết thúc");
             }
+            KhuyenMai khuyenMai = khuyenMaiRepo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id khuyen mai"));
+            if (!isDifferent(khuyenMaiDTO, khuyenMai)) {
+                throw new IllegalArgumentException("Không có thay đổi nào để cập nhật");
+            }
             KhuyenMai result = khuyenMaiService.updateKhuyenMai(id, khuyenMaiDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -89,5 +97,18 @@ public class Khuyen_mai_Controller {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    public static boolean isDifferent(KhuyenMaiDTO dto, KhuyenMai entity) {
+        if (dto == null || entity == null) return true;
+
+        return !Objects.equals(dto.getSoLuong(), entity.getSoLuong())
+                || !Objects.equals(dto.getGiaTriGiam(), entity.getGiaTriGiam())
+                || !Objects.equals(dto.getGiaTriToiDa(), entity.getGiaTriToiDa())
+                || !Objects.equals(dto.getMoTa(), entity.getMoTa())
+                || !Objects.equals(dto.getPhanTramGiam(), entity.getPhanTramGiam())
+                || !Objects.equals(dto.getNgayBatDau(), entity.getNgayBatDau())
+                || !Objects.equals(dto.getNgayKetThuc(), entity.getNgayKetThuc())
+                || !Objects.equals(dto.getTrangThai(), entity.getTrangThai());
     }
 }
