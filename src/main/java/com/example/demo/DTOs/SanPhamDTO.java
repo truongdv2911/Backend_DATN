@@ -32,12 +32,6 @@ public class SanPhamDTO {
     @DecimalMin(value = "10.0", message = "Giá phải lớn hơn hoặc bằng 10.0")
      BigDecimal gia;
 
-    @DecimalMin(value = "0.0", message = "Giá khuyến mãi phải lớn hơn hoặc bằng 0")
-    BigDecimal giaKhuyenMai;
-
-    @Min(value = 1, message = "Số lượng phải lớn hơn 0")
-     Integer soLuong;
-
     @Min(value = 1, message = "Số lượng mảnh ghép phải lớn hơn 0")
      Integer soLuongManhGhep;
 

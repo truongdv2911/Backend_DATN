@@ -37,8 +37,7 @@ public class SanPham {
      BigDecimal gia;
     @Column(name = "gia_khuyen_mai")
      BigDecimal giaKhuyenMai;
-    @Column(name ="so_luong" )
-     Integer soLuong;
+
     @Column(name = "so_luong_manh_ghep")
      Integer soLuongManhGhep;
     @Column(name = "so_luong_ton")

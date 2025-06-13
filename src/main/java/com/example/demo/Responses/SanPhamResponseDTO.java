@@ -14,7 +14,6 @@ public class SanPhamResponseDTO {
     private String moTa;
     private BigDecimal gia;
     private BigDecimal giaKhuyenMai;
-    private Integer soLuong;
     private Integer soLuongManhGhep;
     private Integer soLuongTon;
     private String anhDaiDien;

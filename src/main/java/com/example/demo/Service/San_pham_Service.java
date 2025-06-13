@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class San_pham_Service {
     private final San_pham_Repo sanPhamRepository;
     private final Anh_sp_Repo anhSpRepo;
@@ -76,7 +77,6 @@ public class San_pham_Service {
         }
 
         sanPham.setGiaKhuyenMai(giaKhuyenMai);
-        sanPham.setSoLuong(sanPhamDTO.getSoLuong());
         sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
         sanPham.setAnhDaiDien(sanPhamDTO.getAnhDaiDien());
@@ -124,7 +124,6 @@ public class San_pham_Service {
             dto.setMoTa(sp.getMoTa());
             dto.setGia(sp.getGia());
             dto.setGiaKhuyenMai(sp.getGiaKhuyenMai());
-            dto.setSoLuong(sp.getSoLuong());
             dto.setSoLuongManhGhep(sp.getSoLuongManhGhep());
             dto.setSoLuongTon(sp.getSoLuongTon());
             dto.setAnhDaiDien(sp.getAnhDaiDien());
@@ -151,7 +150,7 @@ public class San_pham_Service {
         }
     }
 
-    public SanPhamResponseDTO updateSanPham(Integer id, @Valid SanPhamDTO sanPhamDTO) {
+    public SanPhamResponseDTO updateSanPham(Integer id, SanPhamDTO sanPhamDTO) {
         try {
             SanPham sanPham = getSanPhamById(id);
             sanPham.setTenSanPham(sanPhamDTO.getTenSanPham());
@@ -178,7 +177,6 @@ public class San_pham_Service {
 
             sanPham.setGiaKhuyenMai(giaKhuyenMai);
 
-            sanPham.setSoLuong(sanPhamDTO.getSoLuong());
             sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
             sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
             sanPham.setAnhDaiDien(null);
@@ -229,7 +227,6 @@ public class San_pham_Service {
         dto.setMoTa(sanPham.getMoTa());
         dto.setGia(sanPham.getGia());
         dto.setGiaKhuyenMai(sanPham.getGiaKhuyenMai());
-        dto.setSoLuong(sanPham.getSoLuong());
         dto.setSoLuongManhGhep(sanPham.getSoLuongManhGhep());
         dto.setSoLuongTon(sanPham.getSoLuongTon());
         dto.setAnhDaiDien(sanPham.getAnhDaiDien());
