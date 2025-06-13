@@ -97,14 +97,16 @@ public class San_pham_Controller {
                 !Objects.equals(sanPhamDTO.getDoTuoi(), sanPham.getDoTuoi()) ||
                 !Objects.equals(sanPhamDTO.getMoTa(), sanPham.getMoTa()) ||
                 !(sanPhamDTO.getGia().compareTo(sanPham.getGia()) == 0) ||
-                !(sanPhamDTO.getGiaKhuyenMai().compareTo(sanPham.getGiaKhuyenMai()) ==0) ||
-                !Objects.equals(sanPhamDTO.getSoLuong(), sanPham.getSoLuong()) ||
                 !Objects.equals(sanPhamDTO.getSoLuongManhGhep(), sanPham.getSoLuongManhGhep()) ||
                 !Objects.equals(sanPhamDTO.getSoLuongTon(), sanPham.getSoLuongTon()) ||
                 !Objects.equals(sanPhamDTO.getSoLuongVote(), sanPham.getSoLuongVote()) ||
                 !Objects.equals(sanPhamDTO.getDanhGiaTrungBinh(), sanPham.getDanhGiaTrungBinh()) ||
-                !Objects.equals(sanPhamDTO.getDanhMucId(), sanPham.getDanhMuc().getId()) ||
-                !Objects.equals(sanPhamDTO.getBoSuuTapId(), sanPham.getBoSuuTap().getId()) ||
+                !Objects.equals(sanPhamDTO.getDanhMucId(),
+                        sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null) ||
+                !Objects.equals(sanPhamDTO.getBoSuuTapId(),
+                        sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null) ||
+                !Objects.equals(sanPhamDTO.getKhuyenMaiId(),
+                        sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null) ||
                 !Objects.equals(sanPhamDTO.getTrangThai(), sanPham.getTrangThai());
     }
 
