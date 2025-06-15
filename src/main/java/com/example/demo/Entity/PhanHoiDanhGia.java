@@ -24,4 +24,8 @@ public class PhanHoiDanhGia {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "danh_gia_id", referencedColumnName = "id")
+    private DanhGia danhGia;
 }

@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,7 +32,7 @@ public class DanhGia {
     @Column(name = "ngay_danh_gia")
     private LocalDateTime ngayDanhGia;
     @Column(name = "ngay_phan_hoi")
-    private Date ngayPhanHoi;
+    private LocalDateTime ngayPhanHoi;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -44,7 +46,13 @@ public class DanhGia {
     @JoinColumn(name = "hdct_id", referencedColumnName = "id")
     private HoaDonChiTiet dhct;
 
-//    @ManyToOne
-//    @JoinColumn(name = "san_pham_id", referencedColumnName = "id")
-//    private SanPham sp;
+    @ManyToOne
+    @JoinColumn(name = "san_pham_id", referencedColumnName = "id")
+    private SanPham sp;
+
+    @OneToMany(mappedBy = "danhGia", cascade = CascadeType.ALL)
+    private List<AnhDanhGia> anhFeedbacks = new ArrayList<>();
+
+    @OneToOne(mappedBy = "danhGia", cascade = CascadeType.ALL)
+    private VideoDanhGia videoFeedback;
 }

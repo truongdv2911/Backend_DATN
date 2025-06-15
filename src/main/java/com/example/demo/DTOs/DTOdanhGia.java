@@ -5,6 +5,7 @@ import com.example.demo.Entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -27,15 +28,16 @@ public class DTOdanhGia {
     private String textPhanHoi;
     @NotNull(message = "Vui lòng điền số sao")
     @Min(value = 1)
+    @Max(value = 5)
     private Integer soSao;
     private LocalDateTime ngayDanhGia;
-    private Date ngayPhanHoi;
+    private LocalDateTime ngayPhanHoi;
 
     private Integer user_id;
 
     private Integer nv_id;
 
-    private Integer dhct_id;
+    private Integer hdct_id;
 
-//    private Integer sp_id;
+    private Integer sp_id;
 }
