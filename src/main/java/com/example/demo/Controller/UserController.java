@@ -90,7 +90,8 @@ public class UserController {
             HttpSession hs= request.getSession(true);
             hs.setAttribute("username", dtOlogin.getEmail());
 
-            User user = userRepository.findByEmail(dtOlogin.getEmail()).orElseThrow(()-> new RuntimeException("khong tim thay email user"));
+            User user = userRepository.findByEmail(dtOlogin.getEmail()).orElseThrow(()->
+                    new RuntimeException("khong tim thay email user"));
             gioHangService.getOrCreateCart(user.getId());
 
             return ResponseEntity.ok(new LoginResponse(user.getId(), user.getTen(), dtOlogin.getEmail(), "Dang nhap thanh cong"));
@@ -109,7 +110,9 @@ public class UserController {
                         map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErorrs);
             }
-            return ResponseEntity.ok(userService.createUser(user));
+            User user1 = userService.createUser(user);
+            gioHangService.getOrCreateCart(user1.getId());
+            return ResponseEntity.ok(user1);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
