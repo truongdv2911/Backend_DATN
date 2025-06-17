@@ -172,7 +172,9 @@ public class Anh_sp_Service {
                 anhSp.setSanPham(sanPham);
 
                 // Gán ảnh đại diện nếu ảnh đầu tiên và chưa có ảnh đại diện
-                if ((Boolean.TRUE.equals(anhChinh) || daSetAnhDaiDien) && (i == 0 && sanPham.getAnhDaiDien().isEmpty())) {
+                if ((Boolean.TRUE.equals(anhChinh) || daSetAnhDaiDien) &&
+                        (i == 0 && (sanPham.getAnhDaiDien() == null || sanPham.getAnhDaiDien().isEmpty()))) {
+
                     sanPham.setAnhDaiDien(url);
                     sanPhamRepository.save(sanPham);
                     daSetAnhDaiDien = false;
