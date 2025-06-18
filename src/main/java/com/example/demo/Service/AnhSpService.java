@@ -3,79 +3,99 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.Anh_sp_DTO;
 import com.example.demo.Entity.AnhSp;
 import com.example.demo.Entity.SanPham;
-
 import com.example.demo.Repository.Anh_sp_Repo;
 import com.example.demo.Repository.San_pham_Repo;
-import io.jsonwebtoken.lang.Strings;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
-
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-public class Anh_sp_Service {
-    private final Anh_sp_Repo anhSpRepository;
 
+public class AnhSpService {
 
-    private final San_pham_Repo sanPhamRepository;
-
+    // Giả định các biến tĩnh
     private final Path uploadDir = Paths.get("uploads");
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-    private final San_pham_Repo san_pham_Repo;
-
-    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/png", "image/jpeg", "image/jpg", "image/gif");
+    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "gif");
 
-//    public AnhSp createAnhSp(Anh_sp_DTO dto) {
-//        SanPham sanPham = sanPhamRepository.findById(dto.getSanpham())
-//                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-//        AnhSp anh = new AnhSp();
-//        anh.setUrl(dto.getUrl());
-//        anh.setMoTa(dto.getMoTa());
-//        anh.setThuTu(dto.getThuTu());
-//        anh.setAnhChinh(dto.getAnhChinh());
-//        anh.setSanPham(sanPham);
-//        return anhSpRepository.save(anh);
-//    }
+    // Giả định repository
+    private final Anh_sp_Repo anhSpRepository;
+    private final San_pham_Repo sanPhamRepository;
 
-
-    public List<AnhSp> getAllAnhSp() {
-        return anhSpRepository.findAll();
+    @Autowired
+    public AnhSpService(Anh_sp_Repo anhSpRepository, San_pham_Repo sanPhamRepository) {
+        this.anhSpRepository = anhSpRepository;
+        this.sanPhamRepository = sanPhamRepository;
     }
 
 
-    public AnhSp getAnhSpById(Integer id) {
-        return anhSpRepository.findById(id)
+    public List<Anh_sp_DTO> getAllAnhSp() {
+        List<AnhSp> anhSpList = anhSpRepository.findAll();
+        return anhSpList.stream().map(anhSp -> new Anh_sp_DTO(
+                anhSp.getUrl(),
+                anhSp.getMoTa(),
+                anhSp.getThuTu(),
+                anhSp.getAnhChinh(),
+                anhSp.getSanPham() != null ? anhSp.getSanPham().getId() : null
+        )).collect(Collectors.toList());
+    }
+
+    public Anh_sp_DTO getAnhSpById(Integer id) {
+        AnhSp anhSp = anhSpRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
+        return new Anh_sp_DTO(
+                anhSp.getUrl(),
+                anhSp.getMoTa(),
+                anhSp.getThuTu(),
+                anhSp.getAnhChinh(),
+                anhSp.getSanPham() != null ? anhSp.getSanPham().getId() : null
+        );
     }
-
 
     public void deleteAnhSp(Integer id) {
         anhSpRepository.deleteById(id);
     }
 
-
-    public AnhSp updateAnhSp(Integer id, MultipartFile file, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
+    public Anh_sp_DTO updateAnhSp(Integer id, MultipartFile file, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
         try {
             AnhSp anhSp = anhSpRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
 
             if (file != null && !file.isEmpty()) {
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new RuntimeException("Kích thước file vượt quá 10 MB: " + file.getOriginalFilename());
+                }
+
                 String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
                 if (originalFilename.contains("..")) {
                     throw new RuntimeException("Tên file không hợp lệ");
                 }
+
+                String contentType = file.getContentType();
+                if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+                    throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (.jpg, .jpeg, .png, .gif)");
+                }
+
+                String extension = StringUtils.getFilenameExtension(originalFilename);
+                if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+                    throw new IllegalArgumentException("Định dạng file ảnh không hợp lệ: ." + extension);
+                }
+
                 String randomString = generateRandomString(10);
                 String uniqueFilename = "anh_" + randomString + "_" + originalFilename;
                 Path filePath = uploadDir.resolve(uniqueFilename);
@@ -94,14 +114,20 @@ public class Anh_sp_Service {
                 anhSp.setSanPham(sanPham);
             }
 
-            return anhSpRepository.save(anhSp);
-        } catch (Exception e) {
+            AnhSp updatedAnhSp = anhSpRepository.save(anhSp);
+            return new Anh_sp_DTO(
+                    updatedAnhSp.getUrl(),
+                    updatedAnhSp.getMoTa(),
+                    updatedAnhSp.getThuTu(),
+                    updatedAnhSp.getAnhChinh(),
+                    updatedAnhSp.getSanPham() != null ? updatedAnhSp.getSanPham().getId() : null
+            );
+        } catch (IOException e) {
             throw new RuntimeException("Lỗi cập nhật ảnh: " + e.getMessage());
         }
     }
 
-
-    public List<AnhSp> uploadAndCreateAnhSp(MultipartFile[] files, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
+    public List<Anh_sp_DTO> uploadAndCreateAnhSp(MultipartFile[] files, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
         if (files == null || files.length == 0) {
             throw new RuntimeException("Chưa chọn ảnh để upload.");
         }
@@ -125,7 +151,18 @@ public class Anh_sp_Service {
                         + "Chỉ được upload tối đa 5 ảnh. Chỉ có thể thêm " + (5 - existingImages.size()) + " ảnh nữa.");
             }
 
-            List<AnhSp> anhSpList = new ArrayList<>();
+            // Validate thuTu nếu được cung cấp
+            if (thuTu != null && (thuTu < 1 || thuTu > 5)) {
+                throw new IllegalArgumentException("Số thứ tự phải nằm trong khoảng từ 1 đến 5.");
+            }
+
+            // Kiểm tra trùng lặp số thứ tự
+            Set<Integer> usedOrders = existingImages.stream()
+                    .map(AnhSp::getThuTu)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            List<Anh_sp_DTO> anhSpList = new ArrayList<>();
             boolean daSetAnhDaiDien = existingImages.isEmpty(); // Chỉ gán ảnh đại diện nếu chưa có
 
             for (int i = 0; i < files.length; i++) {
@@ -147,7 +184,7 @@ public class Anh_sp_Service {
                 }
 
                 // Kiểm tra đuôi file
-                String extension = Strings.getFilenameExtension(originalFilename);
+                String extension = StringUtils.getFilenameExtension(originalFilename);
                 if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
                     throw new IllegalArgumentException("Định dạng file ảnh không hợp lệ: ." + extension);
                 }
@@ -167,20 +204,61 @@ public class Anh_sp_Service {
                 AnhSp anhSp = new AnhSp();
                 anhSp.setUrl(url);
                 anhSp.setMoTa(moTa);
-                anhSp.setThuTu(thuTu != null ? thuTu + i : existingImages.size() + i);
-                anhSp.setAnhChinh(anhChinh != null && i == 0 && anhChinh);
-                anhSp.setSanPham(sanPham);
 
-                // Gán ảnh đại diện nếu ảnh đầu tiên và chưa có ảnh đại diện
-                if ((Boolean.TRUE.equals(anhChinh) || daSetAnhDaiDien) &&
-                        (i == 0 && (sanPham.getAnhDaiDien() == null || sanPham.getAnhDaiDien().isEmpty()))) {
+                // Gán số thứ tự
+                int order;
+                if (thuTu != null) {
+                    order = thuTu + i;
+                    if (order > 5) {
+                        throw new IllegalArgumentException("Số thứ tự " + order + " vượt quá giới hạn 5.");
+                    }
+                    if (usedOrders.contains(order)) {
+                        throw new IllegalArgumentException("Số thứ tự " + order + " đã được sử dụng.");
+                    }
+                } else {
+                    // Gán số thứ tự tự động (bắt đầu từ existingImages.size() + 1)
+                    order = existingImages.size() + i + 1;
+                    if (order > 5) {
+                        throw new IllegalArgumentException("Số thứ tự " + order + " vượt quá giới hạn 5.");
+                    }
+                }
+                usedOrders.add(order);
+                anhSp.setThuTu(order);
 
+                // Set anhChinh: true cho ảnh đầu tiên trong lần upload này, nhưng chỉ nếu không có ảnh chính nào khác
+                boolean isFirstImage = (i == 0);
+                if (isFirstImage) {
+                    // Đặt lại tất cả ảnh hiện có thành anhChinh = false
+                    existingImages.forEach(img -> {
+                        if (img.getAnhChinh()) {
+                            img.setAnhChinh(false);
+                            anhSpRepository.save(img);
+                        }
+                    });
+                    anhSp.setAnhChinh(true);
                     sanPham.setAnhDaiDien(url);
                     sanPhamRepository.save(sanPham);
                     daSetAnhDaiDien = false;
+                } else {
+                    anhSp.setAnhChinh(false);
                 }
+                anhSp.setSanPham(sanPham);
 
-                anhSpList.add(anhSpRepository.save(anhSp));
+                // Gán ảnh đại diện nếu ảnh đầu tiên và chưa có ảnh đại diện
+
+
+
+
+                // Lưu ảnh và ánh xạ sang DTO
+                AnhSp savedAnhSp = anhSpRepository.save(anhSp);
+                Anh_sp_DTO anhSpDTO = new Anh_sp_DTO(
+                        savedAnhSp.getUrl(),
+                        savedAnhSp.getMoTa(),
+                        savedAnhSp.getThuTu(),
+                        savedAnhSp.getAnhChinh(),
+                        sanPhamId
+                );
+                anhSpList.add(anhSpDTO);
             }
 
             return anhSpList;
@@ -189,8 +267,6 @@ public class Anh_sp_Service {
             throw new RuntimeException("Lỗi khi upload ảnh", e);
         }
     }
-
-
     public UrlResource loadImage(String fileName) {
         try {
             Path imagePath = uploadDir.resolve(fileName);
