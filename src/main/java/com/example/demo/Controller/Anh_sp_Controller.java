@@ -1,17 +1,15 @@
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.Anh_sp_DTO;
-import com.example.demo.Entity.AnhSp;
-import com.example.demo.Service.Anh_sp_Service;
-import jakarta.validation.Valid;
+
+import com.example.demo.Service.AnhSpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.validation.BindingResult;
-import org.springframework.http.HttpStatus;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,39 +18,19 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/anhsp")
 public class Anh_sp_Controller {
+
     @Autowired
-    private Anh_sp_Service anhSpService;
+    private AnhSpService anhSpService;
 
-//    @GetMapping("/sanpham/{sanPhamId}")
-//    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
-//        try {
-//            List<AnhSp> list = anhSpService.getAnhBySanPhamId(sanPhamId);
-//            return ResponseEntity.ok(list);
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body("Không tìm thấy ảnh cho sản phẩm id: " + sanPhamId);
-//        }
-//    }
-
-//    @PostMapping("/create")
-//    public ResponseEntity<?> createAnhSp(@Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
-//        try {
-//            if (bindingResult.hasErrors()) {
-//                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
-//            }
-//            AnhSp result = anhSpService.createAnhSp(anhSpDTO);
-//            return ResponseEntity.ok(result);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-//        }
-//    }
 
     @GetMapping("/ReadAll")
     public ResponseEntity<?> getAllAnhSp() {
         try {
-            List<AnhSp> list = anhSpService.getAllAnhSp();
-            return ResponseEntity.ok(list);
+            List<Anh_sp_DTO> anhSpList = anhSpService.getAllAnhSp();
+            return ResponseEntity.ok(anhSpList);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy danh sách ảnh: " + e.getMessage());
         }
     }
 
@@ -60,60 +38,46 @@ public class Anh_sp_Controller {
     @GetMapping("/Readone/{id}")
     public ResponseEntity<?> getAnhSpById(@PathVariable Integer id) {
         try {
-            AnhSp result = anhSpService.getAnhSpById(id);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            Anh_sp_DTO anhSp = anhSpService.getAnhSpById(id);
+            return ResponseEntity.ok(anhSp);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Không tìm thấy ảnh với ID: " + id + " - " + e.getMessage());
         }
     }
-
-
-//    @PutMapping("/Update/{id}")
-//    public ResponseEntity<?> updateAnhSp(@PathVariable Integer id, @Valid @RequestBody Anh_sp_DTO anhSpDTO, BindingResult bindingResult) {
-//        try {
-//            if (bindingResult.hasErrors()) {
-//                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
-//            }
-//            AnhSp result = anhSpService.updateAnhSp(id, anhSpDTO);
-//            return ResponseEntity.ok(result);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-//        }
-//    }
 
 
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deleteAnhSp(@PathVariable Integer id) {
         try {
             anhSpService.deleteAnhSp(id);
-            return ResponseEntity.ok("Xóa thành công");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.ok("Xóa ảnh với ID " + id + " thành công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Không thể xóa ảnh với ID: " + id + " - " + e.getMessage());
         }
     }
 
 
     @PostMapping("/upload-images")
-    public ResponseEntity<?> uploadMultipleAnhSp(
+    public ResponseEntity<?> uploadImages(
             @RequestParam("files") MultipartFile[] files,
-            @RequestParam("moTa") String moTa,
-            @RequestParam("thuTu") Integer thuTu,
-            @RequestParam("anhChinh") Boolean anhChinh,
-            @RequestParam("sanpham") Integer sanphamId) {
+            @RequestParam(value = "moTa", required = false) String moTa,
+            @RequestParam(value = "thuTu", required = false) Integer thuTu,
+            @RequestParam(value = "anhChinh", required = false) Boolean anhChinh,
+            @RequestParam("sanPhamId") Integer sanPhamId) {
+
         try {
-            if (files == null || files.length == 0) {
-                return ResponseEntity.badRequest().body("Không có file nào được gửi lên.");
-            }
-
-            List<AnhSp> result = anhSpService.uploadAndCreateAnhSp(files, moTa, thuTu, anhChinh, sanphamId);
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            List<Anh_sp_DTO> uploadedImages = anhSpService.uploadAndCreateAnhSp(files, moTa, thuTu, anhChinh, sanPhamId);
+            return new ResponseEntity<>(uploadedImages, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>("Lỗi xác thực: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>("Lỗi khi upload ảnh: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // View image
+
     @GetMapping("/images/{fileName:.+}")
     public ResponseEntity<?> viewImage(@PathVariable String fileName) {
         try {
@@ -124,9 +88,11 @@ public class Anh_sp_Controller {
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ảnh: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Không tìm thấy ảnh: " + fileName + " - " + e.getMessage());
         }
     }
+
 
     @PutMapping("/update-image/{id}")
     public ResponseEntity<?> updateImage(
@@ -135,13 +101,25 @@ public class Anh_sp_Controller {
             @RequestParam("moTa") String moTa,
             @RequestParam("thuTu") Integer thuTu,
             @RequestParam("anhChinh") Boolean anhChinh,
-            @RequestParam("sanpham") Integer sanPhamId
-    ) {
+            @RequestParam("sanpham") Integer sanPhamId) {
+
         try {
-            AnhSp anhSp = anhSpService.updateAnhSp(id, file, moTa, thuTu, anhChinh, sanPhamId);
-            return ResponseEntity.ok(anhSp);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            Anh_sp_DTO updatedAnhSp = anhSpService.updateAnhSp(id, file, moTa, thuTu, anhChinh, sanPhamId);
+            return ResponseEntity.ok(updatedAnhSp);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật ảnh: " + e.getMessage());
         }
     }
+
+//    @GetMapping("/sanpham/{sanPhamId}")
+//    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
+//        try {
+//            List<Anh_sp_DTO> list = anhSpService.getAnhBySan(sanPhamId);
+//            return ResponseEntity.ok(list);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body("Không tìm thấy ảnh cho sản phẩm ID: " + sanPhamId + " - " + e.getMessage());
+//        }
+//    }
 }
