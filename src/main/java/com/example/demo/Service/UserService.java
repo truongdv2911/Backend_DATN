@@ -37,7 +37,7 @@ public class UserService {
         }
         User user = new User(null, dtoUser.getTen(), dtoUser.getEmail(), dtoUser.getMatKhau(), dtoUser.getSdt()
                 , dtoUser.getNgaySinh(), dtoUser.getDiaChi(), 1, dtoUser.getFacebookId(),
-                dtoUser.getGoogleId(), roleRepository.findById(2).orElseThrow(() -> new RuntimeException("Khong tim thay role")));
+                dtoUser.getGoogleId(), roleRepository.findById(3).orElseThrow(() -> new RuntimeException("Khong tim thay role")));
 
         if (dtoUser.getFacebookId() == null && dtoUser.getGoogleId() == null) {
             String password = user.getMatKhau();
@@ -128,8 +128,11 @@ public class UserService {
         }
     }
 
-    public Page<User> pageUser(PageRequest pageRequest){
-        return userRepository.pageUser(pageRequest);
+    public Page<User> pageUser(String keyword, PageRequest pageRequest){
+        if (keyword == null || keyword.isBlank()){
+            return userRepository.pageUser(null, pageRequest);
+        }
+        return userRepository.findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(keyword, keyword, pageRequest);
     }
 
 }
