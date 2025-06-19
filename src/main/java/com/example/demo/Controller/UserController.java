@@ -146,10 +146,24 @@ public class UserController {
     @GetMapping("/paging")
     public ResponseEntity<?> getAll(
             @RequestParam("page") int pageNo,
-            @RequestParam("limit") int limit
+            @RequestParam("limit") int limit,
+            @RequestParam(value = "keyword", required = false) String keyword
     ){
         PageRequest pageRequest = PageRequest.of(pageNo, limit, Sort.by("ngayTao").descending());
-        Page<User> users = userService.pageUser(pageRequest);
+        Page<User> users = userService.pageUser(keyword, pageRequest);
+        int totalPage = users.getTotalPages();
+        List<User> listUser = users.getContent();
+        return ResponseEntity.ok(new ListUserResponse(listUser, totalPage));
+    }
+
+    @GetMapping("/getTheoRole")
+    public ResponseEntity<?> getMembers(
+            @RequestParam("page") int pageNo,
+            @RequestParam("limit") int limit,
+            @RequestParam(value = "roleId", required = false) String roleId
+    ){
+        PageRequest pageRequest = PageRequest.of(pageNo, limit, Sort.by("ngayTao").descending());
+        Page<User> users = userRepository.pageUser(roleId, pageRequest);
         int totalPage = users.getTotalPages();
         List<User> listUser = users.getContent();
         return ResponseEntity.ok(new ListUserResponse(listUser, totalPage));

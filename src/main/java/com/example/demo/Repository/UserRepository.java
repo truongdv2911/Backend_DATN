@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -12,8 +13,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmail(String email);
 
-    @Query("select u from User u")
-    Page<User> pageUser(Pageable pageable);
+    @Query("select u from User u where (:roleId is null or u.role.id = :roleId)")
+    Page<User> pageUser(@Param("roleId") String roleId, Pageable pageable);
 
     boolean existsByEmail(String email); // Thêm phương thức này
+
+    Page<User> findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(String hoTen, String email, Pageable pageable);
+
 }
