@@ -1,15 +1,12 @@
 package com.example.demo.Responses;
 
-import com.example.demo.Entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -22,16 +19,21 @@ public class HoaDonResponse {
     private BigDecimal tamTinh;
     private BigDecimal tongTien;
     private BigDecimal soTienGiam;
-    private String DiaChiGiaoHang;
+    private String diaChiGiaoHang;
     private String maVanChuyen;
-    private Date ngayGiao;
+    private LocalDate ngayGiao;
     private LocalDateTime ngayTao;
     private String trangThai;
     private String phuongThucThanhToan;
 
     private Integer userId;
 
-    private Integer nvId;
+    private String ten;
+    private String sdt;
 
-//    private Integer kmId;
+    private Integer nvId;
+    private String nvName;
+
+    private Integer PGGid;
+    private String maPGG;
 }

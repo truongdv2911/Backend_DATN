@@ -1,9 +1,28 @@
 package com.example.demo.Entity;
 
-public class TrangThaiHoaDon {
-    public static final String PENDING = "Đang xử lý";
-    public static final String PROCESSING = "PROCESSING";
-    public static final String SHIPPED = "SHIPPED";
-    public static final String DELIVERED = "DELIVERED";
-    public static final String CANCELLED = "CANCELLED";
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+
+
+@Getter
+@AllArgsConstructor
+
+public enum TrangThaiHoaDon {
+    PENDING("Pending"),
+    PROCESSING("Processing"),
+    SHIPPING("Shipping"),
+    DELIVERED("Delivered"),
+    CANCELLED("Cancelled"),
+    RETURNING("Returning"),
+    REFUNDED("Refunded");
+
+    private final String value;
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
 }
