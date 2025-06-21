@@ -27,4 +27,6 @@ public class HoaDonChiTietResponse {
     private Integer hdId;
 
     private Integer spId;
+    private String masp;
+    private String tensp;
 }

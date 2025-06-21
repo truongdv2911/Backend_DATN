@@ -8,4 +8,5 @@ import java.util.List;
 public interface Anh_sp_Repo extends JpaRepository<AnhSp, Integer> {
 
     List<AnhSp> findBySanPhamId(Integer sanPhamId);
+
 }
