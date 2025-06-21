@@ -102,6 +102,14 @@ public class HoaDonService {
             ct.setSoLuong(item.getSoLuong());
             ct.setTongTien(sp.getGia().multiply(BigDecimal.valueOf(item.getSoLuong())));
             chiTietList.add(ct);
+
+            // Trừ số lượng tồn kho sản phẩm
+            int soLuongConLai = sp.getSoLuongTon() - item.getSoLuong();
+            if (soLuongConLai < 0) {
+                throw new RuntimeException("Sản phẩm " + sp.getTenSanPham() + " không đủ số lượng tồn kho!");
+            }
+            sp.setSoLuongTon(soLuongConLai);
+            san_pham_repo.save(sp);
         }
 
         BigDecimal tamTinh = chiTietList.stream().map(HoaDonChiTiet::getTongTien).reduce(BigDecimal.ZERO, BigDecimal::add);

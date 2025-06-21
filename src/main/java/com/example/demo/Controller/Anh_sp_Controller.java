@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.Anh_sp_DTO;
 
+import com.example.demo.Entity.AnhSp;
 import com.example.demo.Service.AnhSpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -11,9 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/anhsp")
@@ -23,6 +27,15 @@ public class Anh_sp_Controller {
     private AnhSpService anhSpService;
 
 
+
+    @GetMapping("/anh-theo-san-pham/{id}")
+    public ResponseEntity<List<String>> getAllAnhBySanPhamId(@PathVariable Integer id) {
+        List<AnhSp> images = anhSpService.getAnhBySanPhamId(id);
+        List<String> urls = images.stream()
+                .map(img -> "/api/anhsp/images/" + img.getUrl())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(urls);
+    }
     @GetMapping("/ReadAll")
     public ResponseEntity<?> getAllAnhSp() {
         try {
@@ -112,14 +125,5 @@ public class Anh_sp_Controller {
         }
     }
 
-//    @GetMapping("/sanpham/{sanPhamId}")
-//    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
-//        try {
-//            List<Anh_sp_DTO> list = anhSpService.getAnhBySan(sanPhamId);
-//            return ResponseEntity.ok(list);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body("Không tìm thấy ảnh cho sản phẩm ID: " + sanPhamId + " - " + e.getMessage());
-//        }
-//    }
+
 }

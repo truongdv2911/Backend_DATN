@@ -75,7 +75,7 @@ public class HoaDonController {
 //        return ResponseEntity.ok(result);
 //    }
 
-    @PostMapping("/create")
+    @PostMapping("/Create")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createOrder(@Valid @RequestBody DTOhoaDon dtOhoaDon, BindingResult result) {
         logger.info("Yêu cầu tạo hóa đơn mới với userId: {}", dtOhoaDon.getUserId());

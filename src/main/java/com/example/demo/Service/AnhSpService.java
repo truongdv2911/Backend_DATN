@@ -243,13 +243,6 @@ public class AnhSpService {
                     anhSp.setAnhChinh(false);
                 }
                 anhSp.setSanPham(sanPham);
-
-                // Gán ảnh đại diện nếu ảnh đầu tiên và chưa có ảnh đại diện
-
-
-
-
-                // Lưu ảnh và ánh xạ sang DTO
                 AnhSp savedAnhSp = anhSpRepository.save(anhSp);
                 Anh_sp_DTO anhSpDTO = new Anh_sp_DTO(
                         savedAnhSp.getUrl(),
@@ -280,10 +273,21 @@ public class AnhSpService {
             throw new RuntimeException("Lỗi khi load ảnh", e);
         }
     }
-//    public List<AnhSp> getAnhBySanPhamId(Integer sanPhamId) {
-//        return anhSpRepository.findBySanPham_Id(sanPhamId);
+//    public List<Anh_sp_DTO> getAnhBySanPhamId(Integer sanPhamId) {
+//        List<AnhSp> anhSpList = anhSpRepository.findBySanPhamId(sanPhamId);
+//        return anhSpList.stream()
+//                .map(anhSp -> new Anh_sp_DTO(
+//                        anhSp.getUrl(),
+//                        anhSp.getMoTa(),
+//                        anhSp.getThuTu(),
+//                        anhSp.getAnhChinh(),
+//                        anhSp.getSanPham() != null ? anhSp.getSanPham().getId() : null
+//                ))
+//                .collect(Collectors.toList());
 //    }
-
+public List<AnhSp> getAnhBySanPhamId(Integer sanPhamId) {
+    return anhSpRepository.findBySanPhamId(sanPhamId);
+}
     private String generateRandomString(int length) {
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         SecureRandom random = new SecureRandom();

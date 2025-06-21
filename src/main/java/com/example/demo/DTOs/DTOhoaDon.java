@@ -34,11 +34,9 @@ public class DTOhoaDon {
     @NotEmpty(message = "Mã vận chuyển không được để trống")
     private String maVanChuyen;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    @NotNull(message = "Ngày giao không được để trống")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime ngayGiao;
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    @NotNull(message = "Ngày tạo không được để trống")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime ngayTao;
 
     @NotNull(message = "Trạng thái không được để trống")
