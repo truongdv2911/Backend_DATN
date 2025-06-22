@@ -4,6 +4,7 @@ import com.example.demo.DTOs.SanPhamDTO;
 
 import com.example.demo.Entity.*;
 import com.example.demo.Repository.*;
+import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class San_pham_Service {
     private final Danh_muc_Repo danhMucRepository;
     private final Bo_suu_tap_Repo boSuuTapRepository;
     private final Khuyen_mai_Repo khuyenMaiRepository;
+    private final KhuyenMaiSanPhamRepository khuyenMaiSanPhamRepository;
 
     // Phương thức helper tính trạng thái theo số lượng tồn
     private String tinhTrangThaiTheoTonKho(int soLuongTon) {
@@ -63,20 +65,20 @@ public class San_pham_Service {
         BigDecimal giaGoc = sanPhamDTO.getGia();
         BigDecimal giaKhuyenMai = giaGoc; // mặc định bằng giá gốc
 
-        if (sanPhamDTO.getKhuyenMaiId() != null) {
-            KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
-                    .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
-            if (!"Đang hoạt động".equalsIgnoreCase(khuyenMai.getTrangThai())) {
-                throw new RuntimeException("Khuyến mãi không còn hoạt động và không thể áp dụng.");
-            }
-            sanPham.setKhuyenMai(khuyenMai);
-            if (khuyenMai.getPhanTramGiam() != null && khuyenMai.getPhanTramGiam() > 0) {
-                BigDecimal phanTram = new BigDecimal(khuyenMai.getPhanTramGiam()).divide(BigDecimal.valueOf(100));
-                giaKhuyenMai = giaGoc.subtract(giaGoc.multiply(phanTram));
-            }
-        }
+//        if (sanPhamDTO.getKhuyenMaiId() != null) {
+//            KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
+//                    .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
+//            if (!"Đang hoạt động".equalsIgnoreCase(khuyenMai.getTrangThai())) {
+//                throw new RuntimeException("Khuyến mãi không còn hoạt động và không thể áp dụng.");
+//            }
+//            sanPham.setKhuyenMai(khuyenMai);
+//            if (khuyenMai.getPhanTramGiam() != null && khuyenMai.getPhanTramGiam() > 0) {
+//                BigDecimal phanTram = new BigDecimal(khuyenMai.getPhanTramGiam()).divide(BigDecimal.valueOf(100));
+//                giaKhuyenMai = giaGoc.subtract(giaGoc.multiply(phanTram));
+//            }
+//        }
 
-        sanPham.setGiaKhuyenMai(giaKhuyenMai);
+//        sanPham.setGiaKhuyenMai(giaKhuyenMai);
         sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
         sanPham.setAnhDaiDien(sanPhamDTO.getAnhDaiDien());
@@ -103,6 +105,32 @@ public class San_pham_Service {
         return convertToResponseDTO(savedSanPham);
     }
 
+    public List<SanPhamKMResponse> getSanPhamKhuyenMaiFull() {
+        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai();
+
+        return rows.stream().map(r -> {
+            SanPhamKMResponse dto = new SanPhamKMResponse();
+            dto.setId((Integer) r[0]);
+            dto.setTenSanPham((String) r[1]);
+            dto.setMaSanPham((String) r[2]);
+            dto.setDoTuoi((Integer) r[3]);
+            dto.setMoTa((String) r[4]);
+            dto.setGia((BigDecimal) r[5]);
+            dto.setSoLuongManhGhep((Integer) r[6]);
+            dto.setSoLuongTon((Integer) r[7]);
+            dto.setSoLuongVote((Integer) r[8]);
+            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
+            dto.setIdDanhMuc((Integer) r[10]);
+            dto.setIdBoSuuTap((Integer) r[11]);
+            dto.setTrangThai((String) r[12]);
+            dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
+            dto.setPhanTramKhuyenMai(
+                    r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null
+            );
+            return dto;
+        }).toList();
+    }
+
     public List<SanPhamResponseDTO> getAllSanPhamResponses(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<SanPham> pageSanPhams = sanPhamRepository.findAll(pageable);
@@ -123,7 +151,7 @@ public class San_pham_Service {
             dto.setDoTuoi(sp.getDoTuoi());
             dto.setMoTa(sp.getMoTa());
             dto.setGia(sp.getGia());
-            dto.setGiaKhuyenMai(sp.getGiaKhuyenMai());
+//            dto.setGiaKhuyenMai(sp.getGiaKhuyenMai());
             dto.setSoLuongManhGhep(sp.getSoLuongManhGhep());
             dto.setSoLuongTon(sp.getSoLuongTon());
             dto.setAnhDaiDien(sp.getAnhDaiDien());
@@ -131,7 +159,7 @@ public class San_pham_Service {
             dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
             dto.setIdDanhMuc(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
             dto.setIdBoSuuTap(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null);
-            dto.setKhuyenMaiId(sp.getKhuyenMai() != null ? sp.getKhuyenMai().getId() : null);
+//            dto.setKhuyenMaiId(sp.getKhuyenMai() != null ? sp.getKhuyenMai().getId() : null);
             dto.setTrangThai(sp.getTrangThai());
             dto.setAnhUrls(anhUrls);
 
@@ -161,21 +189,21 @@ public class San_pham_Service {
             BigDecimal giaGoc = sanPhamDTO.getGia();
             BigDecimal giaKhuyenMai = giaGoc; // mặc định bằng giá gốc
 
-            if (sanPhamDTO.getKhuyenMaiId() != null) {
-                KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
-                        .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
-                if (!"Đang hoạt động".equalsIgnoreCase(khuyenMai.getTrangThai())) {
-                    throw new RuntimeException("Khuyến mãi không còn hoạt động và không thể áp dụng.");
-                }
-                sanPham.setKhuyenMai(khuyenMai);
+//            if (sanPhamDTO.getKhuyenMaiId() != null) {
+//                KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
+//                        .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
+//                if (!"Đang hoạt động".equalsIgnoreCase(khuyenMai.getTrangThai())) {
+//                    throw new RuntimeException("Khuyến mãi không còn hoạt động và không thể áp dụng.");
+//                }
+//                sanPham.setKhuyenMai(khuyenMai);
 
-                if (khuyenMai.getPhanTramGiam() != null && khuyenMai.getPhanTramGiam() > 0) {
-                    BigDecimal phanTram = new BigDecimal(khuyenMai.getPhanTramGiam()).divide(BigDecimal.valueOf(100));
-                    giaKhuyenMai = giaGoc.subtract(giaGoc.multiply(phanTram));
-                }
-            }
+//                if (khuyenMai.getPhanTramGiam() != null && khuyenMai.getPhanTramGiam() > 0) {
+//                    BigDecimal phanTram = new BigDecimal(khuyenMai.getPhanTramGiam()).divide(BigDecimal.valueOf(100));
+//                    giaKhuyenMai = giaGoc.subtract(giaGoc.multiply(phanTram));
+//                }
+//            }
 
-            sanPham.setGiaKhuyenMai(giaKhuyenMai);
+//            sanPham.setGiaKhuyenMai(giaKhuyenMai);
 
             sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
             sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
@@ -197,6 +225,14 @@ public class San_pham_Service {
 
             // Gán trạng thái theo số lượng tồn
             sanPham.setTrangThai(tinhTrangThaiTheoTonKho(sanPham.getSoLuongTon()));
+
+            List<KhuyenMaiSanPham> ds = khuyenMaiSanPhamRepository.findBySanPham_Id(id);
+            for (KhuyenMaiSanPham kmsp : ds) {
+                double phanTram = kmsp.getKhuyenMai().getPhanTramKhuyenMai();
+                BigDecimal giaMoi = sanPham.getGia().multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(phanTram).divide(BigDecimal.valueOf(100))));
+                kmsp.setGiaKhuyenMai(giaMoi);
+                khuyenMaiSanPhamRepository.save(kmsp);
+            }
 
             SanPham savedSanPham = sanPhamRepository.save(sanPham);
             return convertToResponseDTO(savedSanPham);
@@ -226,7 +262,7 @@ public class San_pham_Service {
         dto.setDoTuoi(sanPham.getDoTuoi());
         dto.setMoTa(sanPham.getMoTa());
         dto.setGia(sanPham.getGia());
-        dto.setGiaKhuyenMai(sanPham.getGiaKhuyenMai());
+//        dto.setGiaKhuyenMai(sanPham.getGiaKhuyenMai());
         dto.setSoLuongManhGhep(sanPham.getSoLuongManhGhep());
         dto.setSoLuongTon(sanPham.getSoLuongTon());
         dto.setAnhDaiDien(sanPham.getAnhDaiDien());
@@ -234,7 +270,7 @@ public class San_pham_Service {
         dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
         dto.setIdDanhMuc(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
         dto.setIdBoSuuTap(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
-        dto.setKhuyenMaiId(sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null);
+//        dto.setKhuyenMaiId(sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
         dto.setAnhUrls(anhUrls);
 

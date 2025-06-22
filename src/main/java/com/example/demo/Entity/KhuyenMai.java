@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -28,29 +29,23 @@ public class KhuyenMai {
 
     @Column(name = "ma_khuyen_mai", nullable = false, unique = true, length = 50)
     private String maKhuyenMai;
-    @Column(name = "so_luong")
-    private Integer soLuong;
-    @Column(name = "gia_tri_giam")
-    private BigDecimal giaTriGiam;
-    @Column(name = "gia_tri_toi_da")
-    private BigDecimal giaTriToiDa;
 
-    @Column(name = "mo_ta", columnDefinition = "TEXT")
-    private String moTa;
-    @Column(name = "phan_tram_giam")
-    private Integer phanTramGiam;
+    @Column(name = "ten_khuyen_mai", nullable = false)
+    private String tenKhuyenMai;
 
-    @Temporal(TemporalType.DATE)
-    @Column(name = "ngay_bat_dau")
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate ngayBatDau;
+    @Column(name = "phan_tram_khuyen_mai", nullable = false)
+    private Double phanTramKhuyenMai;
 
-    @Temporal(TemporalType.DATE)
-    @Column(name = "ngay_ket_thuc")
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate ngayKetThuc;
+    @Column(name = "ngay_bat_dau", nullable = false)
+    private LocalDateTime ngayBatDau;
 
-    @Column(name = "trang_thai", nullable = false, length = 20)
+    @Column(name = "ngay_ket_thuc", nullable = false)
+    private LocalDateTime ngayKetThuc;
+
+    @Column(name = "ngay_tao")
+    private LocalDateTime ngayTao = LocalDateTime.now();
+
+    @Column(name = "trang_thai", nullable = false)
     private String trangThai;
 
 

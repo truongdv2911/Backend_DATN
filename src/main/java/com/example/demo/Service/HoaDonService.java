@@ -25,6 +25,7 @@ public class HoaDonService {
     private final San_pham_Repo san_pham_repo;
     private final HoaDonChiTietRepository hoaDonChiTietRepository;
     private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
+    private final KhuyenMaiSanPhamRepository khuyenMaiSanPhamRepository;
 
     @Transactional
     public HoaDon createHoaDon(DTOhoaDon dtOhoaDon) throws Exception {
@@ -40,7 +41,7 @@ public class HoaDonService {
             hoaDon.setNgayTao(LocalDateTime.now());
             hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
             hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 10));
-            hoaDon.setNgayGiao(dtOhoaDon.getNgayGiao());
+            hoaDon.setNgayGiao(null);
             hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
 
@@ -51,14 +52,19 @@ public class HoaDonService {
             List<HoaDonChiTiet> donChiTiets = new ArrayList<>();
             for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
                 SanPham sanPham = san_pham_repo.findById(cartItemDto.getIdSanPham())
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + cartItemDto.getIdSanPham()));
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: "
+                                + cartItemDto.getIdSanPham()));
 
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
                 hoaDonChiTiet.setHd(hoaDon);
                 hoaDonChiTiet.setSp(sanPham);
-                hoaDonChiTiet.setGia(sanPham.getGia());
+                hoaDonChiTiet.setGia(khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
+                        ? sanPham.getGia() : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()));
+
                 hoaDonChiTiet.setSoLuong(cartItemDto.getSoLuong());
-                hoaDonChiTiet.setTongTien(sanPham.getGia().multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
+                hoaDonChiTiet.setTongTien(khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
+                        ? sanPham.getGia() : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId())
+                        .multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
                 donChiTiets.add(hoaDonChiTiet);
             }
 
@@ -166,9 +172,12 @@ public class HoaDonService {
             HoaDonChiTiet chiTiet = new HoaDonChiTiet();
             chiTiet.setHd(hoaDon);
             chiTiet.setSp(sanPham);
-            chiTiet.setGia(sanPham.getGia());
+            chiTiet.setGia(khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
+                    ? sanPham.getGia() : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()));
             chiTiet.setSoLuong(cartItemDto.getSoLuong());
-            chiTiet.setTongTien(sanPham.getGia().multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
+            chiTiet.setTongTien(khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
+                    ? sanPham.getGia() : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId())
+                    .multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
 
             newDetails.add(chiTiet);
         }

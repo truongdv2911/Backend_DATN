@@ -1,15 +1,22 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTOs.KhuyenMaiDTO;
+import com.example.demo.DTOs.KhuyenMaiSanPhamDTO;
 import com.example.demo.Entity.KhuyenMai;
+import com.example.demo.Entity.KhuyenMaiSanPham;
+import com.example.demo.Entity.SanPham;
+import com.example.demo.Repository.KhuyenMaiSanPhamRepository;
 import com.example.demo.Repository.Khuyen_mai_Repo;
+import com.example.demo.Repository.San_pham_Repo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
@@ -17,6 +24,8 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class Khuyen_mai_Service {
     private final Khuyen_mai_Repo khuyenMaiRepo;
+    private final KhuyenMaiSanPhamRepository kmspRepo;
+    private final San_pham_Repo sanPhamRepo;
 
     public KhuyenMai createKhuyenMai(@Valid KhuyenMaiDTO khuyenMaiDTO) throws Exception {
         try {
@@ -33,17 +42,11 @@ public class Khuyen_mai_Service {
 
             KhuyenMai khuyenMai = new KhuyenMai();
             khuyenMai.setMaKhuyenMai(maKhuyenMai);
-            khuyenMai.setSoLuong(khuyenMaiDTO.getSoLuong());
-            khuyenMai.setGiaTriGiam(khuyenMaiDTO.getGiaTriGiam());
-            khuyenMai.setGiaTriToiDa(khuyenMaiDTO.getGiaTriToiDa());
-            khuyenMai.setMoTa(khuyenMaiDTO.getMoTa());
-            khuyenMai.setPhanTramGiam(khuyenMaiDTO.getPhanTramGiam());
+            khuyenMai.setTenKhuyenMai(khuyenMaiDTO.getTenKhuyenMai());
+            khuyenMai.setPhanTramKhuyenMai(khuyenMaiDTO.getPhanTramKhuyenMai());
             khuyenMai.setNgayBatDau(khuyenMaiDTO.getNgayBatDau());
             khuyenMai.setNgayKetThuc(khuyenMaiDTO.getNgayKetThuc());
             khuyenMai.setTrangThai(tinhTrangThai(khuyenMaiDTO));
-            if (khuyenMaiDTO.getGiaTriGiam().compareTo(khuyenMaiDTO.getGiaTriToiDa())>0){
-                throw new IllegalArgumentException("Gia tri giam khong duoc lon hon gia tri giam toi da");
-            }
             return khuyenMaiRepo.save(khuyenMai);
         }catch (Exception e){
             throw new Exception("Loi khi tao phieu giam gia", e);
@@ -78,15 +81,11 @@ public class Khuyen_mai_Service {
 //        }
 
         KhuyenMai khuyenMai = getKhuyenMaiById(id);
-        khuyenMai.setMaKhuyenMai(khuyenMai.getMaKhuyenMai());
-        khuyenMai.setSoLuong(khuyenMaiDTO.getSoLuong());
-        khuyenMai.setGiaTriGiam(khuyenMaiDTO.getGiaTriGiam());
-        khuyenMai.setGiaTriToiDa(khuyenMaiDTO.getGiaTriToiDa());
-        khuyenMai.setMoTa(khuyenMaiDTO.getMoTa());
-        khuyenMai.setPhanTramGiam(khuyenMaiDTO.getPhanTramGiam());
+        khuyenMai.setTenKhuyenMai(khuyenMaiDTO.getTenKhuyenMai());
+        khuyenMai.setPhanTramKhuyenMai(khuyenMaiDTO.getPhanTramKhuyenMai());
         khuyenMai.setNgayBatDau(khuyenMaiDTO.getNgayBatDau());
         khuyenMai.setNgayKetThuc(khuyenMaiDTO.getNgayKetThuc());
-        khuyenMai.setTrangThai(tinhTrangThai(khuyenMaiDTO));
+        khuyenMai.setTrangThai(khuyenMaiDTO.getTrangThai());
         return khuyenMaiRepo.save(khuyenMai);
     }
 
@@ -106,27 +105,72 @@ public class Khuyen_mai_Service {
     }
 
     private String tinhTrangThai(KhuyenMaiDTO dto) {
-        if (dto.getSoLuong() == 0) {
-            return "Ngừng";
-        }
-        LocalDate today = LocalDate.now();
-        LocalDate ngayBatDau = dto.getNgayBatDau();
-        LocalDate ngayKetThuc = dto.getNgayKetThuc();
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime ngayBatDau = dto.getNgayBatDau();
+        LocalDateTime ngayKetThuc = dto.getNgayKetThuc();
 
         if (ngayBatDau != null && ngayKetThuc != null) {
             if ((today.isEqual(ngayBatDau) || today.isAfter(ngayBatDau)) &&
                     (today.isEqual(ngayKetThuc) || today.isBefore(ngayKetThuc))) {
-                return "Đang hoạt động";
+                return "active";
             }
 
             if (today.isBefore(ngayBatDau)) {
-                return "Ngừng";
+                return "inactive";
             }
 
             if (today.isAfter(ngayKetThuc)) {
-                return "Hết hạn";
+                return "expired";
             }
         }
         return "Chưa xác định";
+    }
+
+    public void applyKhuyenMai(KhuyenMaiSanPhamDTO request) {
+        KhuyenMai km = khuyenMaiRepo.findById(request.getKhuyenMaiId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khuyến mãi"));
+
+        for (Integer idSp : request.getListSanPhamId()) {
+            if (kmspRepo.existsBySanPham_IdAndKhuyenMai_Id(idSp, km.getId())) continue;
+
+            SanPham sp = sanPhamRepo.findById(idSp)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với id: " + idSp));
+
+            List<KhuyenMaiSanPham> dsKhuyenMaiHienTai = kmspRepo.findBySanPham_Id(sp.getId());
+
+            for (KhuyenMaiSanPham kmsp : dsKhuyenMaiHienTai) {
+                KhuyenMai kmCu = kmsp.getKhuyenMai();
+                if (isOverlapping(km.getNgayBatDau(), km.getNgayKetThuc(),
+                        kmCu.getNgayBatDau(), kmCu.getNgayKetThuc())) {
+                    throw new RuntimeException("Sản phẩm \"" + sp.getTenSanPham() + "\" đã có khuyến mãi giao thời gian");
+                }
+            }
+
+            // ✅ Tính giá khuyến mãi theo %
+            BigDecimal giaKhuyenMai;
+            LocalDateTime now = LocalDateTime.now();
+
+            if (!now.isBefore(km.getNgayBatDau()) && !now.isAfter(km.getNgayKetThuc())) {
+                // ĐANG trong thời gian khuyến mãi
+                giaKhuyenMai = sp.getGia()
+                        .multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(km.getPhanTramKhuyenMai()).divide(BigDecimal.valueOf(100))))
+                        .setScale(2, RoundingMode.HALF_UP);
+            } else {
+                // CHƯA ĐẾN hoặc ĐÃ QUA khuyến mãi → giữ giá gốc
+                giaKhuyenMai = sp.getGia();
+            }
+
+            KhuyenMaiSanPham kmsp = KhuyenMaiSanPham.builder()
+                    .sanPham(sp)
+                    .khuyenMai(km)
+                    .giaKhuyenMai(giaKhuyenMai)
+                    .build();
+            kmspRepo.save(kmsp);
+        }
+    }
+
+    boolean isOverlapping(LocalDateTime start1, LocalDateTime end1,
+                          LocalDateTime start2, LocalDateTime end2) {
+        return !start1.isAfter(end2) && !start2.isAfter(end1);
     }
 }

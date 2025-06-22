@@ -47,7 +47,7 @@ public class SanPhamDTO {
     @DecimalMin(value = "0.0", message = "Đánh giá trung bình phải lớn hơn hoặc bằng 0")
      Double danhGiaTrungBinh;
 
-     Integer khuyenMaiId;
+//     Integer khuyenMaiId;
      Integer danhMucId;
      Integer boSuuTapId;
 

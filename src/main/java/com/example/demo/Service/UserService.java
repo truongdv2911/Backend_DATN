@@ -47,6 +47,23 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
+    public User createUser2(DTOuser dtoUser) {
+        if (userRepository.existsByEmail(dtoUser.getEmail())) {
+            throw new DataIntegrityViolationException("Email da ton tai");
+        }
+        User user = new User(null, dtoUser.getTen(), dtoUser.getEmail(), dtoUser.getMatKhau(), dtoUser.getSdt()
+                , dtoUser.getNgaySinh(), dtoUser.getDiaChi(), 1, dtoUser.getFacebookId(),
+                dtoUser.getGoogleId(), roleRepository.findById(dtoUser.getRole_id()).orElseThrow(() -> new RuntimeException("khong tim thay id role")));
+
+        if (dtoUser.getFacebookId() == null && dtoUser.getGoogleId() == null) {
+            String password = user.getMatKhau();
+            String encodePass = passwordEncoder.encode(password);
+            user.setMatKhau(encodePass);
+        }
+        return userRepository.save(user);
+    }
+
     public String login(DTOlogin dtOlogin) throws Exception {
         Optional<User> user = userRepository.findByEmail(dtOlogin.getEmail());
         if (user.isEmpty()) {
@@ -128,11 +145,11 @@ public class UserService {
         }
     }
 
-    public Page<User> pageUser(String keyword, PageRequest pageRequest){
+    public List<User> pageUser(String keyword){
         if (keyword == null || keyword.isBlank()){
-            return userRepository.pageUser(null, pageRequest);
+            return userRepository.findAll();
         }
-        return userRepository.findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(keyword, keyword, pageRequest);
+        return userRepository.findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(keyword, keyword);
     }
 
 }
