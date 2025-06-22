@@ -54,7 +54,7 @@ public class GioHangService {
             gioHangChiTiet.setGioHang(gioHang);
             gioHangChiTiet.setSanPham(sanPham);
             gioHangChiTiet.setSoLuong(soLuong);
-            gioHangChiTiet.setGia(sanPham.getGiaKhuyenMai()); // Giả định SanPham có trường gia
+//            gioHangChiTiet.setGia(sanPham.getGiaKhuyenMai()); // Giả định SanPham có trường gia
             gioHangChiTiet.setTongTien(sanPham.getGia().multiply(BigDecimal.valueOf(soLuong)));
         } else {
             gioHangChiTiet.setSoLuong(gioHangChiTiet.getSoLuong() + soLuong);

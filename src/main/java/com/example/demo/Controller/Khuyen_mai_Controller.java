@@ -28,16 +28,18 @@ public class Khuyen_mai_Controller {
 
 
     @PostMapping("/Create")
-    public ResponseEntity<?> createKhuyenMai(@Valid @RequestBody KhuyenMaiDTO khuyenMaiDTO, BindingResult bindingResult) {
+    public ResponseEntity<?> createKhuyenMai(@Valid @RequestBody KhuyenMaiDTO khuyenMaiDTO, BindingResult result) {
         try {
-            if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            if (result.hasErrors()){
+                List<String> listErorrs = result.getFieldErrors().stream().
+                        map(errors -> errors.getDefaultMessage()).toList();
+                return ResponseEntity.badRequest().body(listErorrs);
             }
             if ( khuyenMaiDTO.getNgayBatDau().isAfter(khuyenMaiDTO.getNgayKetThuc())) {
                 return ResponseEntity.badRequest().body("Ngày bắt đầu phải trước ngày kết thúc");
             }
-            KhuyenMai result = khuyenMaiService.createKhuyenMai(khuyenMaiDTO);
-            return ResponseEntity.ok(result);
+            KhuyenMai results = khuyenMaiService.createKhuyenMai(khuyenMaiDTO);
+            return ResponseEntity.ok(results);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -103,13 +105,10 @@ public class Khuyen_mai_Controller {
     public static boolean isDifferent(KhuyenMaiDTO dto, KhuyenMai entity) {
         if (dto == null || entity == null) return true;
 
-        return !Objects.equals(dto.getSoLuong(), entity.getSoLuong())
-                || compareBigDecimal(dto.getGiaTriGiam(), entity.getGiaTriGiam())
-                || compareBigDecimal(dto.getGiaTriToiDa(), entity.getGiaTriToiDa())
-                || !Objects.equals(dto.getMoTa(), entity.getMoTa())
-                || !Objects.equals(dto.getPhanTramGiam(), entity.getPhanTramGiam())
-                || !Objects.equals(dto.getNgayBatDau(), entity.getNgayBatDau())
+        return !Objects.equals(dto.getNgayBatDau(), entity.getNgayBatDau())
                 || !Objects.equals(dto.getNgayKetThuc(), entity.getNgayKetThuc())
+                || !Objects.equals(dto.getTenKhuyenMai(), entity.getTenKhuyenMai())
+                || !Objects.equals(dto.getPhanTramKhuyenMai(), entity.getPhanTramKhuyenMai())
                 || !Objects.equals(dto.getTrangThai(), entity.getTrangThai());
     }
     private static boolean compareBigDecimal(BigDecimal a, BigDecimal b) {

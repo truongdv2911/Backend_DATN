@@ -4,6 +4,7 @@ import com.example.demo.DTOs.SanPhamDTO;
 
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.San_pham_Repo;
+import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Service.San_pham_Service;
 import jakarta.validation.Valid;
@@ -49,6 +50,16 @@ public class San_pham_Controller {
             @RequestParam(defaultValue = "10") int size) {
         try {
             List<SanPhamResponseDTO> responseDTOs = sanPhamService.getAllSanPhamResponses(page, size);
+            return ResponseEntity.ok(responseDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/ReadAllV2")
+    public ResponseEntity<?> getAllSanPhamsV2() {
+        try {
+            List<SanPhamKMResponse> responseDTOs = sanPhamService.getSanPhamKhuyenMaiFull();
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -105,8 +116,6 @@ public class San_pham_Controller {
                         sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null) ||
                 !Objects.equals(sanPhamDTO.getBoSuuTapId(),
                         sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null) ||
-                !Objects.equals(sanPhamDTO.getKhuyenMaiId(),
-                        sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null) ||
                 !Objects.equals(sanPhamDTO.getTrangThai(), sanPham.getTrangThai());
     }
 

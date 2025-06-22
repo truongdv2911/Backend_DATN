@@ -35,8 +35,8 @@ public class SanPham {
      String moTa;
     @Column(name = "gia")
      BigDecimal gia;
-    @Column(name = "gia_khuyen_mai")
-     BigDecimal giaKhuyenMai;
+//    @Column(name = "gia_khuyen_mai")
+//     BigDecimal giaKhuyenMai;
 
     @Column(name = "so_luong_manh_ghep")
      Integer soLuongManhGhep;
@@ -56,11 +56,6 @@ public class SanPham {
     @Column(name = "ngay_sua")
     @Temporal(TemporalType.TIMESTAMP)
      Date ngaySua = new Date();
-
-    @ManyToOne
-    @JsonIgnore // Bỏ qua khi tuần tự hóa
-    @JoinColumn(name = "khuyen_mai_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_KhuyenMai"))
-     KhuyenMai khuyenMai;
 
     @ManyToOne
     @JoinColumn(name = "danh_muc_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_DanhMuc"))

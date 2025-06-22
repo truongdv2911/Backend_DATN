@@ -4,6 +4,7 @@ package com.example.demo.Controller;
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
 import com.example.demo.Entity.User;
+import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Responses.ListUserResponse;
 import com.example.demo.Responses.LoginResponse;
@@ -40,6 +41,7 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final GioHangService gioHangService;
+    private final RoleRepository roleRepository;
     private final AuthenticationManager authenticationManager;
 
 
@@ -73,6 +75,26 @@ public class UserController {
             }
         }
         return ResponseEntity.badRequest().body(new LoginResponse(null, null,null, "Xác thực không hợp lệ"));
+    }
+
+    @GetMapping("/getRole")
+    public ResponseEntity<?> getRoles(){
+        return ResponseEntity.ok(roleRepository.findAll());
+    }
+
+    @PostMapping("/createUser")
+    public ResponseEntity<?> createUser2(@Valid @RequestBody DTOuser user, BindingResult result){
+        try {
+            if (result.hasErrors()){
+                List<String> listErorrs = result.getFieldErrors().stream().
+                        map(errors -> errors.getDefaultMessage()).toList();
+                return ResponseEntity.badRequest().body(listErorrs);
+            }
+            User user1 = userService.createUser2(user);
+            return ResponseEntity.ok(user1);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @PostMapping("/login")
@@ -145,28 +167,18 @@ public class UserController {
 
     @GetMapping("/paging")
     public ResponseEntity<?> getAll(
-            @RequestParam("page") int pageNo,
-            @RequestParam("limit") int limit,
             @RequestParam(value = "keyword", required = false) String keyword
     ){
-        PageRequest pageRequest = PageRequest.of(pageNo, limit, Sort.by("ngayTao").descending());
-        Page<User> users = userService.pageUser(keyword, pageRequest);
-        int totalPage = users.getTotalPages();
-        List<User> listUser = users.getContent();
-        return ResponseEntity.ok(new ListUserResponse(listUser, totalPage));
+        List<User> users = userService.pageUser(keyword);
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/getTheoRole")
     public ResponseEntity<?> getMembers(
-            @RequestParam("page") int pageNo,
-            @RequestParam("limit") int limit,
             @RequestParam(value = "roleId", required = false) String roleId
     ){
-        PageRequest pageRequest = PageRequest.of(pageNo, limit, Sort.by("ngayTao").descending());
-        Page<User> users = userRepository.pageUser(roleId, pageRequest);
-        int totalPage = users.getTotalPages();
-        List<User> listUser = users.getContent();
-        return ResponseEntity.ok(new ListUserResponse(listUser, totalPage));
+        List<User> users = userRepository.pageUser(roleId);
+        return ResponseEntity.ok(users);
     }
 
     @PutMapping("update/{id}")
@@ -186,5 +198,4 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }
