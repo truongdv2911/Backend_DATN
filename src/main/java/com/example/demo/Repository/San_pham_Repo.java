@@ -5,14 +5,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface San_pham_Repo extends JpaRepository<SanPham,Integer> {
+public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecificationExecutor<SanPham> {
     boolean existsByMaSanPham(@Param("maSanPham") String maSanPham);
 
     @EntityGraph(attributePaths = "anhSps")
@@ -70,6 +72,21 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer> {
             phan_tram_khuyen_mai
         FROM sp_km
         WHERE rn = 1
+        AND (:keyword IS NULL OR LOWER(ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')))
+                  AND (:giaMin IS NULL OR gia >= :giaMin)
+                  AND (:giaMax IS NULL OR gia <= :giaMax)
+                  AND (:idDanhMuc IS NULL OR danh_muc_id = :idDanhMuc)
+                  AND (:idBoSuuTap IS NULL OR bo_suu_tap_id = :idBoSuuTap)
+                  AND (:tuoiMin IS NULL OR do_tuoi >= :tuoiMin)
+                  AND (:tuoiMax IS NULL OR do_tuoi <= :tuoiMax)
 """, nativeQuery = true)
-    List<Object[]> findSanPhamWithCurrentKhuyenMai();
+    List<Object[]> findSanPhamWithCurrentKhuyenMai(
+            @Param("keyword") String keyword,
+            @Param("giaMin") BigDecimal giaMin,
+            @Param("giaMax") BigDecimal giaMax,
+            @Param("idDanhMuc") Integer idDanhMuc,
+            @Param("idBoSuuTap") Integer idBoSuuTap,
+            @Param("tuoiMin") Integer tuoiMin,
+            @Param("tuoiMax") Integer tuoiMax
+    );
 }

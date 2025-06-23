@@ -4,8 +4,10 @@ import com.example.demo.Entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,10 +24,6 @@ import java.util.List;
 @NoArgsConstructor
 public class DTOhoaDon {
     @Min(value = 0)
-    private BigDecimal tamTinh;
-    @Min(value = 0)
-    private BigDecimal tongTien;
-    @Min(value = 0)
     private BigDecimal soTienGiam;
     @NotEmpty
     private String DiaChiGiaoHang;
@@ -36,7 +34,12 @@ public class DTOhoaDon {
     private String trangThai;
     @NotEmpty
     private String phuongThucThanhToan;
+    @NotEmpty(message = "không để trống số điện thoại người nhận")
+    @Pattern(regexp = "\\d{10}", message = "Sai dinh dang sdt")
+    private String sdt;
 
+    @Valid
+    @NotEmpty(message = "Giỏ hàng không được để trống")
     private List<CartItemDTO> cartItems;
 
     private Integer userId;

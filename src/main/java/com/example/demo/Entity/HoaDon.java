@@ -40,6 +40,8 @@ public class HoaDon {
     private String trangThai;
     @Column(name = "phuong_thuc_thanh_toan")
     private String phuongThucThanhToan;
+    @Column(name = "so_dien_thoai")
+    private String sdt;
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;

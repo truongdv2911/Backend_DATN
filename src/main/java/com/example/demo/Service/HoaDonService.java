@@ -44,6 +44,7 @@ public class HoaDonService {
             hoaDon.setNgayGiao(null);
             hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
+            hoaDon.setSdt(dtOhoaDon.getSdt());
 
             PhieuGiamGia phieuGiamGia = phieuGiamGiaRepo.findById(dtOhoaDon.getIdPhieuGiam()).orElseThrow(()-> new RuntimeException("Không tìm thấy id phiếu giảm"));
             hoaDon.setPhieuGiamGia(phieuGiamGia);
@@ -127,7 +128,7 @@ public class HoaDonService {
         modelMapper.typeMap(HoaDon.class, HoaDonResponse.class).addMappings(mapper ->{
             mapper.map(src -> src.getUser().getId(), HoaDonResponse::setUserId);
             mapper.map(src -> src.getNv().getId(), HoaDonResponse::setNvId);
-//                mapper.map(src -> src.get().getId(), HoaDonResponse::setUserId);
+            mapper.map(src -> src.getPhieuGiamGia().getId(), HoaDonResponse::setUserId);
         });
         HoaDon hoaDon = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
         return modelMapper.map(hoaDon, HoaDonResponse.class);
@@ -138,7 +139,7 @@ public class HoaDonService {
         modelMapper.typeMap(HoaDon.class, HoaDonResponse.class).addMappings(mapper ->{
                 mapper.map(src -> src.getUser().getId(), HoaDonResponse::setUserId);
                 mapper.map(src -> src.getNv().getId(), HoaDonResponse::setNvId);
-//                mapper.map(src -> src.get().getId(), HoaDonResponse::setUserId);
+                mapper.map(src -> src.getPhieuGiamGia().getId(), HoaDonResponse::setUserId);
         });
         return hoaDonRepository.findByIdUser(user_id).stream().map(order -> {
             HoaDonResponse orderResponse = modelMapper.map(order, HoaDonResponse.class);
@@ -226,6 +227,7 @@ public class HoaDonService {
         hoaDon.setTongTien(tong.subtract(soTienGiam));
         hoaDon.setTrangThai(dtOhoaDon.getTrangThai());
         hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
+        hoaDon.setSdt(dtOhoaDon.getSdt());
         hoaDon.setNgayGiao(dtOhoaDon.getNgayGiao());
         hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
 
