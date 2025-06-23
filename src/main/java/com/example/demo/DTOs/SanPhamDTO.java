@@ -1,5 +1,6 @@
 package com.example.demo.DTOs;
 
+import com.example.demo.Entity.SanPham;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -38,9 +39,6 @@ public class SanPhamDTO {
     @Min(value = 1, message = "Số lượng tồn phải lớn hơn 0")
      Integer soLuongTon;
 
-    @Size(max = 255, message = "Ảnh đại diện không được vượt quá 255 ký tự")
-     String anhDaiDien;
-
     @Min(value = 0, message = "Số lượng vote phải lớn hơn hoặc bằng 0")
      Integer soLuongVote;
 
@@ -54,4 +52,25 @@ public class SanPhamDTO {
     @NotBlank(message = "Trạng thái không được để trống")
     @Size(max = 50, message = "Trạng thái không được vượt quá 50 ký tự")
     String trangThai;
+
+    public SanPhamDTO(SanPham sp) {
+        this.tenSanPham = sp.getTenSanPham();
+        this.maSanPham = sp.getMaSanPham();
+        this.doTuoi = sp.getDoTuoi();
+        this.moTa = sp.getMoTa();
+        this.soLuongManhGhep = sp.getSoLuongManhGhep();
+        this.gia = sp.getGia();
+        this.soLuongTon = sp.getSoLuongTon();
+        this.soLuongVote = sp.getSoLuongVote();
+        this.danhGiaTrungBinh = sp.getDanhGiaTrungBinh();
+        this.trangThai = sp.getTrangThai();
+
+        if (sp.getDanhMuc() != null) {
+            this.danhMucId = sp.getDanhMuc().getId();
+        }
+
+        if (sp.getBoSuuTap() != null) {
+            this.boSuuTapId = sp.getBoSuuTap().getId();
+        }
+    }
 }

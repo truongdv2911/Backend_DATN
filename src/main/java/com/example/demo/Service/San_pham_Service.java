@@ -3,6 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.SanPhamDTO;
 
 import com.example.demo.Entity.*;
+import com.example.demo.Filter.SanPhamSpecification;
 import com.example.demo.Repository.*;
 import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
@@ -11,11 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -34,7 +37,7 @@ public class San_pham_Service {
 
     // Phương thức helper tính trạng thái theo số lượng tồn
     private String tinhTrangThaiTheoTonKho(int soLuongTon) {
-        return soLuongTon > 0 ? "Còn hàng" : "Hết hàng";
+        return soLuongTon > 0 ? "Đang kinh doanh" : "Hết hàng";
     }
 
     public SanPhamResponseDTO createSanPham(@Valid SanPhamDTO sanPhamDTO) {
@@ -81,7 +84,6 @@ public class San_pham_Service {
 //        sanPham.setGiaKhuyenMai(giaKhuyenMai);
         sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
-        sanPham.setAnhDaiDien(sanPhamDTO.getAnhDaiDien());
         sanPham.setSoLuongVote(0);
         sanPham.setDanhGiaTrungBinh(0.0);
 
@@ -106,7 +108,8 @@ public class San_pham_Service {
     }
 
     public List<SanPhamKMResponse> getSanPhamKhuyenMaiFull() {
-        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai();
+        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai(null, null,null
+                ,null,null,null,null);
 
         return rows.stream().map(r -> {
             SanPhamKMResponse dto = new SanPhamKMResponse();
@@ -224,7 +227,7 @@ public class San_pham_Service {
             }
 
             // Gán trạng thái theo số lượng tồn
-            sanPham.setTrangThai(tinhTrangThaiTheoTonKho(sanPham.getSoLuongTon()));
+            sanPham.setTrangThai(sanPhamDTO.getTrangThai());
 
             List<KhuyenMaiSanPham> ds = khuyenMaiSanPhamRepository.findBySanPham_Id(id);
             for (KhuyenMaiSanPham kmsp : ds) {
@@ -244,7 +247,8 @@ public class San_pham_Service {
     public void deleteSanPham(Integer id) {
         try {
             SanPham sanPham = getSanPhamById(id);
-            sanPhamRepository.delete(sanPham);
+            sanPham.setTrangThai("Ngừng kinh doanh");
+            sanPhamRepository.save(sanPham);
         } catch (Exception e) {
             throw new RuntimeException("Error while deleting SanPham: " + e.getMessage(), e);
         }
@@ -281,5 +285,41 @@ public class San_pham_Service {
         Random random = new Random();
         int randomNumber = random.nextInt(900000) + 100000;
         return "SP" + randomNumber;
+    }
+
+    public List<SanPhamKMResponse> timKiemSanPham(
+            String keyword,
+            BigDecimal giaMin,
+            BigDecimal giaMax,
+            Integer idDanhMuc,
+            Integer idBoSuuTap,
+            Integer tuoiMin,
+            Integer tuoiMax
+    ) {
+        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai(
+                keyword, giaMin, giaMax,
+                idDanhMuc, idBoSuuTap,
+                tuoiMin, tuoiMax);
+        return rows.stream().map(r -> {
+            SanPhamKMResponse dto = new SanPhamKMResponse();
+            dto.setId((Integer) r[0]);
+            dto.setTenSanPham((String) r[1]);
+            dto.setMaSanPham((String) r[2]);
+            dto.setDoTuoi((Integer) r[3]);
+            dto.setMoTa((String) r[4]);
+            dto.setGia((BigDecimal) r[5]);
+            dto.setSoLuongManhGhep((Integer) r[6]);
+            dto.setSoLuongTon((Integer) r[7]);
+            dto.setSoLuongVote((Integer) r[8]);
+            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
+            dto.setIdDanhMuc((Integer) r[10]);
+            dto.setIdBoSuuTap((Integer) r[11]);
+            dto.setTrangThai((String) r[12]);
+            dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
+            dto.setPhanTramKhuyenMai(
+                    r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null
+            );
+            return dto;
+        }).toList();
     }
 }

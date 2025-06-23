@@ -9,10 +9,13 @@ import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Service.San_pham_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,6 +120,25 @@ public class San_pham_Controller {
                 !Objects.equals(sanPhamDTO.getBoSuuTapId(),
                         sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null) ||
                 !Objects.equals(sanPhamDTO.getTrangThai(), sanPham.getTrangThai());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchSanPham(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) BigDecimal giaMin,
+            @RequestParam(required = false) BigDecimal giaMax,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss") LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss") LocalDateTime toDate,
+            @RequestParam(required = false) Integer idDanhMuc,
+            @RequestParam(required = false) Integer idBoSuuTap,
+            @RequestParam(required = false) Integer tuoiMin,
+            @RequestParam(required = false) Integer tuoiMax
+    ) {
+        List<SanPhamKMResponse> result = sanPhamService.timKiemSanPham(
+                keyword, giaMin, giaMax,
+                idDanhMuc, idBoSuuTap, tuoiMin, tuoiMax
+        );
+        return ResponseEntity.ok(result);
     }
 
 }
