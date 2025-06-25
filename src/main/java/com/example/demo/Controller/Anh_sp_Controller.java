@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.Anh_sp_DTO;
 
+import com.example.demo.Entity.AnhSp;
 import com.example.demo.Service.AnhSpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -122,4 +123,17 @@ public class Anh_sp_Controller {
 //                    .body("Không tìm thấy ảnh cho sản phẩm ID: " + sanPhamId + " - " + e.getMessage());
 //        }
 //    }
+
+    @GetMapping("/sanpham/{sanPhamId}")
+    public ResponseEntity<?> getAnhBySanPham(@PathVariable Integer sanPhamId) {
+        try {
+            List<Anh_sp_DTO> anhSpList = anhSpService.getAnhBySanPhamId(sanPhamId);
+            return ResponseEntity.ok(anhSpList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Không tìm thấy ảnh cho sản phẩm ID: " + sanPhamId + " - " + e.getMessage());
+        }
+    }
+
+
 }

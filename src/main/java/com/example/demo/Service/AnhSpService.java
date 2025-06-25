@@ -47,6 +47,7 @@ public class AnhSpService {
     public List<Anh_sp_DTO> getAllAnhSp() {
         List<AnhSp> anhSpList = anhSpRepository.findAll();
         return anhSpList.stream().map(anhSp -> new Anh_sp_DTO(
+                anhSp.getId(),
                 anhSp.getUrl(),
                 anhSp.getMoTa(),
                 anhSp.getThuTu(),
@@ -59,6 +60,7 @@ public class AnhSpService {
         AnhSp anhSp = anhSpRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
         return new Anh_sp_DTO(
+                anhSp.getId(),
                 anhSp.getUrl(),
                 anhSp.getMoTa(),
                 anhSp.getThuTu(),
@@ -67,9 +69,21 @@ public class AnhSpService {
         );
     }
 
-    public void deleteAnhSp(Integer id) {
-        anhSpRepository.deleteById(id);
+//    public void deleteAnhSp(Integer id) {
+//        anhSpRepository.deleteById(id);
+//    }
+public void deleteAnhSp(Integer id) {
+    AnhSp anh = anhSpRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
+    Path path = uploadDir.resolve(anh.getUrl());
+    try {
+        Files.deleteIfExists(path);
+    } catch (IOException e) {
+        System.out.println("Không thể xóa file vật lý: " + e.getMessage());
     }
+    anhSpRepository.deleteById(id);
+}
+
 
     public Anh_sp_DTO updateAnhSp(Integer id, MultipartFile file, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
         try {
@@ -116,6 +130,7 @@ public class AnhSpService {
 
             AnhSp updatedAnhSp = anhSpRepository.save(anhSp);
             return new Anh_sp_DTO(
+                    updatedAnhSp.getId(),
                     updatedAnhSp.getUrl(),
                     updatedAnhSp.getMoTa(),
                     updatedAnhSp.getThuTu(),
@@ -227,31 +242,31 @@ public class AnhSpService {
 
                 // Set anhChinh: true cho ảnh đầu tiên trong lần upload này, nhưng chỉ nếu không có ảnh chính nào khác
                 boolean isFirstImage = (i == 0);
-                if (isFirstImage) {
-                    // Đặt lại tất cả ảnh hiện có thành anhChinh = false
-                    existingImages.forEach(img -> {
-                        if (img.getAnhChinh()) {
-                            img.setAnhChinh(false);
-                            anhSpRepository.save(img);
-                        }
-                    });
+                boolean daCoAnhChinh = existingImages.stream().anyMatch(AnhSp::getAnhChinh);
+                if (!daCoAnhChinh && i == 0) {
                     anhSp.setAnhChinh(true);
                     sanPham.setAnhDaiDien(url);
                     sanPhamRepository.save(sanPham);
-                    daSetAnhDaiDien = false;
+                    daCoAnhChinh = true;
+                } else if (Boolean.TRUE.equals(anhChinh)) {
+                    for (AnhSp img : existingImages) {
+                        if (Boolean.TRUE.equals(img.getAnhChinh())) {
+                            img.setAnhChinh(false);
+                            anhSpRepository.save(img);
+                        }
+                    }
+                    anhSp.setAnhChinh(true);
+                    sanPham.setAnhDaiDien(url);
+                    sanPhamRepository.save(sanPham);
+                    daCoAnhChinh = true;
                 } else {
                     anhSp.setAnhChinh(false);
                 }
                 anhSp.setSanPham(sanPham);
-
-                // Gán ảnh đại diện nếu ảnh đầu tiên và chưa có ảnh đại diện
-
-
-
-
                 // Lưu ảnh và ánh xạ sang DTO
                 AnhSp savedAnhSp = anhSpRepository.save(anhSp);
                 Anh_sp_DTO anhSpDTO = new Anh_sp_DTO(
+                        savedAnhSp.getId(),
                         savedAnhSp.getUrl(),
                         savedAnhSp.getMoTa(),
                         savedAnhSp.getThuTu(),
@@ -293,4 +308,19 @@ public class AnhSpService {
         }
         return sb.toString();
     }
+
+    //
+
+    public List<Anh_sp_DTO> getAnhBySanPhamId(Integer sanPhamId) {
+        List<AnhSp> list = anhSpRepository.findBySanPhamId(sanPhamId);
+        return list.stream().map(anhSp -> new Anh_sp_DTO(
+                anhSp.getId(),
+                anhSp.getUrl(),
+                anhSp.getMoTa(),
+                anhSp.getThuTu(),
+                anhSp.getAnhChinh(),
+                anhSp.getSanPham().getId()
+        )).collect(Collectors.toList());
+    }
+
 }
