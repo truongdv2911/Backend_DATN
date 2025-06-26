@@ -13,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE )
 public class Anh_sp_DTO {
+    @NotNull(message = "ID ảnh không được để trống")
+    Integer id;
 
     @NotBlank(message = "URL không được để trống")
     @Size(max = 500, message = "URL không được vượt quá 500 ký tự")
