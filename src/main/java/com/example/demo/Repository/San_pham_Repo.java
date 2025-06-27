@@ -18,6 +18,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
     boolean existsByMaSanPham(@Param("maSanPham") String maSanPham);
 
     @EntityGraph(attributePaths = "anhSps")
+    @Query("select s from SanPham s where s.trangThai in ('Đang kinh doanh', 'Hết hàng')")
     Page<SanPham> findAll(Pageable pageable);
 
     @Query(value = """
@@ -71,7 +72,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             gia_khuyen_mai,
             phan_tram_khuyen_mai
         FROM sp_km
-        WHERE rn = 1
+        WHERE rn = 1 and trang_thai like N'Đang kinh doanh' or trang_thai like N'Hết hàng'
         AND (:keyword IS NULL OR LOWER(ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')))
                   AND (:giaMin IS NULL OR gia >= :giaMin)
                   AND (:giaMax IS NULL OR gia <= :giaMax)
