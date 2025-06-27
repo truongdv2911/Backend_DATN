@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.SanPhamDTO;
 
+import com.example.demo.DTOs.SanPhamUpdateDTO;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.San_pham_Repo;
 import com.example.demo.Responses.SanPhamKMResponse;
@@ -80,7 +81,7 @@ public class San_pham_Controller {
     }
 
     @PutMapping("/Update/{id}")
-    public ResponseEntity<?> updateSanPham(@PathVariable Integer id, @Valid @RequestBody SanPhamDTO sanPhamDTO,BindingResult result) {
+    public ResponseEntity<?> updateSanPham(@PathVariable Integer id, @Valid @RequestBody SanPhamUpdateDTO sanPhamDTO, BindingResult result) {
         try {
             if (result.hasErrors()) {
                 List<String> listErrors = result.getFieldErrors().stream()
@@ -106,7 +107,7 @@ public class San_pham_Controller {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
-    public static boolean isDifferent(SanPhamDTO sanPhamDTO, SanPham sanPham) {
+    public static boolean isDifferent(SanPhamUpdateDTO sanPhamDTO, SanPham sanPham) {
         return !Objects.equals(sanPhamDTO.getTenSanPham(), sanPham.getTenSanPham()) ||
                 !Objects.equals(sanPhamDTO.getDoTuoi(), sanPham.getDoTuoi()) ||
                 !Objects.equals(sanPhamDTO.getMoTa(), sanPham.getMoTa()) ||
@@ -118,8 +119,7 @@ public class San_pham_Controller {
                 !Objects.equals(sanPhamDTO.getDanhMucId(),
                         sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null) ||
                 !Objects.equals(sanPhamDTO.getBoSuuTapId(),
-                        sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null) ||
-                !Objects.equals(sanPhamDTO.getTrangThai(), sanPham.getTrangThai());
+                        sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
     }
 
     @GetMapping("/search")

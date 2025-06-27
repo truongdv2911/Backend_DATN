@@ -35,6 +35,7 @@ public class DTOuser {
             message = "Mật khẩu phải có ít nhất 1 ký tự đặc biệt hoặc sai định dạng"
     )
     private String matKhau;
+    @Pattern(regexp = "\\d{10}", message = "Sai dinh dang sdt")
     private String sdt;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")

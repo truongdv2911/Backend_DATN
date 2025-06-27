@@ -2,6 +2,7 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.SanPhamDTO;
 
+import com.example.demo.DTOs.SanPhamUpdateDTO;
 import com.example.demo.Entity.*;
 import com.example.demo.Filter.SanPhamSpecification;
 import com.example.demo.Repository.*;
@@ -157,7 +158,6 @@ public class San_pham_Service {
 //            dto.setGiaKhuyenMai(sp.getGiaKhuyenMai());
             dto.setSoLuongManhGhep(sp.getSoLuongManhGhep());
             dto.setSoLuongTon(sp.getSoLuongTon());
-            dto.setAnhDaiDien(sp.getAnhDaiDien());
             dto.setSoLuongVote(sp.getSoLuongVote());
             dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
             dto.setIdDanhMuc(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
@@ -181,7 +181,7 @@ public class San_pham_Service {
         }
     }
 
-    public SanPhamResponseDTO updateSanPham(Integer id, SanPhamDTO sanPhamDTO) {
+    public SanPhamResponseDTO updateSanPham(Integer id, SanPhamUpdateDTO sanPhamDTO) {
         try {
             SanPham sanPham = getSanPhamById(id);
             sanPham.setTenSanPham(sanPhamDTO.getTenSanPham());
@@ -210,9 +210,6 @@ public class San_pham_Service {
 
             sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
             sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
-            sanPham.setAnhDaiDien(null);
-            sanPham.setSoLuongVote(0);
-            sanPham.setDanhGiaTrungBinh(0.0);
 
             if (sanPhamDTO.getDanhMucId() != null) {
                 DanhMuc danhMuc = danhMucRepository.findById(sanPhamDTO.getDanhMucId())
@@ -227,7 +224,7 @@ public class San_pham_Service {
             }
 
             // Gán trạng thái theo số lượng tồn
-            sanPham.setTrangThai(sanPhamDTO.getTrangThai());
+            sanPham.setTrangThai(tinhTrangThaiTheoTonKho(sanPhamDTO.getSoLuongTon()));
 
             List<KhuyenMaiSanPham> ds = khuyenMaiSanPhamRepository.findBySanPham_Id(id);
             for (KhuyenMaiSanPham kmsp : ds) {
@@ -266,15 +263,12 @@ public class San_pham_Service {
         dto.setDoTuoi(sanPham.getDoTuoi());
         dto.setMoTa(sanPham.getMoTa());
         dto.setGia(sanPham.getGia());
-//        dto.setGiaKhuyenMai(sanPham.getGiaKhuyenMai());
         dto.setSoLuongManhGhep(sanPham.getSoLuongManhGhep());
         dto.setSoLuongTon(sanPham.getSoLuongTon());
-        dto.setAnhDaiDien(sanPham.getAnhDaiDien());
         dto.setSoLuongVote(sanPham.getSoLuongVote());
         dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
         dto.setIdDanhMuc(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
         dto.setIdBoSuuTap(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
-//        dto.setKhuyenMaiId(sanPham.getKhuyenMai() != null ? sanPham.getKhuyenMai().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
         dto.setAnhUrls(anhUrls);
 
