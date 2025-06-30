@@ -22,6 +22,8 @@ public class HoaDon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(name = "ma_hoa_don", unique = true)
+    private String maHD;
     @Column(name = "tam_tinh")
     private BigDecimal tamTinh;
     @Column(name = "tong_tien")
@@ -42,6 +44,8 @@ public class HoaDon {
     private String phuongThucThanhToan;
     @Column(name = "so_dien_thoai")
     private String sdt;
+    @Column(name = "loai_hoa_don")
+    private Integer loaiHD;
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;

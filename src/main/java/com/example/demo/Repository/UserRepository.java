@@ -14,7 +14,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmail(String email);
 
-    @Query("select u from User u where (:roleId is null or u.role.id = :roleId)")
+    @Query("select u from User u where (:roleId is null or u.role.id = :roleId) and u.trangThai = 1")
     List<User> pageUser(@Param("roleId") String roleId);
 
     boolean existsByEmail(String email); // Thêm phương thức này

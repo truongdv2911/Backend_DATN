@@ -135,13 +135,12 @@ public class San_pham_Service {
         }).toList();
     }
 
-    public List<SanPhamResponseDTO> getAllSanPhamResponses(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<SanPham> pageSanPhams = sanPhamRepository.findAll(pageable);
+    public List<SanPhamResponseDTO> getAllSanPhamResponses() {
+        List<SanPham> pageSanPhams = sanPhamRepository.findAll();
 
         List<SanPhamResponseDTO> dtoList = new ArrayList<>();
 
-        for (SanPham sp : pageSanPhams.getContent()) {
+        for (SanPham sp : pageSanPhams) {
             List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(sp.getId());
 
             List<String> anhUrls = listAnh.stream()

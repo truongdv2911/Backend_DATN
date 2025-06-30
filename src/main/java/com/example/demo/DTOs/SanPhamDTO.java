@@ -54,7 +54,6 @@ public class SanPhamDTO {
     @NotNull(message = "Bộ sưu tập không được để trống")
      Integer boSuuTapId;
 
-    @NotBlank(message = "Trạng thái không được để trống")
     @Size(max = 50, message = "Trạng thái không được vượt quá 50 ký tự")
     String trangThai;
 

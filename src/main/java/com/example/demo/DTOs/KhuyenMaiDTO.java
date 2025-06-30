@@ -25,7 +25,7 @@ public class KhuyenMaiDTO {
 
     @NotNull(message = "Phần trăm giảm không được để trống")
     @Min(value = 0, message = "Phần trăm giảm phải lớn hơn hoặc bằng 0")
-    @Max(value = 60, message = "Phần trăm giảm không được vượt quá 60%")
+    @Max(value = 100, message = "Phần trăm giảm không được vượt quá 100%")
     private Double phanTramKhuyenMai;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")

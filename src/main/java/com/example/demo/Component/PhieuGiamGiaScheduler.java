@@ -55,7 +55,7 @@ public class PhieuGiamGiaScheduler {
             if (now.isBefore(km.getNgayBatDau())) {
                 trangThaiMoi = "inactive";
             } else if (now.isAfter(km.getNgayKetThuc())) {
-                trangThaiMoi = "inactive";
+                trangThaiMoi = "expired";
             } else {
                 trangThaiMoi = "active";
             }

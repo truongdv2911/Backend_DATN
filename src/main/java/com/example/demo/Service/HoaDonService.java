@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ public class HoaDonService {
 
             // 2. Tạo hóa đơn
             HoaDon hoaDon = new HoaDon();
+            hoaDon.setMaHD(taoMaHoaDonTuDong());
             hoaDon.setUser(user);
             hoaDon.setNv(null);
             hoaDon.setNgayTao(LocalDateTime.now());
@@ -45,6 +48,7 @@ public class HoaDonService {
             hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
             hoaDon.setSdt(dtOhoaDon.getSdt());
+            hoaDon.setLoaiHD(dtOhoaDon.getLoaiHD());
 
             PhieuGiamGia phieuGiamGia = phieuGiamGiaRepo.findById(dtOhoaDon.getIdPhieuGiam()).orElseThrow(()-> new RuntimeException("Không tìm thấy id phiếu giảm"));
             hoaDon.setPhieuGiamGia(phieuGiamGia);
@@ -243,5 +247,27 @@ public class HoaDonService {
         HoaDon hoaDon = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
         hoaDon.setTrangThai(TrangThaiHoaDon.CANCELLED);
         hoaDonRepository.save(hoaDon);
+    }
+    public String taoMaHoaDonTuDong() {
+        Pageable limit1 =  PageRequest.of(0, 1);
+        List<String> maList = hoaDonRepository.findTopMaHoaDon(limit1);
+
+        int nextNumber = 1;
+
+        if (!maList.isEmpty()) {
+            String maMax = maList.get(0);
+
+            if (maMax != null && maMax.startsWith("HD")) {
+                try {
+                    String numberStr = maMax.substring(2); // bỏ "HD"
+                    nextNumber = Integer.parseInt(numberStr) + 1;
+                } catch (NumberFormatException e) {
+                    // Lỡ gặp mã sai định dạng: vẫn sinh từ 1
+                    nextNumber = 1;
+                }
+            }
+        }
+        // Pad số về dạng 3 chữ số: "HD001", "HD042", ...
+        return String.format("HD%03d", nextNumber);
     }
 }

@@ -114,6 +114,9 @@ public class UserController {
 
             User user = userRepository.findByEmail(dtOlogin.getEmail()).orElseThrow(()->
                     new RuntimeException("khong tim thay email user"));
+            if (user.getTrangThai() != 1){
+                return ResponseEntity.badRequest().body("Tài khoản của bạn đã bị BAN");
+            }
             gioHangService.getOrCreateCart(user.getId());
 
             return ResponseEntity.ok(new LoginResponse(user.getId(), user.getTen(), dtOlogin.getEmail(), "Dang nhap thanh cong"));
