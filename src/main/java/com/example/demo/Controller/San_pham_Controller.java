@@ -49,11 +49,9 @@ public class San_pham_Controller {
 
 
     @GetMapping("/ReadAll")
-    public ResponseEntity<?> getAllSanPhams(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> getAllSanPhams() {
         try {
-            List<SanPhamResponseDTO> responseDTOs = sanPhamService.getAllSanPhamResponses(page, size);
+            List<SanPhamResponseDTO> responseDTOs = sanPhamService.getAllSanPhamResponses();
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

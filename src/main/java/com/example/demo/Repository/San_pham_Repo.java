@@ -17,9 +17,8 @@ import java.util.List;
 public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecificationExecutor<SanPham> {
     boolean existsByMaSanPham(@Param("maSanPham") String maSanPham);
 
-    @EntityGraph(attributePaths = "anhSps")
-    @Query("select s from SanPham s where s.trangThai in ('Đang kinh doanh', 'Hết hàng')")
-    Page<SanPham> findAll(Pageable pageable);
+    @Query(value = "select * from San_pham s where s.trang_thai in (N'Đang kinh doanh', N'Hết hàng')", nativeQuery = true)
+    List<SanPham> findAll();
 
     @Query(value = """
         WITH sp_km AS (

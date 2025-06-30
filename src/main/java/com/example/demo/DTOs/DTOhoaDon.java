@@ -47,4 +47,6 @@ public class DTOhoaDon {
     private Integer nvId;
 
     private Integer idPhieuGiam;
+
+    private Integer loaiHD;
 }
