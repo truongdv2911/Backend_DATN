@@ -3,6 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.Component.JwtTokenUntil;
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
+import com.example.demo.DTOs.UserUpdateDTO;
 import com.example.demo.Entity.User;
 import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Repository.UserRepository;
@@ -120,7 +121,7 @@ public class UserService {
 //        return jwtTokenUntil.generationToken(user);
 //    }
 
-    public User updateUser(Integer id, DTOuser dtOuser) throws Exception {
+    public User updateUser(Integer id, UserUpdateDTO dtOuser) throws Exception {
         try {
             User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Khong tim thay id user"));
             if (userRepository.existsByEmail(dtOuser.getEmail())
@@ -132,7 +133,6 @@ public class UserService {
             }
             user.setTen(dtOuser.getTen());
             user.setEmail(dtOuser.getEmail());
-            user.setMatKhau(passwordEncoder.encode(dtOuser.getMatKhau()));
             user.setDiaChi(dtOuser.getDiaChi());
             user.setSdt(dtOuser.getSdt());
             user.setNgaySinh(dtOuser.getNgaySinh());
@@ -150,6 +150,17 @@ public class UserService {
             return userRepository.findAll();
         }
         return userRepository.findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(keyword, keyword);
+    }
+
+    public Boolean AdminDoiMK(Integer userId, String matKhauMoi){
+        Optional<User> optional = userRepository.findById(userId);
+        if (optional.isEmpty()){
+            return false;
+        }
+        User user = optional.get();
+        user.setMatKhau(passwordEncoder.encode(matKhauMoi));
+        userRepository.save(user);
+        return true;
     }
 
 }
