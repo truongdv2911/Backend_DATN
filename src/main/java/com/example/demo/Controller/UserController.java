@@ -3,6 +3,8 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.DTOlogin;
 import com.example.demo.DTOs.DTOuser;
+import com.example.demo.DTOs.DoiMatKhauRequest;
+import com.example.demo.DTOs.UserUpdateDTO;
 import com.example.demo.Entity.User;
 import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Repository.UserRepository;
@@ -186,7 +188,7 @@ public class UserController {
 
     @PutMapping("update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Integer id,
-                                        @Valid @RequestBody DTOuser user,
+                                        @Valid @RequestBody UserUpdateDTO user,
                                         BindingResult result
                                         ){
         try {
@@ -199,6 +201,25 @@ public class UserController {
             return ResponseEntity.ok(userService.updateUser(id, user));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("doiMatKhau/{id}")
+    public ResponseEntity<?> doiMatKhauNguoiDung(
+            @PathVariable Integer id,
+            @Valid
+            @RequestBody DoiMatKhauRequest request, BindingResult result) {
+
+        if (result.hasErrors()) {
+            List<String> listErorrs = result.getFieldErrors().stream().
+                    map(errors -> errors.getDefaultMessage()).toList();
+            return ResponseEntity.badRequest().body(listErorrs);
+        }
+        boolean result1 = userService.AdminDoiMK(id, request.getMatKhauMoi());
+        if (result1) {
+            return ResponseEntity.ok("Đã đổi mật khẩu thành công cho người dùng ID: " + id);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng.");
         }
     }
 }
