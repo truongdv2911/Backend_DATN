@@ -54,7 +54,7 @@ public class Khuyen_mai_Service {
     }
 
     public List<KhuyenMai> getAllKhuyenMai() {
-        return khuyenMaiRepo.findAll();
+        return khuyenMaiRepo.findAllKhuyenMaiKhongBiXoa();
     }
 
     public KhuyenMai getKhuyenMaiById(Integer id) {
@@ -90,8 +90,9 @@ public class Khuyen_mai_Service {
     }
 
     public void deleteKhuyenMai(Integer id) {
-        KhuyenMai khuyenMai = getKhuyenMaiById(id);
-        khuyenMaiRepo.delete(khuyenMai);
+        KhuyenMai khuyenMai = khuyenMaiRepo.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy id km"));
+        khuyenMai.setTrangThai("isDelete");
+        khuyenMaiRepo.save(khuyenMai);
     }
 
     public String generateMaPhieu() {

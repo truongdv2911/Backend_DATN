@@ -20,4 +20,5 @@ public class SanPhamKMResponse {
     private String trangThai;
     private BigDecimal GiaKhuyenMai;
     private Double PhanTramKhuyenMai;
+    private String trangThaiKM;
 }

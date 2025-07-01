@@ -111,7 +111,7 @@ public class San_pham_Service {
     public List<SanPhamKMResponse> getSanPhamKhuyenMaiFull() {
         List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai(null, null,null
                 ,null,null,null,null);
-
+        LocalDateTime now = LocalDateTime.now();
         return rows.stream().map(r -> {
             SanPhamKMResponse dto = new SanPhamKMResponse();
             dto.setId((Integer) r[0]);
@@ -131,6 +131,39 @@ public class San_pham_Service {
             dto.setPhanTramKhuyenMai(
                     r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null
             );
+            // Set trạng thái khuyến mại
+            List<KhuyenMaiSanPham> kmspList = khuyenMaiSanPhamRepository.findBySanPham_Id(dto.getId());
+            // Ưu tiên khuyến mại đang áp dụng
+            KhuyenMaiSanPham applying = kmspList.stream()
+                .filter(kmsp -> {
+                    if (kmsp.getKhuyenMai() == null) return false;
+                    LocalDateTime start = kmsp.getKhuyenMai().getNgayBatDau();
+                    LocalDateTime end = kmsp.getKhuyenMai().getNgayKetThuc();
+                    return (now.isEqual(start) || now.isAfter(start)) && (now.isBefore(end) || now.isEqual(end));
+                })
+                .findFirst().orElse(null);
+            if (applying != null) {
+                dto.setTrangThaiKM("Đang áp dụng");
+            } else {
+                // Lấy khuyến mại mới nhất
+                KhuyenMaiSanPham newest = kmspList.stream()
+                    .filter(kmsp -> kmsp.getKhuyenMai() != null)
+                    .max((a, b) -> a.getKhuyenMai().getNgayBatDau().compareTo(b.getKhuyenMai().getNgayBatDau()))
+                    .orElse(null);
+                if (newest != null) {
+                    LocalDateTime ngayBatDau = newest.getKhuyenMai().getNgayBatDau();
+                    LocalDateTime ngayKetThuc = newest.getKhuyenMai().getNgayKetThuc();
+                    if (now.isBefore(ngayBatDau)) {
+                        dto.setTrangThaiKM("Khuyến mại chưa bắt đầu");
+                    } else if (now.isAfter(ngayKetThuc)) {
+                        dto.setTrangThaiKM("Khuyến mại đã hết hạn");
+                    } else {
+                        dto.setTrangThaiKM("Đang áp dụng"); // Trường hợp này hiếm, dự phòng
+                    }
+                } else {
+                    dto.setTrangThaiKM("Chưa có khuyến mại");
+                }
+            }
             return dto;
         }).toList();
     }
