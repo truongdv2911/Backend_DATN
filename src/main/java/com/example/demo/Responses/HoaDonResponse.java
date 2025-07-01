@@ -19,19 +19,25 @@ import java.util.Date;
 @NoArgsConstructor
 public class HoaDonResponse {
     private Integer id;
+    private String maHD;
+    private Integer loaiHD;
     private BigDecimal tamTinh;
     private BigDecimal tongTien;
     private BigDecimal soTienGiam;
     private String DiaChiGiaoHang;
     private String maVanChuyen;
-    private Date ngayGiao;
+    private LocalDateTime ngayGiao;
     private LocalDateTime ngayTao;
     private String trangThai;
     private String phuongThucThanhToan;
-    private String sdt;
+    private String sdt1;
 
     private Integer userId;
+    private String ten;
+    private String sdt;
 
     private Integer nvId;
+    private String nvName;
     private Integer idPhieuGiam;
+    private String maPGG;
 }
