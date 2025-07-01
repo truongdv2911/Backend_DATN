@@ -13,4 +13,8 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
 
     @Query("SELECT h.maHD FROM HoaDon h ORDER BY h.maHD DESC")
     List<String> findTopMaHoaDon(Pageable pageable);
+
+
+    @Query("SELECT h.trangThai, COUNT(h) FROM HoaDon h GROUP BY h.trangThai")
+    List<Object[]> countByTrangThaiGroup();
 }

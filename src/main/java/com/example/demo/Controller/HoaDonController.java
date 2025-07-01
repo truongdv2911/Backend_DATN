@@ -9,6 +9,7 @@ import com.example.demo.Service.HoaDonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -29,16 +32,7 @@ public class HoaDonController {
 
     @GetMapping("/get-all-hoa-don")
     public ResponseEntity<?> getAll(){
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.typeMap(HoaDon.class, HoaDonResponse.class).addMappings(mapper ->{
-            mapper.map(src -> src.getUser().getId(), HoaDonResponse::setUserId);
-            mapper.map(src -> src.getNv().getId(), HoaDonResponse::setNvId);
-            mapper.map(src -> src.getPhieuGiamGia().getId(), HoaDonResponse::setUserId);
-        });
-        return ResponseEntity.ok(hoaDonRepository.findAll().stream().map(order -> {
-            HoaDonResponse orderResponse = modelMapper.map(order, HoaDonResponse.class);
-            return orderResponse;
-        }).toList());
+      return ResponseEntity.ok(hoaDonRepository.findAll());
     }
 
     @PostMapping("/create")
@@ -109,4 +103,31 @@ public class HoaDonController {
         hoaDonService.deleteHoaDon(id);
         return ResponseEntity.ok("Xoa thanh cong");
     }
+    @GetMapping("/status-count")
+    public ResponseEntity<Map<String, Long>> getCountByStatus() {
+        return ResponseEntity.ok(hoaDonService.countByTrangThai());
+    }
+    @PutMapping("/{id}/trang-thai")
+    public ResponseEntity<?> updateTrangThai(
+            @PathVariable Integer id,
+            @RequestParam String trangThai) {
+        try {
+            HoaDonResponse response = hoaDonService.updateTrangThai(id, trangThai);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Cập nhật trạng thái thất bại");
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    @GetMapping("/paging")
+    public ResponseEntity<Page<HoaDonResponse>> getAllHoaDonPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<HoaDonResponse> result = hoaDonService.getAllPaged(page, size);
+        return ResponseEntity.ok(result);
+    }
+
 }
