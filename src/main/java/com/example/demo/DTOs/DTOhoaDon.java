@@ -27,9 +27,7 @@ public class DTOhoaDon {
     private BigDecimal soTienGiam;
     @NotEmpty
     private String DiaChiGiaoHang;
-    @NotEmpty
-    private String maVanChuyen;
-    private Date ngayGiao;
+    private LocalDateTime ngayGiao;
     private LocalDateTime ngayTao;
     private String trangThai;
     @NotEmpty

@@ -46,7 +46,7 @@ public class PhieuGiamGiaScheduler {
 
     @Scheduled(fixedDelay  = 5000) // chạy mỗi giây
     public void capNhatTrangThaiKhuyenMai() {
-        List<KhuyenMai> danhSachKhuyenMai = khuyenMaiRepository.findAll();
+        List<KhuyenMai> danhSachKhuyenMai = khuyenMaiRepository.findAllKhuyenMaiKhongBiXoa();
         LocalDateTime now = LocalDateTime.now();
 
         for (KhuyenMai km : danhSachKhuyenMai) {
