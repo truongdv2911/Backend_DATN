@@ -131,6 +131,12 @@ public class Khuyen_mai_Service {
         KhuyenMai km = khuyenMaiRepo.findById(request.getKhuyenMaiId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khuyến mãi"));
 
+        // Chỉ cho phép apply nếu trạng thái là 'active' hoặc 'inactive'
+        String status = km.getTrangThai();
+        if (!"active".equalsIgnoreCase(status) && !"inactive".equalsIgnoreCase(status)) {
+            throw new RuntimeException("Chỉ được áp dụng khuyến mại có trạng thái active hoặc inactive!");
+        }
+
         for (Integer idSp : request.getListSanPhamId()) {
             if (kmspRepo.existsBySanPham_IdAndKhuyenMai_Id(idSp, km.getId())) continue;
 

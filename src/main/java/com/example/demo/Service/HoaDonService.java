@@ -74,13 +74,14 @@ public class HoaDonService {
                 if (phieuGiamGia.getSoLuong() == null || phieuGiamGia.getSoLuong() <= 0) {
                     throw new RuntimeException("Phiếu giảm giá đã hết lượt sử dụng!");
                 }
-                if (!"Đang hoạt động".equals(phieuGiamGia.getTrangThai())) {
+                if (!"active".equals(phieuGiamGia.getTrangThai())) {
                     throw new RuntimeException("Phiếu giảm giá không còn hoạt động!");
                 }
                 if (phieuGiamGia.getNgayKetThuc() != null && phieuGiamGia.getNgayKetThuc().isBefore(now)) {
                     throw new RuntimeException("Phiếu giảm giá đã hết hạn!");
                 }
             }
+            hoaDon.setPhieuGiamGia(phieuGiamGia);
 
             // Kiểm tra tồn kho cho tất cả loại hóa đơn
             for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {

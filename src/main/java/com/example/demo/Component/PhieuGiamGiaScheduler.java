@@ -37,7 +37,7 @@ public class PhieuGiamGiaScheduler {
             boolean hetSoLuong = pgg.getSoLuong() <= 0;
 
             if (hetHan || hetSoLuong) {
-                pgg.setTrangThai("Hết hạn"); // hoặc EXPIRED/OUT_OF_STOCK tùy logic
+                pgg.setTrangThai("expired"); // hoặc EXPIRED/OUT_OF_STOCK tùy logic
                 phieuGiamGiaRepo.save(pgg);
             }
         }

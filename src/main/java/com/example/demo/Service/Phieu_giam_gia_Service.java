@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.DTOs.KhuyenMaiDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
@@ -9,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -40,6 +44,21 @@ public class Phieu_giam_gia_Service {
             }
         }
 
+        // Validate loại phiếu giảm giá
+        String loai = phieuGiamGiaDTO.getLoaiPhieuGiam();
+        if ("Theo %".equalsIgnoreCase(loai)) {
+            if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
+                throw new IllegalArgumentException("Giá trị giảm theo % không được lớn hơn 100%");
+            }
+            if (phieuGiamGiaDTO.getGiamToiDa() == null || phieuGiamGiaDTO.getGiamToiDa().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Giảm tối đa phải lớn hơn 0 với phiếu giảm theo %");
+            }
+        } else if ("Theo số tiền".equalsIgnoreCase(loai)) {
+            if (phieuGiamGiaDTO.getGiamToiDa() != null && phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0) {
+                throw new IllegalArgumentException("Giá trị giảm không được lớn hơn giảm tối đa");
+            }
+        }
+
         PhieuGiamGia phieuGiamGia = new PhieuGiamGia();
         phieuGiamGia.setMaPhieu(maPhieu);
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
@@ -51,18 +70,37 @@ public class Phieu_giam_gia_Service {
         if (phieuGiamGiaDTO.getNgayKetThuc().isBefore(phieuGiamGiaDTO.getNgayBatDau())){
             throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
         }
-        if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0){
-            throw new IllegalArgumentException("Gia tri giam khong duoc lon hon gia tri giam toi da");
-        }
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
-        phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
+        phieuGiamGia.setTrangThai(tinhTrangThai(phieuGiamGiaDTO));
         return phieuGiamGiaRepo.save(phieuGiamGia);
+    }
+
+    private String tinhTrangThai(PhieuGiamGiaDTO dto) {
+        LocalDate today = LocalDate.now();
+        LocalDate ngayBatDau = dto.getNgayBatDau();
+        LocalDate ngayKetThuc = dto.getNgayKetThuc();
+
+        if (ngayBatDau != null && ngayKetThuc != null) {
+            if ((today.isEqual(ngayBatDau) || today.isAfter(ngayBatDau)) &&
+                    (today.isEqual(ngayKetThuc) || today.isBefore(ngayKetThuc))) {
+                return "active";
+            }
+
+            if (today.isBefore(ngayBatDau)) {
+                return "inactive";
+            }
+
+            if (today.isAfter(ngayKetThuc)) {
+                return "expired";
+            }
+        }
+        return "Chưa xác định";
     }
 
 
     public List<PhieuGiamGia> getAllPhieuGiamGia() {
-        return phieuGiamGiaRepo.findAll();
+        return phieuGiamGiaRepo.findAllPhieuKhongBiXoa();
     }
 
 
@@ -74,6 +112,20 @@ public class Phieu_giam_gia_Service {
 
 
     public PhieuGiamGia updatePhieuGiamGia(Integer id, PhieuGiamGiaDTO phieuGiamGiaDTO) {
+        // Validate loại phiếu giảm giá
+        String loai = phieuGiamGiaDTO.getLoaiPhieuGiam();
+        if ("Theo %".equalsIgnoreCase(loai)) {
+            if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
+                throw new IllegalArgumentException("Giá trị giảm theo % không được lớn hơn 100%");
+            }
+            if (phieuGiamGiaDTO.getGiamToiDa() == null || phieuGiamGiaDTO.getGiamToiDa().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Giảm tối đa phải lớn hơn 0 với phiếu giảm theo %");
+            }
+        } else if ("Theo số tiền".equalsIgnoreCase(loai)) {
+            if (phieuGiamGiaDTO.getGiamToiDa() != null && phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0) {
+                throw new IllegalArgumentException("Giá trị giảm không được lớn hơn giảm tối đa");
+            }
+        }
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
@@ -85,31 +137,29 @@ public class Phieu_giam_gia_Service {
         }
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
-        phieuGiamGia.setTrangThai(phieuGiamGiaDTO.getTrangThai());
-        if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0){
-            throw new IllegalArgumentException("Gia tri giam khong duoc lon hon gia tri giam toi da");
-        }
+        phieuGiamGia.setTrangThai(tinhTrangThai(phieuGiamGiaDTO));
         return phieuGiamGiaRepo.save(phieuGiamGia);
     }
 
-    public PhieuGiamGia ThayDoiTrangThaiPhieuGiamGia(Integer id) throws Exception {
-        Optional<PhieuGiamGia> phieuGiamGia = phieuGiamGiaRepo.findById(id);
-        if (phieuGiamGia.isEmpty()){
-            throw new Exception("Khong tim thay id phieu giam gia");
-        }
-
-        if (phieuGiamGia.get().getTrangThai().equals("Ngừng")){
-            phieuGiamGia.get().setTrangThai("Đang hoạt động");
-            return phieuGiamGiaRepo.save(phieuGiamGia.get());
-        }else{
-            phieuGiamGia.get().setTrangThai("Ngừng");
-            return phieuGiamGiaRepo.save(phieuGiamGia.get());
-        }
-    }
+//    public PhieuGiamGia ThayDoiTrangThaiPhieuGiamGia(Integer id) throws Exception {
+//        Optional<PhieuGiamGia> phieuGiamGia = phieuGiamGiaRepo.findById(id);
+//        if (phieuGiamGia.isEmpty()){
+//            throw new Exception("Khong tim thay id phieu giam gia");
+//        }
+//
+//        if (phieuGiamGia.get().getTrangThai().equals("Ngừng")){
+//            phieuGiamGia.get().setTrangThai("Đang hoạt động");
+//            return phieuGiamGiaRepo.save(phieuGiamGia.get());
+//        }else{
+//            phieuGiamGia.get().setTrangThai("Ngừng");
+//            return phieuGiamGiaRepo.save(phieuGiamGia.get());
+//        }
+//    }
 
     public void deletePhieuGiamGia(Integer id) {
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
-        phieuGiamGiaRepo.delete(phieuGiamGia);
+        phieuGiamGia.setTrangThai("isDelete");
+        phieuGiamGiaRepo.save(phieuGiamGia);
     }
 
 
