@@ -128,9 +128,11 @@ public class San_pham_Service {
             dto.setIdBoSuuTap((Integer) r[11]);
             dto.setTrangThai((String) r[12]);
             dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
-            dto.setPhanTramKhuyenMai(
-                    r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null
-            );
+            Double phanTramKM = r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null;
+            dto.setPhanTramKhuyenMai(phanTramKM);
+            if (phanTramKM == null) {
+                dto.setGiaKhuyenMai(dto.getGia());
+            }
             // Set trạng thái khuyến mại
             List<KhuyenMaiSanPham> kmspList = khuyenMaiSanPhamRepository.findBySanPham_Id(dto.getId());
             // Ưu tiên khuyến mại đang áp dụng

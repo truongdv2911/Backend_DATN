@@ -93,6 +93,7 @@ public class Khuyen_mai_Service {
         KhuyenMai khuyenMai = khuyenMaiRepo.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy id km"));
         khuyenMai.setTrangThai("isDelete");
         khuyenMaiRepo.save(khuyenMai);
+        khuyenMaiRepo.deleteByKhuyenMaiId(id);
     }
 
     public String generateMaPhieu() {

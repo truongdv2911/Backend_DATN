@@ -44,6 +44,8 @@ public class Phieu_giam_gia_Service {
             }
         }
 
+        PhieuGiamGia phieuGiamGia = new PhieuGiamGia();
+
         // Validate loại phiếu giảm giá
         String loai = phieuGiamGiaDTO.getLoaiPhieuGiam();
         if ("Theo %".equalsIgnoreCase(loai)) {
@@ -53,18 +55,15 @@ public class Phieu_giam_gia_Service {
             if (phieuGiamGiaDTO.getGiamToiDa() == null || phieuGiamGiaDTO.getGiamToiDa().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("Giảm tối đa phải lớn hơn 0 với phiếu giảm theo %");
             }
+            phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
         } else if ("Theo số tiền".equalsIgnoreCase(loai)) {
-            if (phieuGiamGiaDTO.getGiamToiDa() != null && phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0) {
-                throw new IllegalArgumentException("Giá trị giảm không được lớn hơn giảm tối đa");
-            }
+            phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiaTriGiam());
         }
 
-        PhieuGiamGia phieuGiamGia = new PhieuGiamGia();
         phieuGiamGia.setMaPhieu(maPhieu);
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
-        phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
         phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
 
         if (phieuGiamGiaDTO.getNgayKetThuc().isBefore(phieuGiamGiaDTO.getNgayBatDau())){
