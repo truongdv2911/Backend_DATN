@@ -89,14 +89,14 @@ public class Phieu_giam_gia_Controller {
         }
     }
 
-    @DeleteMapping("/changeStatus/{id}")
-    public ResponseEntity<?> changeStatus(@PathVariable Integer id){
-        try {
-            return ResponseEntity.ok(phieuGiamGiaService.ThayDoiTrangThaiPhieuGiamGia(id));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
+//    @DeleteMapping("/changeStatus/{id}")
+//    public ResponseEntity<?> changeStatus(@PathVariable Integer id){
+//        try {
+//            return ResponseEntity.ok(phieuGiamGiaService.ThayDoiTrangThaiPhieuGiamGia(id));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+//        }
+//    }
 
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deletePhieuGiamGia(@PathVariable Integer id) {
@@ -117,8 +117,7 @@ public class Phieu_giam_gia_Controller {
                 || compareBigDecimal(phieuGiamGia.getGiamToiDa(), other.getGiamToiDa())
                 || compareBigDecimal(phieuGiamGia.getGiaTriToiThieu(), other.getGiaTriToiThieu())
                 || !Objects.equals(phieuGiamGia.getNgayBatDau(), other.getNgayBatDau())
-                || !Objects.equals(phieuGiamGia.getNgayKetThuc(), other.getNgayKetThuc())
-                || !Objects.equals(phieuGiamGia.getTrangThai(), other.getTrangThai());
+                || !Objects.equals(phieuGiamGia.getNgayKetThuc(), other.getNgayKetThuc());
     }
     private static boolean compareBigDecimal(BigDecimal a, BigDecimal b) {
         if (a == null && b == null) return false; // giống nhau

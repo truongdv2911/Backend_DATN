@@ -48,7 +48,4 @@ public class PhieuGiamGiaDTO {
     @Future(message = "Ngày kết thúc ít nhất phải ngày mai")
     LocalDate ngayKetThuc;
 
-//    @NotBlank(message = "Trạng thái không được để trống")
-    @Size(max = 20, message = "Trạng thái không được vượt quá 20 ký tự")
-     String trangThai;
 }

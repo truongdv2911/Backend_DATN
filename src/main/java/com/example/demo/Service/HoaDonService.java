@@ -9,8 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,13 +74,14 @@ public class HoaDonService {
                 if (phieuGiamGia.getSoLuong() == null || phieuGiamGia.getSoLuong() <= 0) {
                     throw new RuntimeException("Phiếu giảm giá đã hết lượt sử dụng!");
                 }
-                if (!"Đang hoạt động".equals(phieuGiamGia.getTrangThai())) {
+                if (!"active".equals(phieuGiamGia.getTrangThai())) {
                     throw new RuntimeException("Phiếu giảm giá không còn hoạt động!");
                 }
                 if (phieuGiamGia.getNgayKetThuc() != null && phieuGiamGia.getNgayKetThuc().isBefore(now)) {
                     throw new RuntimeException("Phiếu giảm giá đã hết hạn!");
                 }
             }
+            hoaDon.setPhieuGiamGia(phieuGiamGia);
 
             // Kiểm tra tồn kho cho tất cả loại hóa đơn
             for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
@@ -322,4 +325,85 @@ public class HoaDonService {
         // Pad số về dạng 3 chữ số: "HD001", "HD042", ...
         return String.format("HD%03d", nextNumber);
     }
+
+    private HoaDonResponse convertToResponse(HoaDon hoaDon) {
+        HoaDonResponse response = new HoaDonResponse();
+        response.setId(hoaDon.getId());
+        response.setMaHD(hoaDon.getMaHD());
+        response.setLoaiHD(hoaDon.getLoaiHD());
+        response.setTamTinh(hoaDon.getTamTinh());
+        response.setTongTien(hoaDon.getTongTien());
+        response.setSoTienGiam(hoaDon.getSoTienGiam());
+        response.setDiaChiGiaoHang(hoaDon.getDiaChiGiaoHang());
+        response.setMaVanChuyen(hoaDon.getMaVanChuyen());
+        response.setNgayGiao(hoaDon.getNgayGiao());
+        response.setNgayTao(hoaDon.getNgayTao());
+        response.setTrangThai(hoaDon.getTrangThai());
+        response.setPhuongThucThanhToan(hoaDon.getPhuongThucThanhToan());
+        if (hoaDon.getUser() != null) response.setUserId(hoaDon.getUser().getId());
+        if (hoaDon.getUser() != null) response.setTen(hoaDon.getUser().getTen());
+        if (hoaDon.getUser() != null) response.setSdt(hoaDon.getUser().getSdt());
+        if (hoaDon.getNv() != null) response.setNvId(hoaDon.getNv().getId());
+        if (hoaDon.getNv() != null) response.setNvName(hoaDon.getNv().getTen());
+        if (hoaDon.getPhieuGiamGia() != null) response.setIdPhieuGiam(hoaDon.getPhieuGiamGia().getId());
+        if (hoaDon.getPhieuGiamGia() != null) response.setMaPGG(hoaDon.getPhieuGiamGia().getMaPhieu());
+        return response;
+    }
+
+
+
+    @Transactional
+    public HoaDonResponse updateTrangThai(Integer id, String trangThai) throws Exception {
+        // Tìm hóa đơn
+        HoaDon hoaDon = hoaDonRepository.findById(id)
+                .orElseThrow(() -> new Exception("Không tìm thấy hóa đơn với ID: " + id));
+        if (!isValidTrangThaiTransition(hoaDon.getTrangThai(), trangThai)) {
+            throw new Exception("Chuyển đổi trạng thái từ " + hoaDon.getTrangThai() + " sang " + trangThai + " không hợp lệ");
+        }
+        hoaDon.setTrangThai(trangThai);
+        HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
+        return convertToResponse(updatedHoaDon);
+    }
+    private boolean isValidTrangThaiTransition(String current, String next) {
+        if (current == null || next == null) {
+            return false;
+        }
+
+        if (current.equals(TrangThaiHoaDon.PENDING)) {
+            return next.equals(TrangThaiHoaDon.PROCESSING) || next.equals(TrangThaiHoaDon.CANCELLED);
+        } else if (current.equals(TrangThaiHoaDon.PROCESSING)) {
+            return next.equals(TrangThaiHoaDon.PACKING) ;
+        } else if (current.equals(TrangThaiHoaDon.PACKING)) {
+            return next.equals(TrangThaiHoaDon.SHIPPED);
+        } else if (current.equals(TrangThaiHoaDon.SHIPPED)) {
+            return next.equals(TrangThaiHoaDon.DELIVERED) || next.equals(TrangThaiHoaDon.FAILED);
+        } else if (current.equals(TrangThaiHoaDon.DELIVERED)) {
+            return next.equals(TrangThaiHoaDon.COMPLETED) ;
+        } else if (current.equals(TrangThaiHoaDon.COMPLETED) || current.equals(TrangThaiHoaDon.CANCELLED)) {
+            return false; // Không cho phép thay đổi từ trạng thái cuối
+        } else if (current.equals(TrangThaiHoaDon.FAILED)) {
+            return next.equals(TrangThaiHoaDon.CANCELLED) || next.equals(TrangThaiHoaDon.PENDING);
+        }
+
+        return false; // Trạng thái không hợp lệ
+    }
+    @Transactional(readOnly = true)
+    public Map<String, Long> countByTrangThai() {
+        List<Object[]> result = hoaDonRepository.countByTrangThaiGroup();
+        Map<String, Long> map = new HashMap<>();
+        for (Object[] row : result) {
+            String trangThai = (String) row[0];
+            Long count = (Long) row[1];
+            map.put(trangThai, count);
+        }
+        return map;
+    }
+    @Transactional(readOnly = true)
+    public Page<HoaDonResponse> getAllPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("ngayTao").descending());
+        Page<HoaDon> hoaDonPage = hoaDonRepository.findAll(pageable);
+        return hoaDonPage.map(this::convertToResponse);
+    }
+
+
 }
