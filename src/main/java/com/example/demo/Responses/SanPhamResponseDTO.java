@@ -17,8 +17,8 @@ public class SanPhamResponseDTO {
     private Integer soLuongTon;
     private Integer soLuongVote;
     private Double danhGiaTrungBinh;
-    private Integer idDanhMuc;
-    private Integer idBoSuuTap;
+    private Integer danhMucId;
+    private Integer boSuuTapId;
     private String trangThai;
     private List<String> anhUrls;
 }
