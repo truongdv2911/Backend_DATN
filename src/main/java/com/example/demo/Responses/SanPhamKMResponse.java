@@ -3,6 +3,8 @@ package com.example.demo.Responses;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 @Data
 public class SanPhamKMResponse {
     private Integer id;
@@ -15,10 +17,11 @@ public class SanPhamKMResponse {
     private Integer soLuongTon;
     private Integer soLuongVote;
     private Double danhGiaTrungBinh;
-    private Integer idDanhMuc;
-    private Integer idBoSuuTap;
+    private Integer danhMucId;
+    private Integer boSuuTapId;
     private String trangThai;
     private BigDecimal GiaKhuyenMai;
     private Double PhanTramKhuyenMai;
     private String trangThaiKM;
+    private List<String> anhUrls;
 }

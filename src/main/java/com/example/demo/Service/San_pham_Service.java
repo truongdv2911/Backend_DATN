@@ -124,16 +124,17 @@ public class San_pham_Service {
             dto.setSoLuongTon((Integer) r[7]);
             dto.setSoLuongVote((Integer) r[8]);
             dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
-            dto.setIdDanhMuc((Integer) r[10]);
-            dto.setIdBoSuuTap((Integer) r[11]);
+            dto.setDanhMucId((Integer) r[10]);
+            dto.setBoSuuTapId((Integer) r[11]);
             dto.setTrangThai((String) r[12]);
             dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
-            dto.setPhanTramKhuyenMai(
-                    r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null
-            );
+            Double phanTramKM = r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null;
+            dto.setPhanTramKhuyenMai(phanTramKM);
+            if (phanTramKM == null) {
+                dto.setGiaKhuyenMai(dto.getGia());
+            }
             // Set trạng thái khuyến mại
             List<KhuyenMaiSanPham> kmspList = khuyenMaiSanPhamRepository.findBySanPham_Id(dto.getId());
-            // Ưu tiên khuyến mại đang áp dụng
             KhuyenMaiSanPham applying = kmspList.stream()
                 .filter(kmsp -> {
                     if (kmsp.getKhuyenMai() == null) return false;
@@ -145,7 +146,6 @@ public class San_pham_Service {
             if (applying != null) {
                 dto.setTrangThaiKM("Đang áp dụng");
             } else {
-                // Lấy khuyến mại mới nhất
                 KhuyenMaiSanPham newest = kmspList.stream()
                     .filter(kmsp -> kmsp.getKhuyenMai() != null)
                     .max((a, b) -> a.getKhuyenMai().getNgayBatDau().compareTo(b.getKhuyenMai().getNgayBatDau()))
@@ -158,12 +158,16 @@ public class San_pham_Service {
                     } else if (now.isAfter(ngayKetThuc)) {
                         dto.setTrangThaiKM("Khuyến mại đã hết hạn");
                     } else {
-                        dto.setTrangThaiKM("Đang áp dụng"); // Trường hợp này hiếm, dự phòng
+                        dto.setTrangThaiKM("Đang áp dụng");
                     }
                 } else {
                     dto.setTrangThaiKM("Chưa có khuyến mại");
                 }
             }
+            // Lấy danh sách url ảnh cho sản phẩm
+            List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(dto.getId());
+            List<String> anhUrls = listAnh.stream().map(AnhSp::getUrl).toList();
+            dto.setAnhUrls(anhUrls);
             return dto;
         }).toList();
     }
@@ -192,8 +196,8 @@ public class San_pham_Service {
             dto.setSoLuongTon(sp.getSoLuongTon());
             dto.setSoLuongVote(sp.getSoLuongVote());
             dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
-            dto.setIdDanhMuc(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
-            dto.setIdBoSuuTap(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null);
+            dto.setDanhMucId(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
+            dto.setBoSuuTapId(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null);
 //            dto.setKhuyenMaiId(sp.getKhuyenMai() != null ? sp.getKhuyenMai().getId() : null);
             dto.setTrangThai(sp.getTrangThai());
             dto.setAnhUrls(anhUrls);
@@ -299,8 +303,8 @@ public class San_pham_Service {
         dto.setSoLuongTon(sanPham.getSoLuongTon());
         dto.setSoLuongVote(sanPham.getSoLuongVote());
         dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
-        dto.setIdDanhMuc(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
-        dto.setIdBoSuuTap(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
+        dto.setDanhMucId(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
+        dto.setBoSuuTapId(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
         dto.setAnhUrls(anhUrls);
 
@@ -338,8 +342,8 @@ public class San_pham_Service {
             dto.setSoLuongTon((Integer) r[7]);
             dto.setSoLuongVote((Integer) r[8]);
             dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
-            dto.setIdDanhMuc((Integer) r[10]);
-            dto.setIdBoSuuTap((Integer) r[11]);
+            dto.setDanhMucId((Integer) r[10]);
+            dto.setBoSuuTapId((Integer) r[11]);
             dto.setTrangThai((String) r[12]);
             dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
             dto.setPhanTramKhuyenMai(
