@@ -7,6 +7,7 @@ import com.example.demo.Service.Phieu_giam_gia_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.http.HttpStatus;
@@ -105,6 +106,15 @@ public class Phieu_giam_gia_Controller {
             return ResponseEntity.ok("Xóa thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getPGGDuocPhepApDung")
+    public ResponseEntity<?> getPGG(@RequestParam("tamTinh") BigDecimal tamTinh){
+        try {
+            return ResponseEntity.ok(phieuGiamGiaRepo.getPGGPhuHop(tamTinh));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Loi khi tai phieu"+e.getMessage());
         }
     }
 
