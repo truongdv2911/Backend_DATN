@@ -1,24 +1,16 @@
 package com.example.demo.Service;
 
-import com.example.demo.DTOs.SanPhamDTO;
-
 import com.example.demo.DTOs.SanPhamUpdateDTO;
 import com.example.demo.Entity.*;
-import com.example.demo.Filter.SanPhamSpecification;
 import com.example.demo.Repository.*;
 import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
