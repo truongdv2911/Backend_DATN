@@ -1,7 +1,5 @@
 package com.example.demo.Controller;
 
-import com.example.demo.DTOs.SanPhamDTO;
-
 import com.example.demo.DTOs.SanPhamUpdateDTO;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.San_pham_Repo;
@@ -20,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/sanpham")
@@ -31,7 +28,7 @@ public class San_pham_Controller {
     private final San_pham_Repo san_pham_repo;
 
     @PostMapping("/Create")
-    public ResponseEntity<?> createSanPham(@Valid @RequestBody SanPhamDTO sanPhamDTO, BindingResult result) {
+    public ResponseEntity<?> createSanPham(@Valid @RequestBody SanPhamUpdateDTO sanPhamDTO, BindingResult result) {
         try {
             if (result.hasErrors()) {
                 List<String> listErrors = result.getFieldErrors().stream()
