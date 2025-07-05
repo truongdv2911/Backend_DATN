@@ -20,5 +20,5 @@ public class SanPhamResponseDTO {
     private Integer danhMucId;
     private Integer boSuuTapId;
     private String trangThai;
-    private List<String> anhUrls;
+    private List<AnhResponse> anhUrls;
 }
