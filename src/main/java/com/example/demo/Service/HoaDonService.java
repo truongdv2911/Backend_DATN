@@ -62,6 +62,24 @@ public class HoaDonService {
                 hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 8));
                 hoaDon.setNgayGiao(LocalDateTime.now().plusDays(3));
             }
+            //            Nếu Hóa đơn là tại quầy thì không có phương thức thanh toánh COD
+            if(dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
+                if("COD".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan())){
+                    throw new RuntimeException("Hóa đơn tại quầy không thể dùng thanh toán COD");
+                }
+                hoaDon.setTrangThai(TrangThaiHoaDon.COMPLETED);
+                hoaDon.setMaVanChuyen(null);
+                hoaDon.setNgayGiao(null);
+                hoaDon.setUser(null);
+                hoaDon.setDiaChiGiaoHang("Tại quầy");
+                if (dtOhoaDon.getNvId() != null) {
+                    User nv = userRepository.findById(dtOhoaDon.getNvId()).orElse(null);
+                    hoaDon.setNv(nv);
+
+                }else {
+                    hoaDon.setNv(null);
+                }
+            }
             hoaDon.setNgayTao(LocalDateTime.now());
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
             hoaDon.setSdt(dtOhoaDon.getSdt());
