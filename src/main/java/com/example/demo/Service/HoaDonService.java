@@ -62,7 +62,7 @@ public class HoaDonService {
                 hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 8));
                 hoaDon.setNgayGiao(LocalDateTime.now().plusDays(3));
             }
-            //            Nếu Hóa đơn là tại quầy thì không có phương thức thanh toánh COD
+            //  Nếu Hóa đơn là tại quầy thì không có phương thức thanh toánh COD
             if(dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
                 if("COD".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan())){
                     throw new RuntimeException("Hóa đơn tại quầy không thể dùng thanh toán COD");
