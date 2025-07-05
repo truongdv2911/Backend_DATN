@@ -23,5 +23,5 @@ public class SanPhamKMResponse {
     private BigDecimal GiaKhuyenMai;
     private Double PhanTramKhuyenMai;
     private String trangThaiKM;
-    private List<String> anhUrls;
+    private List<AnhResponse> anhUrls;
 }

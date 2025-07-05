@@ -41,12 +41,13 @@ public class HoaDonService {
             // 2. Tạo hóa đơn
             HoaDon hoaDon = new HoaDon();
             hoaDon.setMaHD(taoMaHoaDonTuDong());
-            hoaDon.setUser(user);
             // Nếu là hóa đơn tại quầy thì set nhân viên và trạng thái hoàn tất, maVanChuyen = null
             if (dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
                 hoaDon.setTrangThai(TrangThaiHoaDon.COMPLETED);
                 hoaDon.setMaVanChuyen(null);
                 hoaDon.setNgayGiao(null);
+                hoaDon.setUser(null);
+                hoaDon.setDiaChiGiaoHang("Tại quầy");
                 if (dtOhoaDon.getNvId() != null) {
                     User nv = userRepository.findById(dtOhoaDon.getNvId()).orElse(null);
                     hoaDon.setNv(nv);
@@ -56,11 +57,12 @@ public class HoaDonService {
             } else {
                 hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
                 hoaDon.setNv(null);
+                hoaDon.setUser(user);
+                hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
                 hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 8));
                 hoaDon.setNgayGiao(LocalDateTime.now().plusDays(3));
             }
             hoaDon.setNgayTao(LocalDateTime.now());
-            hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
             hoaDon.setSdt(dtOhoaDon.getSdt());
             hoaDon.setLoaiHD(dtOhoaDon.getLoaiHD());
