@@ -3,6 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.SanPhamUpdateDTO;
 import com.example.demo.Entity.*;
 import com.example.demo.Repository.*;
+import com.example.demo.Responses.AnhResponse;
 import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import jakarta.validation.Valid;
@@ -158,7 +159,14 @@ public class San_pham_Service {
             }
             // Lấy danh sách url ảnh cho sản phẩm
             List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(dto.getId());
-            List<String> anhUrls = listAnh.stream().map(AnhSp::getUrl).toList();
+            List<AnhResponse> anhUrls = listAnh.stream()
+                    .map(anh -> {
+                        AnhResponse response = new AnhResponse();
+                        response.setUrl(anh.getUrl());
+                        response.setAnhChinh(anh.getAnhChinh());
+                        return response;
+                    })
+                    .toList();
             dto.setAnhUrls(anhUrls);
             return dto;
         }).toList();
@@ -172,9 +180,14 @@ public class San_pham_Service {
         for (SanPham sp : pageSanPhams) {
             List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(sp.getId());
 
-            List<String> anhUrls = listAnh.stream()
-                    .map(AnhSp::getUrl)
-                    .collect(Collectors.toList());
+            List<AnhResponse> anhUrls = listAnh.stream()
+                    .map(anh -> {
+                        AnhResponse response = new AnhResponse();
+                        response.setUrl(anh.getUrl());
+                        response.setAnhChinh(anh.getAnhChinh());
+                        return response;
+                    })
+                    .toList();
 
             SanPhamResponseDTO dto = new SanPhamResponseDTO();
             dto.setId(sp.getId());
@@ -280,9 +293,14 @@ public class San_pham_Service {
     }
     public SanPhamResponseDTO convertToResponseDTO(SanPham sanPham) {
         List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(sanPham.getId());
-        List<String> anhUrls = listAnh.stream()
-                .map(AnhSp::getUrl)
-                .collect(Collectors.toList());
+        List<AnhResponse> anhUrls = listAnh.stream()
+                .map(anh -> {
+                    AnhResponse response = new AnhResponse();
+                    response.setUrl(anh.getUrl());
+                    response.setAnhChinh(anh.getAnhChinh());
+                    return response;
+                })
+                .toList();
 
         SanPhamResponseDTO dto = new SanPhamResponseDTO();
         dto.setId(sanPham.getId());

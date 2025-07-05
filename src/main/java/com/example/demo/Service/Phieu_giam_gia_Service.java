@@ -47,7 +47,7 @@ public class Phieu_giam_gia_Service {
         PhieuGiamGia phieuGiamGia = new PhieuGiamGia();
 
         // Validate loại phiếu giảm giá
-        String loai = phieuGiamGiaDTO.getLoaiPhieuGiam();
+        String loai = phieuGiamGiaDTO.getLoaiPhieuGiam().trim();
         if ("Theo %".equalsIgnoreCase(loai)) {
             if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
                 throw new IllegalArgumentException("Giá trị giảm theo % không được lớn hơn 100%");
@@ -62,7 +62,7 @@ public class Phieu_giam_gia_Service {
 
         phieuGiamGia.setMaPhieu(maPhieu);
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
-        phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
+        phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
         phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
 
@@ -112,7 +112,7 @@ public class Phieu_giam_gia_Service {
 
     public PhieuGiamGia updatePhieuGiamGia(Integer id, PhieuGiamGiaDTO phieuGiamGiaDTO) {
         // Validate loại phiếu giảm giá
-        String loai = phieuGiamGiaDTO.getLoaiPhieuGiam();
+        String loai = phieuGiamGiaDTO.getLoaiPhieuGiam().trim();
         if ("Theo %".equalsIgnoreCase(loai)) {
             if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
                 throw new IllegalArgumentException("Giá trị giảm theo % không được lớn hơn 100%");
@@ -127,7 +127,7 @@ public class Phieu_giam_gia_Service {
         }
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
-        phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam());
+        phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
         phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
         phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
