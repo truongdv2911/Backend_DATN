@@ -45,6 +45,18 @@ public class   Danh_muc_Service {
 
     public void deleteDanhMuc(Integer id) {
         DanhMuc danhMuc = getDanhMucById(id);
+        
+        // Kiểm tra xem có sản phẩm nào trong danh mục còn tồn kho không
+        boolean hasProductsInStock = danhMuc.getSanPhams().stream()
+                .anyMatch(sanPham -> {
+                    Integer soLuongTon = sanPham.getSoLuongTon();
+                    return soLuongTon != null && soLuongTon > 0;
+                });
+        
+        if (hasProductsInStock) {
+            throw new RuntimeException("Không thể xóa danh mục. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa danh mục.");
+        }
+        
         danhMucRepo.delete(danhMuc);
     }
 }

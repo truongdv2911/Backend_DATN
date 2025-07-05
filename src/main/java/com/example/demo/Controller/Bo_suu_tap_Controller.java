@@ -76,8 +76,14 @@ public class Bo_suu_tap_Controller {
         try {
             boSuuTapService.deleteBoSuuTap(id);
             return ResponseEntity.ok("Xóa thành công");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            // Xử lý trường hợp không thể xóa do còn sản phẩm trong kho
+            if (e.getMessage().contains("Vẫn còn sản phẩm trong kho")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
     public static boolean isDifferent(BoSuuTapDTO dto, BoSuuTap entity) {
