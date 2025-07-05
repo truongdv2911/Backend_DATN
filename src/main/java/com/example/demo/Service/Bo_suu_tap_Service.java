@@ -50,6 +50,18 @@ public class Bo_suu_tap_Service {
 
     public void deleteBoSuuTap(Integer id) {
         BoSuuTap boSuuTap = getBoSuuTapById(id);
+        
+        // Kiểm tra xem có sản phẩm nào trong bộ sưu tập còn tồn kho không
+        boolean hasProductsInStock = boSuuTap.getSanPhams().stream()
+                .anyMatch(sanPham -> {
+                    Integer soLuongTon = sanPham.getSoLuongTon();
+                    return soLuongTon != null && soLuongTon > 0;
+                });
+        
+        if (hasProductsInStock) {
+            throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
+        }
+        
         boSuuTapRepo.delete(boSuuTap);
     }
 }

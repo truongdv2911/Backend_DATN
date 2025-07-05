@@ -1,9 +1,11 @@
 package com.example.demo.Entity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Data
@@ -26,5 +28,9 @@ public class BoSuuTap {
      Integer namPhatHanh;
     @Column(name = "ngay_tao")
      Date ngayTao;
+
+    @OneToMany(mappedBy = "boSuuTap", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("boSuuTap")
+    private List<SanPham> sanPhams;
 
 }
