@@ -111,9 +111,10 @@ public class HoaDonController {
     @PutMapping("/{id}/trang-thai")
     public ResponseEntity<?> updateTrangThai(
             @PathVariable Integer id,
-            @RequestParam String trangThai) {
+            @RequestParam String trangThai,
+            @RequestParam Integer idNV) {
         try {
-            HoaDonResponse response = hoaDonService.updateTrangThai(id, trangThai);
+            HoaDonResponse response = hoaDonService.updateTrangThai(id, trangThai, idNV);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();

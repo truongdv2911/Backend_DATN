@@ -41,12 +41,15 @@ public class HoaDonService {
             // 2. Tạo hóa đơn
             HoaDon hoaDon = new HoaDon();
             hoaDon.setMaHD(taoMaHoaDonTuDong());
+            hoaDon.setUser(user);
             // Nếu là hóa đơn tại quầy thì set nhân viên và trạng thái hoàn tất, maVanChuyen = null
             if (dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
+                if("COD".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan())){
+                    throw new RuntimeException("Hóa đơn tại quầy không thể dùng thanh toán COD");
+                }
                 hoaDon.setTrangThai(TrangThaiHoaDon.COMPLETED);
                 hoaDon.setMaVanChuyen(null);
                 hoaDon.setNgayGiao(null);
-                hoaDon.setUser(null);
                 hoaDon.setDiaChiGiaoHang("Tại quầy");
                 if (dtOhoaDon.getNvId() != null) {
                     User nv = userRepository.findById(dtOhoaDon.getNvId()).orElse(null);
@@ -57,28 +60,9 @@ public class HoaDonService {
             } else {
                 hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
                 hoaDon.setNv(null);
-                hoaDon.setUser(user);
                 hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
                 hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 8));
                 hoaDon.setNgayGiao(LocalDateTime.now().plusDays(3));
-            }
-            //  Nếu Hóa đơn là tại quầy thì không có phương thức thanh toánh COD
-            if(dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
-                if("COD".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan())){
-                    throw new RuntimeException("Hóa đơn tại quầy không thể dùng thanh toán COD");
-                }
-                hoaDon.setTrangThai(TrangThaiHoaDon.COMPLETED);
-                hoaDon.setMaVanChuyen(null);
-                hoaDon.setNgayGiao(null);
-                hoaDon.setUser(null);
-                hoaDon.setDiaChiGiaoHang("Tại quầy");
-                if (dtOhoaDon.getNvId() != null) {
-                    User nv = userRepository.findById(dtOhoaDon.getNvId()).orElse(null);
-                    hoaDon.setNv(nv);
-
-                }else {
-                    hoaDon.setNv(null);
-                }
             }
             hoaDon.setNgayTao(LocalDateTime.now());
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
@@ -373,7 +357,7 @@ public class HoaDonService {
 
 
     @Transactional
-    public HoaDonResponse updateTrangThai(Integer id, String trangThai) throws Exception {
+    public HoaDonResponse updateTrangThai(Integer id, String trangThai, Integer idNV) throws Exception {
         // Tìm hóa đơn
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new Exception("Không tìm thấy hóa đơn với ID: " + id));
@@ -381,9 +365,16 @@ public class HoaDonService {
             throw new Exception("Chuyển đổi trạng thái từ " + hoaDon.getTrangThai() + " sang " + trangThai + " không hợp lệ");
         }
         hoaDon.setTrangThai(trangThai);
+
+        // Cập nhật nhân viên sửa trạng thái
+        User nv = userRepository.findById(idNV)
+                .orElseThrow(() -> new Exception("Không tìm thấy nhân viên với ID: " + idNV));
+        hoaDon.setNv(nv);
+
         HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
         return convertToResponse(updatedHoaDon);
     }
+    
     private boolean isValidTrangThaiTransition(String current, String next) {
         if (current == null || next == null) {
             return false;
