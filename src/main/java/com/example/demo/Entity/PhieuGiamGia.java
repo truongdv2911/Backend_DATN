@@ -21,6 +21,8 @@ public class PhieuGiamGia {
 
     @Column(name = "ma_phieu", nullable = false, unique = true, length = 50)
     private String maPhieu;
+    @Column(name = "ten_phieu")
+    private String tenPhieu;
     @Column(name = "so_luong")
     private Integer soLuong;
 
