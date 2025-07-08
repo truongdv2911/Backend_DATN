@@ -61,6 +61,7 @@ public class Phieu_giam_gia_Service {
         }
 
         phieuGiamGia.setMaPhieu(maPhieu);
+        phieuGiamGia.setTenPhieu(phieuGiamGiaDTO.getTenPhieu());
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
@@ -126,6 +127,7 @@ public class Phieu_giam_gia_Service {
             }
         }
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
+        phieuGiamGia.setTenPhieu(phieuGiamGiaDTO.getTenPhieu());
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());

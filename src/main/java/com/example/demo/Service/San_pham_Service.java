@@ -285,7 +285,15 @@ public class San_pham_Service {
     public void deleteSanPham(Integer id) {
         try {
             SanPham sanPham = getSanPhamById(id);
-            sanPham.setTrangThai("Ngừng kinh doanh");
+            if(sanPham.getTrangThai().equals("Ngừng kinh doanh")){
+                if (sanPham.getSoLuongTon() == 0){
+                    sanPham.setTrangThai("Hết hàng");
+                }else{
+                    sanPham.setTrangThai("Đang kinh doanh");
+                }
+            }else{
+                sanPham.setTrangThai("Ngừng kinh doanh");
+            }
             sanPhamRepository.save(sanPham);
         } catch (Exception e) {
             throw new RuntimeException("Error while deleting SanPham: " + e.getMessage(), e);
