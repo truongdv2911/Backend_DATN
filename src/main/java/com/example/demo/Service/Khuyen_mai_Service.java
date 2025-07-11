@@ -8,13 +8,17 @@ import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.KhuyenMaiSanPhamRepository;
 import com.example.demo.Repository.Khuyen_mai_Repo;
 import com.example.demo.Repository.San_pham_Repo;
+import com.example.demo.Responses.ChiTietKMResponse;
+import com.example.demo.Responses.ChiTietPhieuResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,10 +26,34 @@ import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class Khuyen_mai_Service {
     private final Khuyen_mai_Repo khuyenMaiRepo;
     private final KhuyenMaiSanPhamRepository kmspRepo;
     private final San_pham_Repo sanPhamRepo;
+
+
+    public ChiTietKMResponse getDetailKM(Integer idKM) {
+        Object row = khuyenMaiRepo.getDetailKM(idKM);
+        if (row == null) {
+            throw new RuntimeException("Không tìm thấy phiếu hoặc chưa có dữ liệu thống kê.");
+        }
+        Object[] data = (Object[]) row;
+
+        ChiTietKMResponse response = new ChiTietKMResponse();
+        response.setId((Integer) data[0]);
+        response.setTenKhuyenMai((String) data[1]);
+        response.setPhanTramKhuyenMai(((Number) data[2]).intValue());
+        response.setNgayBatDau(((Timestamp) data[3]).toLocalDateTime());
+        response.setNgayKetThuc(((Timestamp) data[4]).toLocalDateTime());
+        response.setSoSanPhamApDung(((Number) data[5]).intValue());
+        response.setTongSoLuongBan(((Number) data[6]).intValue());
+        response.setTongTienTruocGiam((BigDecimal) data[7]);
+        response.setTongSoTienGiam((BigDecimal) data[8]);
+        response.setTongTienSauGiam((BigDecimal) data[9]);
+        response.setSoHoaDon((Integer) data[10]);
+        return response;
+    }
 
     public KhuyenMai createKhuyenMai(@Valid KhuyenMaiDTO khuyenMaiDTO) throws Exception {
         try {

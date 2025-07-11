@@ -4,6 +4,8 @@ import com.example.demo.DTOs.KhuyenMaiDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.KhuyenMai;
 import com.example.demo.Repository.Khuyen_mai_Repo;
+import com.example.demo.Responses.ChiTietKMResponse;
+import com.example.demo.Responses.ChiTietPhieuResponse;
 import com.example.demo.Service.Khuyen_mai_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -99,6 +101,16 @@ public class Khuyen_mai_Controller {
             return ResponseEntity.ok("Xóa thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getDetail/{id}")
+    public ResponseEntity<?> detailKM(@PathVariable Integer id){
+        try {
+            ChiTietKMResponse response = khuyenMaiService.getDetailKM(id);
+            return ResponseEntity.ok(response);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("loi"+e.getMessage());
         }
     }
 
