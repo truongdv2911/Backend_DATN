@@ -34,14 +34,18 @@ public class HoaDonService {
     @Transactional
     public HoaDon createHoaDon(DTOhoaDon dtOhoaDon) throws Exception {
         try {
-            // 1. Lấy thông tin user
-            User user = userRepository.findById(dtOhoaDon.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + dtOhoaDon.getUserId()));
-
             // 2. Tạo hóa đơn
+            //Lấy thông tin user
             HoaDon hoaDon = new HoaDon();
+            if (dtOhoaDon.getUserId() != null) {
+                User user = userRepository.findById(dtOhoaDon.getUserId())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + dtOhoaDon.getUserId()));
+                hoaDon.setUser(user);
+            } else {
+                hoaDon.setUser(null); // Hóa đơn không gán người dùng
+            }
+
             hoaDon.setMaHD(taoMaHoaDonTuDong());
-            hoaDon.setUser(user);
             // Nếu là hóa đơn tại quầy thì set nhân viên và trạng thái hoàn tất, maVanChuyen = null
             if (dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
                 if("COD".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan())){
