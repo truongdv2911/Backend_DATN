@@ -16,13 +16,14 @@ import java.util.List;
 @Repository
 public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecificationExecutor<SanPham> {
     boolean existsByMaSanPham(@Param("maSanPham") String maSanPham);
+    boolean existsByTenSanPham(@Param("tenSanPham") String tenSanPham);
 
     @Query(value = "select * from San_pham", nativeQuery = true)
     List<SanPham> findAll();
 
     @Query(value = """
         WITH sp_km AS (
-            SELECT\s
+            SELECT
                 sp.id AS sp_id,
                 sp.ten_san_pham,
                 sp.ma_san_pham,
@@ -39,22 +40,23 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
                 kmsp.gia_khuyen_mai,
                 km.phan_tram_khuyen_mai,
                 ROW_NUMBER() OVER (
-                    PARTITION BY sp.id\s
-                    ORDER BY\s
-                        CASE\s
-                            WHEN km.id IS NOT NULL THEN 0  -- Ưu tiên sản phẩm có khuyến mãi hợp lệ
-                            ELSE 1\s
+                    PARTITION BY sp.id
+                    ORDER BY
+                        CASE
+                            WHEN km.id IS NOT NULL THEN 0
+                            ELSE 1
                         END
                 ) AS rn
-            FROM\s
+            FROM
                 san_pham sp
             LEFT JOIN khuyenMai_sanPham kmsp
                 ON kmsp.id_san_pham = sp.id
-            LEFT JOIN khuyen_mai km\s
+            LEFT JOIN khuyen_mai km
                 ON km.id = kmsp.id_khuyen_mai
                 AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
+                AND km.trang_thai IN ('ACTIVE', 'INACTIVE')  -- ✅ Điều kiện mới
         )
-        SELECT\s
+        SELECT
             sp_id AS id,
             ten_san_pham,
             ma_san_pham,
@@ -71,7 +73,8 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             gia_khuyen_mai,
             phan_tram_khuyen_mai
         FROM sp_km
-        WHERE rn = 1 and trang_thai like N'Đang kinh doanh' or trang_thai like N'Hết hàng'
+        WHERE rn = 1
+          AND (trang_thai LIKE N'Đang kinh doanh' OR trang_thai LIKE N'Hết hàng')
         AND (:keyword IS NULL OR LOWER(ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')))
                   AND (:giaMin IS NULL OR gia >= :giaMin)
                   AND (:giaMax IS NULL OR gia <= :giaMax)

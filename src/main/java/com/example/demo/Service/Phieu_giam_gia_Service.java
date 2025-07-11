@@ -4,6 +4,7 @@ import com.example.demo.DTOs.KhuyenMaiDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
+import com.example.demo.Responses.ChiTietPhieuResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
-
 @Transactional
 public class Phieu_giam_gia_Service {
 
@@ -177,5 +177,26 @@ public class Phieu_giam_gia_Service {
 
     public List<PhieuGiamGia> getByLoaiPhieuGiam(String loaiPhieuGiam) {
         return phieuGiamGiaRepo.findByLoaiPhieuGiam(loaiPhieuGiam);
+    }
+
+    public ChiTietPhieuResponse getDetail(Integer id) {
+        Object row = phieuGiamGiaRepo.getChiTietPhieu(id);
+        if (row == null) {
+            throw new RuntimeException("Không tìm thấy phiếu hoặc chưa có dữ liệu thống kê.");
+        }
+        Object[] data = (Object[]) row;
+
+        ChiTietPhieuResponse response = new ChiTietPhieuResponse();
+        response.setId((Integer) data[0]);
+        response.setMaPhieu((String) data[1]);
+        response.setTenPhieu((String) data[2]);
+        response.setGiaTriGiam((BigDecimal) data[3]);
+        response.setSoLuotSuDung(((Number) data[4]).intValue());
+        response.setSoNguoiSuDung(((Number) data[5]).intValue());
+        response.setTongTienBanDuoc((BigDecimal) data[6]);
+        response.setTongTienGiam((BigDecimal) data[7]);
+        response.setTongTienTruocGiam((BigDecimal) data[8]);
+
+        return response;
     }
 }

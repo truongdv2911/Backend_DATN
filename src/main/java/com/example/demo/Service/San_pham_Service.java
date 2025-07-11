@@ -35,6 +35,10 @@ public class San_pham_Service {
     }
 
     public SanPhamResponseDTO createSanPham(@Valid SanPhamUpdateDTO sanPhamDTO) {
+        // Kiểm tra trùng tên sản phẩm
+        if (sanPhamRepository.existsByTenSanPham(sanPhamDTO.getTenSanPham())) {
+            throw new RuntimeException("Tên sản phẩm đã tồn tại!");
+        }
         String maSanPham = null;
         if (maSanPham == null || maSanPham.isBlank()) {
             int maxTry = 10;

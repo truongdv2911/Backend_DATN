@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
+import com.example.demo.Responses.ChiTietPhieuResponse;
 import com.example.demo.Service.Phieu_giam_gia_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -115,6 +116,16 @@ public class Phieu_giam_gia_Controller {
             return ResponseEntity.ok(phieuGiamGiaRepo.getPGGPhuHop(tamTinh));
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Loi khi tai phieu"+e.getMessage());
+        }
+    }
+
+    @GetMapping("/getDetail/{id}")
+    public ResponseEntity<?> detailPhieu(@PathVariable Integer id){
+        try {
+            ChiTietPhieuResponse chiTietPhieuResponse = phieuGiamGiaService.getDetail(id);
+            return ResponseEntity.ok(chiTietPhieuResponse);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("loi"+e.getMessage());
         }
     }
 
