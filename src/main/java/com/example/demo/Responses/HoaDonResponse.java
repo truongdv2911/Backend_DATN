@@ -40,4 +40,5 @@ public class HoaDonResponse {
     private String nvName;
     private Integer idPhieuGiam;
     private String maPGG;
+    private String qrCodeUrl;
 }

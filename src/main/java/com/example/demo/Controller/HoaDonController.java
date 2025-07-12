@@ -56,7 +56,9 @@ public class HoaDonController {
                     }
                 }
             }
-            return ResponseEntity.ok(hoaDonService.createHoaDon(dtOhoaDon));
+            HoaDon hoaDon = hoaDonService.createHoaDon(dtOhoaDon);
+            HoaDonResponse response = hoaDonService.convertToResponse(hoaDon);
+            return ResponseEntity.ok(response);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }

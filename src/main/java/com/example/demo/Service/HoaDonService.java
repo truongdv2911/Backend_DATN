@@ -72,6 +72,7 @@ public class HoaDonService {
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
             hoaDon.setSdt(dtOhoaDon.getSdt());
             hoaDon.setLoaiHD(dtOhoaDon.getLoaiHD());
+            hoaDon.setQrCodeUrl(dtOhoaDon.getQrCodeUrl());
 
             // Kiểm tra phiếu giảm giá (nếu có)
             PhieuGiamGia phieuGiamGia = null;
@@ -334,11 +335,12 @@ public class HoaDonService {
         return String.format("HD%03d", nextNumber);
     }
 
-    private HoaDonResponse convertToResponse(HoaDon hoaDon) {
+    public HoaDonResponse convertToResponse(HoaDon hoaDon) {
         HoaDonResponse response = new HoaDonResponse();
         response.setId(hoaDon.getId());
         response.setMaHD(hoaDon.getMaHD());
         response.setLoaiHD(hoaDon.getLoaiHD());
+        response.setQrCodeUrl(hoaDon.getQrCodeUrl());
         response.setTamTinh(hoaDon.getTamTinh());
         response.setTongTien(hoaDon.getTongTien());
         response.setSoTienGiam(hoaDon.getSoTienGiam());
@@ -348,9 +350,13 @@ public class HoaDonService {
         response.setNgayTao(hoaDon.getNgayTao());
         response.setTrangThai(hoaDon.getTrangThai());
         response.setPhuongThucThanhToan(hoaDon.getPhuongThucThanhToan());
-        if (hoaDon.getUser() != null) response.setUserId(hoaDon.getUser().getId());
-        if (hoaDon.getUser() != null) response.setTen(hoaDon.getUser().getTen());
-        if (hoaDon.getUser() != null) response.setSdt(hoaDon.getUser().getSdt());
+        if (hoaDon.getUser() != null){
+            response.setUserId(hoaDon.getUser().getId());
+            response.setTen(hoaDon.getUser().getTen());
+            response.setSdt(hoaDon.getUser().getSdt());
+        }else {
+            response.setSdt(hoaDon.getSdt());
+        }
         if (hoaDon.getNv() != null) response.setNvId(hoaDon.getNv().getId());
         if (hoaDon.getNv() != null) response.setNvName(hoaDon.getNv().getTen());
         if (hoaDon.getPhieuGiamGia() != null) response.setIdPhieuGiam(hoaDon.getPhieuGiamGia().getId());

@@ -1,20 +1,24 @@
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.SanPhamUpdateDTO;
+import com.example.demo.DTOs.SanPhamWithImagesDTO;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.San_pham_Repo;
 import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Service.San_pham_Service;
+import com.example.demo.Service.AnhSpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,6 +30,7 @@ public class San_pham_Controller {
 
     private final San_pham_Service sanPhamService;
     private final San_pham_Repo san_pham_repo;
+    private final AnhSpService anhSpService;
 
     @PostMapping("/Create")
     public ResponseEntity<?> createSanPham(@Valid @RequestBody SanPhamUpdateDTO sanPhamDTO, BindingResult result) {
@@ -37,6 +42,36 @@ public class San_pham_Controller {
             }
             SanPhamResponseDTO responseDTO = sanPhamService.createSanPham(sanPhamDTO);
             return ResponseEntity.ok(responseDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "Internal Server Error"));
+        }
+    }
+
+    @PostMapping(value = "/CreateWithFileImages", consumes = "multipart/form-data")
+    public ResponseEntity<?> createSanPhamWithFileImages(
+            @Valid @ModelAttribute SanPhamUpdateDTO sanPhamDTO,
+            @RequestParam("files") MultipartFile[] files,
+            BindingResult result
+            ) {
+        if (result.hasErrors()) {
+            List<String> listErrors = result.getFieldErrors().stream()
+                    .map(errors -> errors.getDefaultMessage()).toList();
+            return ResponseEntity.badRequest().body(listErrors);
+        }
+        try {
+            // Tạo sản phẩm trước
+            SanPhamResponseDTO sanPhamResponse = sanPhamService.createSanPham(sanPhamDTO);
+            
+            // Lấy sản phẩm vừa tạo
+            SanPham sanPham = sanPhamService.getSanPhamById(sanPhamResponse.getId());
+            
+            // Upload và tạo ảnh sử dụng AnhSpService
+            anhSpService.uploadAndCreateAnhSp(files, null, null, sanPham.getId());
+            
+            return ResponseEntity.ok(sanPhamService.convertToResponseDTO(sanPham));
+            
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
