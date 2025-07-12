@@ -64,12 +64,11 @@ public class Anh_sp_Controller {
     public ResponseEntity<?> uploadImages(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(value = "moTa", required = false) String moTa,
-            @RequestParam(value = "thuTu", required = false) Integer thuTu,
             @RequestParam(value = "anhChinh", required = false) Boolean anhChinh,
             @RequestParam("sanPhamId") Integer sanPhamId) {
 
         try {
-            List<Anh_sp_DTO> uploadedImages = anhSpService.uploadAndCreateAnhSp(files, moTa, thuTu, anhChinh, sanPhamId);
+            List<Anh_sp_DTO> uploadedImages = anhSpService.uploadAndCreateAnhSp(files, moTa, anhChinh, sanPhamId);
             return new ResponseEntity<>(uploadedImages, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>("Lỗi xác thực: " + e.getMessage(), HttpStatus.BAD_REQUEST);

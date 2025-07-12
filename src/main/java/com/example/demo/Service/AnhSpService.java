@@ -47,10 +47,8 @@ public class AnhSpService {
     public List<Anh_sp_DTO> getAllAnhSp() {
         List<AnhSp> anhSpList = anhSpRepository.findAll();
         return anhSpList.stream().map(anhSp -> new Anh_sp_DTO(
-                anhSp.getId(),
                 anhSp.getUrl(),
                 anhSp.getMoTa(),
-                anhSp.getThuTu(),
                 anhSp.getAnhChinh(),
                 anhSp.getSanPham() != null ? anhSp.getSanPham().getId() : null
         )).collect(Collectors.toList());
@@ -60,10 +58,8 @@ public class AnhSpService {
         AnhSp anhSp = anhSpRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
         return new Anh_sp_DTO(
-                anhSp.getId(),
                 anhSp.getUrl(),
                 anhSp.getMoTa(),
-                anhSp.getThuTu(),
                 anhSp.getAnhChinh(),
                 anhSp.getSanPham() != null ? anhSp.getSanPham().getId() : null
         );
@@ -130,10 +126,8 @@ public void deleteAnhSp(Integer id) {
 
             AnhSp updatedAnhSp = anhSpRepository.save(anhSp);
             return new Anh_sp_DTO(
-                    updatedAnhSp.getId(),
                     updatedAnhSp.getUrl(),
                     updatedAnhSp.getMoTa(),
-                    updatedAnhSp.getThuTu(),
                     updatedAnhSp.getAnhChinh(),
                     updatedAnhSp.getSanPham() != null ? updatedAnhSp.getSanPham().getId() : null
             );
@@ -142,7 +136,7 @@ public void deleteAnhSp(Integer id) {
         }
     }
 
-    public List<Anh_sp_DTO> uploadAndCreateAnhSp(MultipartFile[] files, String moTa, Integer thuTu, Boolean anhChinh, Integer sanPhamId) {
+    public List<Anh_sp_DTO> uploadAndCreateAnhSp(MultipartFile[] files, String moTa, Boolean anhChinh, Integer sanPhamId) {
         if (files == null || files.length == 0) {
             throw new RuntimeException("Chưa chọn ảnh để upload.");
         }
@@ -164,11 +158,6 @@ public void deleteAnhSp(Integer id) {
             if (totalImagesAfterUpload > 5) {
                 throw new RuntimeException("Sản phẩm đã có " + existingImages.size() + " ảnh. "
                         + "Chỉ được upload tối đa 5 ảnh. Chỉ có thể thêm " + (5 - existingImages.size()) + " ảnh nữa.");
-            }
-
-            // Validate thuTu nếu được cung cấp
-            if (thuTu != null && (thuTu < 1 || thuTu > 5)) {
-                throw new IllegalArgumentException("Số thứ tự phải nằm trong khoảng từ 1 đến 5.");
             }
 
             // Kiểm tra trùng lặp số thứ tự
@@ -220,26 +209,6 @@ public void deleteAnhSp(Integer id) {
                 anhSp.setUrl(url);
                 anhSp.setMoTa(moTa);
 
-                // Gán số thứ tự
-                int order;
-                if (thuTu != null) {
-                    order = thuTu + i;
-                    if (order > 5) {
-                        throw new IllegalArgumentException("Số thứ tự " + order + " vượt quá giới hạn 5.");
-                    }
-                    if (usedOrders.contains(order)) {
-                        throw new IllegalArgumentException("Số thứ tự " + order + " đã được sử dụng.");
-                    }
-                } else {
-                    // Gán số thứ tự tự động (bắt đầu từ existingImages.size() + 1)
-                    order = existingImages.size() + i + 1;
-                    if (order > 5) {
-                        throw new IllegalArgumentException("Số thứ tự " + order + " vượt quá giới hạn 5.");
-                    }
-                }
-                usedOrders.add(order);
-                anhSp.setThuTu(order);
-
                 // Set anhChinh: true cho ảnh đầu tiên trong lần upload này, nhưng chỉ nếu không có ảnh chính nào khác
                 boolean isFirstImage = (i == 0);
                 boolean daCoAnhChinh = existingImages.stream().anyMatch(AnhSp::getAnhChinh);
@@ -266,10 +235,8 @@ public void deleteAnhSp(Integer id) {
                 // Lưu ảnh và ánh xạ sang DTO
                 AnhSp savedAnhSp = anhSpRepository.save(anhSp);
                 Anh_sp_DTO anhSpDTO = new Anh_sp_DTO(
-                        savedAnhSp.getId(),
                         savedAnhSp.getUrl(),
                         savedAnhSp.getMoTa(),
-                        savedAnhSp.getThuTu(),
                         savedAnhSp.getAnhChinh(),
                         sanPhamId
                 );
@@ -314,10 +281,8 @@ public void deleteAnhSp(Integer id) {
     public List<Anh_sp_DTO> getAnhBySanPhamId(Integer sanPhamId) {
         List<AnhSp> list = anhSpRepository.findBySanPhamId(sanPhamId);
         return list.stream().map(anhSp -> new Anh_sp_DTO(
-                anhSp.getId(),
                 anhSp.getUrl(),
                 anhSp.getMoTa(),
-                anhSp.getThuTu(),
                 anhSp.getAnhChinh(),
                 anhSp.getSanPham().getId()
         )).collect(Collectors.toList());

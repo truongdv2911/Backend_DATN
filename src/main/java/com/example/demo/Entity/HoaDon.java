@@ -57,4 +57,7 @@ public class HoaDon {
     @ManyToOne
     @JoinColumn(name = "id_phieu_khuyen_mai", referencedColumnName = "id")
     private PhieuGiamGia phieuGiamGia;
+
+    @Column(name = "qr_code_url")
+    private String qrCodeUrl;
 }

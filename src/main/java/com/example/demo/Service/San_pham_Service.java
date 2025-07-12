@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTOs.SanPhamUpdateDTO;
+import com.example.demo.DTOs.SanPhamWithImagesDTO;
 import com.example.demo.Entity.*;
 import com.example.demo.Repository.*;
 import com.example.demo.Responses.AnhResponse;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ public class San_pham_Service {
     private final Bo_suu_tap_Repo boSuuTapRepository;
     private final Khuyen_mai_Repo khuyenMaiRepository;
     private final KhuyenMaiSanPhamRepository khuyenMaiSanPhamRepository;
+    private final AnhSpService anhSpService;
 
     // Phương thức helper tính trạng thái theo số lượng tồn
     private String tinhTrangThaiTheoTonKho(int soLuongTon) {
@@ -63,8 +66,8 @@ public class San_pham_Service {
         sanPham.setMoTa(sanPhamDTO.getMoTa());
         sanPham.setGia(sanPhamDTO.getGia());
 
-        BigDecimal giaGoc = sanPhamDTO.getGia();
-        BigDecimal giaKhuyenMai = giaGoc; // mặc định bằng giá gốc
+//        BigDecimal giaGoc = sanPhamDTO.getGia();
+//        BigDecimal giaKhuyenMai = giaGoc; // mặc định bằng giá gốc
 
 //        if (sanPhamDTO.getKhuyenMaiId() != null) {
 //            KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
@@ -103,6 +106,41 @@ public class San_pham_Service {
         
         SanPham savedSanPham = sanPhamRepository.save(sanPham);
         return convertToResponseDTO(savedSanPham);
+    }
+
+    public SanPhamResponseDTO createSanPhamWithImages(@Valid SanPhamWithImagesDTO sanPhamWithImagesDTO) {
+        // Kiểm tra chỉ có 1 ảnh chính
+        long soAnhChinh = sanPhamWithImagesDTO.getDanhSachAnh().stream()
+                .filter(anh -> anh.getAnhChinh())
+                .count();
+        
+        if (soAnhChinh != 1) {
+            throw new RuntimeException("Phải có đúng 1 ảnh chính trong danh sách ảnh!");
+        }
+        
+        // Tạo sản phẩm trước
+        SanPhamResponseDTO sanPhamResponse = createSanPham(sanPhamWithImagesDTO.getSanPham());
+        
+        // Lấy sản phẩm vừa tạo
+        SanPham sanPham = getSanPhamById(sanPhamResponse.getId());
+        
+        // Tạo danh sách ảnh cho sản phẩm
+        List<AnhSp> danhSachAnh = sanPhamWithImagesDTO.getDanhSachAnh().stream()
+                .map(anhDTO -> {
+                    AnhSp anhSp = new AnhSp();
+                    anhSp.setUrl(anhDTO.getUrl());
+                    anhSp.setMoTa(anhDTO.getMoTa());
+                    anhSp.setAnhChinh(anhDTO.getAnhChinh());
+                    anhSp.setSanPham(sanPham);
+                    return anhSp;
+                })
+                .collect(Collectors.toList());
+        
+        // Lưu tất cả ảnh
+        anhSpRepo.saveAll(danhSachAnh);
+        
+        // Trả về response với ảnh đã được thêm
+        return convertToResponseDTO(sanPham);
     }
 
     public List<SanPhamKMResponse> getSanPhamKhuyenMaiFull() {
@@ -333,7 +371,7 @@ public class San_pham_Service {
         return dto;
     }
 
-    private String generateMaPhieu() {
+    public String generateMaPhieu() {
         Random random = new Random();
         int randomNumber = random.nextInt(900000) + 100000;
         return "SP" + randomNumber;
