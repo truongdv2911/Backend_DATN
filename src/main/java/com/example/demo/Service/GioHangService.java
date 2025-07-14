@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -103,7 +104,7 @@ public class GioHangService {
             throw new RuntimeException("Phiếu giảm giá không khả dụng");
         }
 
-        LocalDate currentDate = LocalDate.now();
+        LocalDateTime currentDate = LocalDateTime.now();
         if (phieuGiamGia.getNgayBatDau().isAfter(currentDate) ||
                 phieuGiamGia.getNgayKetThuc().isBefore(currentDate)) {
             throw new RuntimeException("Phiếu giảm giá đã hết hạn hoặc chưa bắt đầu");

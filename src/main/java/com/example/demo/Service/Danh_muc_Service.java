@@ -17,6 +17,9 @@ public class   Danh_muc_Service {
 
 
     public DanhMuc createDanhMuc(@Valid DanhMucDTO danhMucDTO) {
+        if (danhMucRepo.existsByTenDanhMuc(danhMucDTO.getTenDanhMuc())) {
+            throw new RuntimeException("Tên danh mục đã tồn tại!");
+        }
         DanhMuc danhMuc = new DanhMuc();
         danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
         danhMuc.setMoTa(danhMucDTO.getMoTa());
@@ -37,6 +40,10 @@ public class   Danh_muc_Service {
 
     public DanhMuc updateDanhMuc(Integer id, @Valid DanhMucDTO danhMucDTO) {
         DanhMuc danhMuc = getDanhMucById(id);
+        if (!danhMuc.getTenDanhMuc().equals(danhMucDTO.getTenDanhMuc())
+                && danhMucRepo.existsByTenDanhMuc(danhMucDTO.getTenDanhMuc())) {
+            throw new RuntimeException("Tên danh mục đã tồn tại!");
+        }
         danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
         danhMuc.setMoTa(danhMucDTO.getMoTa());
         return danhMucRepo.save(danhMuc);

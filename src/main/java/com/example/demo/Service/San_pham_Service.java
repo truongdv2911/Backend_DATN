@@ -266,7 +266,12 @@ public class San_pham_Service {
 
     public SanPhamResponseDTO updateSanPham(Integer id, SanPhamUpdateDTO sanPhamDTO) {
         try {
+
             SanPham sanPham = getSanPhamById(id);
+            if (!sanPham.getTenSanPham().equals(sanPhamDTO.getTenSanPham())
+                    && sanPhamRepository.existsByTenSanPham(sanPhamDTO.getTenSanPham())) {
+                throw new RuntimeException("Tên sản phẩm đã tồn tại!");
+            }
             sanPham.setTenSanPham(sanPhamDTO.getTenSanPham());
             sanPham.setDoTuoi(sanPhamDTO.getDoTuoi());
             sanPham.setMoTa(sanPhamDTO.getMoTa());

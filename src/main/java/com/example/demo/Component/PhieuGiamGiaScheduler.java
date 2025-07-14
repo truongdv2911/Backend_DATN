@@ -27,17 +27,23 @@ public class PhieuGiamGiaScheduler {
     private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
     private final KhuyenMaiSanPhamRepository kmspRepo;
     // Chạy mỗi ngày lúc 0h đêm
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(fixedDelay  = 3000)
     public void updateTrangThaiPhieuGiamGia() {
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
 
         List<PhieuGiamGia> danhSach = phieuGiamGiaRepo.findAll();
         for (PhieuGiamGia pgg : danhSach) {
-            boolean hetHan = pgg.getNgayKetThuc().isBefore(now);
-            boolean hetSoLuong = pgg.getSoLuong() <= 0;
+            String trangThaiMoi;
+            if (now.isBefore(pgg.getNgayBatDau())) {
+                trangThaiMoi = "inactive";
+            } else if (pgg.getNgayKetThuc().isBefore(now) || pgg.getSoLuong() <= 0) {
+                trangThaiMoi = "expired";
+            } else {
+                trangThaiMoi = "active";
+            }
 
-            if (hetHan || hetSoLuong) {
-                pgg.setTrangThai("expired"); // hoặc EXPIRED/OUT_OF_STOCK tùy logic
+            if (!trangThaiMoi.equals(pgg.getTrangThai())) {
+                pgg.setTrangThai(trangThaiMoi);
                 phieuGiamGiaRepo.save(pgg);
             }
         }

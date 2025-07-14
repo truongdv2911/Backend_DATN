@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface Khuyen_mai_Repo extends JpaRepository<KhuyenMai, Integer> {
     boolean existsByMaKhuyenMai(String maKhuyenMai);
-
+    boolean existsByTenKhuyenMai(@Param("tenKM") String tenKM);
     @Query("SELECT k FROM KhuyenMai k WHERE k.trangThai <> 'isDelete'")
     List<KhuyenMai> findAllKhuyenMaiKhongBiXoa();
     @Modifying

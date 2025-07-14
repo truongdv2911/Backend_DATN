@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -42,14 +43,14 @@ public class PhieuGiamGiaDTO {
     @DecimalMin(value = "0.0", message = "Giá trị tối thiểu phải lớn hơn hoặc bằng 0")
      BigDecimal giaTriToiThieu;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     @NotNull(message = "Ngày bắt đầu không được để trống")
     @FutureOrPresent(message = "Ngày bắt đầu ít nhất từ bây giờ")
-     LocalDate ngayBatDau;
+    LocalDateTime ngayBatDau;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     @NotNull(message = "Ngày kết thúc không được để trống")
     @Future(message = "Ngày kết thúc ít nhất phải ngày mai")
-    LocalDate ngayKetThuc;
+    LocalDateTime ngayKetThuc;
 
 }

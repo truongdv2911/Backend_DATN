@@ -60,4 +60,7 @@ public class HoaDon {
 
     @Column(name = "qr_code_url")
     private String qrCodeUrl;
+
+    @Column(name = "phi_ship")
+    private BigDecimal phiShip;
 }

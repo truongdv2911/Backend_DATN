@@ -32,7 +32,7 @@ public class DTOhoaDon {
     private String trangThai;
     @NotEmpty
     private String phuongThucThanhToan;
-    @NotEmpty(message = "không để trống số điện thoại người nhận")
+//    @NotEmpty(message = "không để trống số điện thoại người nhận")
     @Pattern(regexp = "\\d{10}", message = "Sai dinh dang sdt")
     private String sdt;
 
@@ -49,4 +49,6 @@ public class DTOhoaDon {
     private Integer loaiHD;
 
     private String qrCodeUrl;
+
+    private Integer isFast;
 }
