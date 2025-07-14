@@ -57,6 +57,9 @@ public class Khuyen_mai_Service {
 
     public KhuyenMai createKhuyenMai(@Valid KhuyenMaiDTO khuyenMaiDTO) throws Exception {
         try {
+            if (khuyenMaiRepo.existsByTenKhuyenMai(khuyenMaiDTO.getTenKhuyenMai())) {
+                throw new RuntimeException("Tên khuyến mại đã tồn tại!");
+            }
             String maKhuyenMai = "";
             int maxTry = 10;
             int count = 0;
@@ -109,6 +112,10 @@ public class Khuyen_mai_Service {
 //        }
 
         KhuyenMai khuyenMai = getKhuyenMaiById(id);
+        if (!khuyenMai.getTenKhuyenMai().equals(khuyenMaiDTO.getTenKhuyenMai())
+                && khuyenMaiRepo.existsByTenKhuyenMai(khuyenMaiDTO.getTenKhuyenMai())) {
+            throw new RuntimeException("Tên khuyến mại đã tồn tại!");
+        }
         khuyenMai.setTenKhuyenMai(khuyenMaiDTO.getTenKhuyenMai());
         khuyenMai.setPhanTramKhuyenMai(khuyenMaiDTO.getPhanTramKhuyenMai());
         khuyenMai.setNgayBatDau(khuyenMaiDTO.getNgayBatDau());

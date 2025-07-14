@@ -19,6 +19,9 @@ public class Bo_suu_tap_Service {
 
 
     public BoSuuTap createBoSuuTap(@Valid BoSuuTapDTO boSuuTapDTO) {
+        if (boSuuTapRepo.existsByTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap())) {
+            throw new RuntimeException("Tên bộ sưu tập đã tồn tại!");
+        }
         BoSuuTap boSuuTap = new BoSuuTap();
         boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
         boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
@@ -41,6 +44,10 @@ public class Bo_suu_tap_Service {
 
     public BoSuuTap updateBoSuuTap(Integer id, @Valid BoSuuTapDTO boSuuTapDTO) {
         BoSuuTap boSuuTap = getBoSuuTapById(id);
+        if (!boSuuTap.getTenBoSuuTap().equals(boSuuTapDTO.getTenBoSuuTap())
+                && boSuuTapRepo.existsByTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap())) {
+            throw new RuntimeException("Tên bộ sưu tập đã tồn tại!");
+        }
         boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
         boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
         boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());

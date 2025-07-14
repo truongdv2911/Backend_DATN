@@ -41,4 +41,5 @@ public class HoaDonResponse {
     private Integer idPhieuGiam;
     private String maPGG;
     private String qrCodeUrl;
+    private BigDecimal phiShip;
 }

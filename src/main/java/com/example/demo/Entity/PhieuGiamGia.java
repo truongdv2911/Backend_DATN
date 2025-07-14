@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 @Entity
 @Data
@@ -34,14 +35,12 @@ public class PhieuGiamGia {
     private BigDecimal giamToiDa;
     @Column(name = "gia_tri_toi_thieu")
     private BigDecimal giaTriToiThieu;
-
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     @Column(name = "ngay_bat_dau")
-    private LocalDate ngayBatDau;
-
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    private LocalDateTime ngayBatDau;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     @Column(name = "ngay_ket_thuc")
-    private LocalDate ngayKetThuc;
+    private LocalDateTime ngayKetThuc;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;

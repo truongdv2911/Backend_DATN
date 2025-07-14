@@ -31,11 +31,38 @@ public class HoaDonService {
     private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
     private final KhuyenMaiSanPhamRepository khuyenMaiSanPhamRepository;
 
+    // Danh sách tỉnh/thành phố miền Bắc
+    private static final Set<String> MIEN_BAC = Set.of(
+        "Hà Nội", "Bắc Ninh", "Cao Bằng", "Điện Biên", "Hải Phòng", "Lai Châu", "Lạng Sơn",
+        "Lào Cai", "Ninh Bình", "Phú Thọ", "Quảng Ninh", "Sơn La", "Thái Nguyên", "Tuyên Quang"
+    );
+
+    // Danh sách tỉnh/thành phố miền Nam
+    private static final Set<String> MIEN_NAM = Set.of(
+        "Hồ Chí Minh", "Cần Thơ", "An Giang", "Cà Mau", "Đồng Nai", "Đồng Tháp", "Tây Ninh", "Vĩnh Long"
+    );
+    private static final Set<String> MIEN_TRUNG = Set.of(
+        "Đà Nẵng", "Huế", "Đắk Lắk", "Hà Tĩnh", "Khánh Hòa", "Lâm Đồng", "Nghệ An", "Quảng Ngãi", "Quảng Trị", "Thanh Hóa"
+    );
+
+    public boolean isMienBac(String province) {
+        return MIEN_BAC.contains(province);
+    }
+
+    public boolean isMienTrung(String province) {
+        return MIEN_TRUNG.contains(province);
+    }
+
+    public boolean isMienNam(String province) {
+        return MIEN_NAM.contains(province);
+    }
+
     @Transactional
     public HoaDon createHoaDon(DTOhoaDon dtOhoaDon) throws Exception {
         try {
             // 2. Tạo hóa đơn
             //Lấy thông tin user
+            BigDecimal phiShip = BigDecimal.ZERO;
             HoaDon hoaDon = new HoaDon();
             if (dtOhoaDon.getUserId() != null) {
                 User user = userRepository.findById(dtOhoaDon.getUserId())
@@ -55,6 +82,7 @@ public class HoaDonService {
                 hoaDon.setMaVanChuyen(null);
                 hoaDon.setNgayGiao(null);
                 hoaDon.setDiaChiGiaoHang("Tại quầy");
+                hoaDon.setPhiShip(new BigDecimal(0));
                 if (dtOhoaDon.getNvId() != null) {
                     User nv = userRepository.findById(dtOhoaDon.getNvId()).orElse(null);
                     hoaDon.setNv(nv);
@@ -65,8 +93,31 @@ public class HoaDonService {
                 hoaDon.setTrangThai(TrangThaiHoaDon.PENDING);
                 hoaDon.setNv(null);
                 hoaDon.setDiaChiGiaoHang(dtOhoaDon.getDiaChiGiaoHang());
+
+                // --- BẮT ĐẦU: Tính phí ship và ngày giao hàng tự động ---
+                String[] addressParts = dtOhoaDon.getDiaChiGiaoHang() != null ? dtOhoaDon.getDiaChiGiaoHang().split(",") : new String[0];
+                String province = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : "";
+                String district = addressParts.length > 1 ? addressParts[addressParts.length - 2].trim() : "";
+                String fromProvince = "Hà Nội"; // Có thể thay đổi nếu cần lấy động
+                String loaiVanChuyen = getLoaiVanChuyen(fromProvince, province);
+                String khuVuc = isNoiThanh(province, district) ? "Nội thành" : "Ngoại thành";
+                double totalWeight = 0;
+                for (CartItemDTO cartItemDto : dtOhoaDon.getCartItems()) {
+                    totalWeight += cartItemDto.getSoLuong()*0.5; // Mặc định mỗi sản phẩm 1kg
+                }
+                phiShip = tinhPhiShip(loaiVanChuyen, khuVuc, totalWeight);
+                int soNgayGiao = tinhSoNgayGiao(loaiVanChuyen);
                 hoaDon.setMaVanChuyen(UUID.randomUUID().toString().substring(0, 8));
-                hoaDon.setNgayGiao(LocalDateTime.now().plusDays(3));
+
+                if (dtOhoaDon.getIsFast() == 1 && ("DAC_BIET".equals(loaiVanChuyen) || "LIEN_MIEN".equals(loaiVanChuyen))){
+                    hoaDon.setPhiShip(phiShip.add(BigDecimal.valueOf(15000)));
+                    hoaDon.setNgayGiao(LocalDateTime.now().plusDays(soNgayGiao - 1));
+                }else {
+                    hoaDon.setPhiShip(phiShip);
+                    hoaDon.setNgayGiao(LocalDateTime.now().plusDays(soNgayGiao));
+                }
+                // --- KẾT THÚC: Tính phí ship và ngày giao hàng tự động ---
+
             }
             hoaDon.setNgayTao(LocalDateTime.now());
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
@@ -79,7 +130,7 @@ public class HoaDonService {
             if (dtOhoaDon.getIdPhieuGiam() != null) {
                 phieuGiamGia = phieuGiamGiaRepo.findById(dtOhoaDon.getIdPhieuGiam())
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu giảm giá!"));
-                LocalDate now = LocalDate.now();
+                LocalDateTime now = LocalDateTime.now();
                 if (phieuGiamGia.getSoLuong() == null || phieuGiamGia.getSoLuong() <= 0) {
                     throw new RuntimeException("Phiếu giảm giá đã hết lượt sử dụng!");
                 }
@@ -179,7 +230,7 @@ public class HoaDonService {
 
             hoaDon.setTamTinh(totalHd);
             hoaDon.setSoTienGiam(soTienGiam);
-            hoaDon.setTongTien(totalHd.subtract(soTienGiam));
+            hoaDon.setTongTien((totalHd.subtract(soTienGiam)).add(phiShip));
 
             // 5. Lưu vào database (transaction sẽ commit tại đây nếu không có lỗi)
             HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
@@ -199,7 +250,7 @@ public class HoaDonService {
             mapper.map(src -> src.getPhieuGiamGia().getId(), HoaDonResponse::setUserId);
         });
         HoaDon hoaDon = hoaDonRepository.findById(id).orElseThrow(() -> new Exception("khong tim thay hoa don"));
-        return modelMapper.map(hoaDon, HoaDonResponse.class);
+        return convertToResponse(hoaDon);
     }
 
     public List<HoaDonResponse> getAll(Integer user_id) {
@@ -210,7 +261,7 @@ public class HoaDonService {
                 mapper.map(src -> src.getPhieuGiamGia().getId(), HoaDonResponse::setUserId);
         });
         return hoaDonRepository.findByIdUser(user_id).stream().map(order -> {
-            HoaDonResponse orderResponse = modelMapper.map(order, HoaDonResponse.class);
+            HoaDonResponse orderResponse = convertToResponse(order);
             return orderResponse;
         }).toList();
     }
@@ -264,7 +315,7 @@ public class HoaDonService {
                     .orElseThrow(() -> new Exception("Không tìm thấy phiếu giảm giá"));
 
             boolean isValid = phieu.getSoLuong() > 0
-                    && phieu.getNgayKetThuc().isAfter(LocalDate.now())
+                    && phieu.getNgayKetThuc().isAfter(LocalDateTime.now())
                     && "Đang hoạt động".equals(phieu.getTrangThai())
                     && tong.compareTo(phieu.getGiaTriToiThieu()) >= 0;
 
@@ -350,6 +401,8 @@ public class HoaDonService {
         response.setNgayTao(hoaDon.getNgayTao());
         response.setTrangThai(hoaDon.getTrangThai());
         response.setPhuongThucThanhToan(hoaDon.getPhuongThucThanhToan());
+        response.setPhiShip(hoaDon.getPhiShip());
+        response.setSdt1(hoaDon.getSdt());
         if (hoaDon.getUser() != null){
             response.setUserId(hoaDon.getUser().getId());
             response.setTen(hoaDon.getUser().getTen());
@@ -426,5 +479,85 @@ public class HoaDonService {
         return hoaDonPage.map(this::convertToResponse);
     }
 
+    // Xác định loại vận chuyển dựa vào tỉnh xuất phát và tỉnh nhận
+    public String getLoaiVanChuyen(String fromProvince, String toProvince) {
+        if (fromProvince.equalsIgnoreCase(toProvince)) {
+            return "NOI_TINH";
+        }
+        if ((fromProvince.equalsIgnoreCase("Hà Nội") && toProvince.equalsIgnoreCase("Đà Nẵng"))) {
+            return "DAC_BIET";
+        }
+        if ((fromProvince.equalsIgnoreCase("Hà Nội") && isMienBac(toProvince))) {
+            return "NOI_MIEN";
+        }
+        return "LIEN_MIEN";
+    }
+
+    // Hàm xác định nội thành (ví dụ cho Hà Nội, Tp.HCM, bạn có thể mở rộng thêm)
+    public boolean isNoiThanh(String province, String district) {
+        if (province.equalsIgnoreCase("Hà Nội")) {
+            Set<String> noiThanhHN = Set.of("Ba Đình", "Hoàn Kiếm", "Đống Đa", "Hai Bà Trưng", "Cầu Giấy", "Thanh Xuân", "Hoàng Mai", "Long Biên", "Tây Hồ", "Nam Từ Liêm", "Bắc Từ Liêm", "Hà Đông");
+            return noiThanhHN.contains(district);
+        }
+        return false;
+    }
+
+    // Hàm tính phí ship dựa vào loại vận chuyển, khu vực, trọng lượng
+    public BigDecimal tinhPhiShip(String loaiVanChuyen, String khuVuc, double weightKg) {
+        BigDecimal base = BigDecimal.ZERO;
+        double extraWeight = 0;
+        switch (loaiVanChuyen) {
+            case "NOI_TINH":
+                if (khuVuc.equals("Nội thành")) {
+                    base = new BigDecimal(22000);
+                    extraWeight = Math.max(0, weightKg - 3);
+                    base = base.add(new BigDecimal(2500 * Math.ceil(extraWeight / 0.5)));
+                } else {
+                    base = new BigDecimal(30000);
+                    extraWeight = Math.max(0, weightKg - 3);
+                    base = base.add(new BigDecimal(2500 * Math.ceil(extraWeight / 0.5)));
+                }
+                break;
+            case "NOI_MIEN":
+                if (khuVuc.equals("Nội thành")) {
+                    base = new BigDecimal(30000);
+                } else {
+                    base = new BigDecimal(35000);
+                }
+                extraWeight = Math.max(0, weightKg - 0.5);
+                base = base.add(new BigDecimal(2500 * Math.ceil(extraWeight / 0.5)));
+                break;
+            case "DAC_BIET":
+                if (khuVuc.equals("Nội thành")) {
+                    base = new BigDecimal(30000);
+                } else {
+                    base = new BigDecimal(40000);
+                }
+                extraWeight = Math.max(0, weightKg - 0.5);
+                base = base.add(new BigDecimal(5000 * Math.ceil(extraWeight / 0.5)));
+                break;
+            case "LIEN_MIEN":
+                if (khuVuc.equals("Nội thành")) {
+                    base = new BigDecimal(32000); // hoặc 32000 tùy loại chuẩn/nhanh
+                } else {
+                    base = new BigDecimal(37000);
+                }
+                extraWeight = Math.max(0, weightKg - 0.5);
+                base = base.add(new BigDecimal(5000 * Math.ceil(extraWeight / 0.5)));
+                break;
+        }
+        return base;
+    }
+
+    // Hàm tính số ngày giao hàng dựa vào loại vận chuyển
+    public int tinhSoNgayGiao(String loaiVanChuyen) {
+        switch (loaiVanChuyen) {
+            case "NOI_TINH": return 1; // 12-24h
+            case "NOI_MIEN": return 1; // 24h
+            case "DAC_BIET": return 3; // 3-4 ngày
+            case "LIEN_MIEN": return 3; // 3-5 ngày hoặc 2 ngày (48h)
+            default: return 3;
+        }
+    }
 
 }

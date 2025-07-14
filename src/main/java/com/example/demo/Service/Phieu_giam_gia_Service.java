@@ -26,7 +26,9 @@ public class Phieu_giam_gia_Service {
     private Phieu_giam_gia_Repo phieuGiamGiaRepo;
 
     public PhieuGiamGia createPhieuGiamGia(PhieuGiamGiaDTO phieuGiamGiaDTO) {
-
+        if (phieuGiamGiaRepo.existsByTenPhieu(phieuGiamGiaDTO.getTenPhieu())) {
+            throw new RuntimeException("Tên phiếu giảm đã tồn tại!");
+        }
         String maPhieu = phieuGiamGiaDTO.getMaPhieu();
         if (maPhieu == null || maPhieu.isBlank()) {
             int maxTry = 10;
@@ -77,9 +79,9 @@ public class Phieu_giam_gia_Service {
     }
 
     private String tinhTrangThai(PhieuGiamGiaDTO dto) {
-        LocalDate today = LocalDate.now();
-        LocalDate ngayBatDau = dto.getNgayBatDau();
-        LocalDate ngayKetThuc = dto.getNgayKetThuc();
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime ngayBatDau = dto.getNgayBatDau();
+        LocalDateTime ngayKetThuc = dto.getNgayKetThuc();
 
         if (ngayBatDau != null && ngayKetThuc != null) {
             if ((today.isEqual(ngayBatDau) || today.isAfter(ngayBatDau)) &&
@@ -127,6 +129,10 @@ public class Phieu_giam_gia_Service {
             }
         }
         PhieuGiamGia phieuGiamGia = getPhieuGiamGiaById(id);
+        if (!phieuGiamGia.getTenPhieu().equals(phieuGiamGiaDTO.getTenPhieu())
+                && phieuGiamGiaRepo.existsByTenPhieu(phieuGiamGiaDTO.getTenPhieu())) {
+            throw new RuntimeException("Tên phiếu giảm đã tồn tại!");
+        }
         phieuGiamGia.setTenPhieu(phieuGiamGiaDTO.getTenPhieu());
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());

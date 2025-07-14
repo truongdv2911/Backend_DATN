@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface Phieu_giam_gia_Repo extends JpaRepository<PhieuGiamGia,Integer> {
     boolean existsByMaPhieu(String maPhieu);
-
+    boolean existsByTenPhieu(@Param("tenPGG") String tenPGG);
     // Thêm hàm lọc theo loại phiếu giảm giá
     List<PhieuGiamGia> findByLoaiPhieuGiam(String loaiPhieuGiam);
     @Query("SELECT k FROM PhieuGiamGia k WHERE k.trangThai <> 'isDelete'")
