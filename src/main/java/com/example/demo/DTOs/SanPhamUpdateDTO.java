@@ -46,4 +46,6 @@ public class SanPhamUpdateDTO {
     Integer danhMucId;
     @NotNull(message = "Bộ sưu tập không được để trống")
     Integer boSuuTapId;
+    @NotNull(message = "Xuất xứ không được để trống")
+    Integer xuatXuId;
 }
