@@ -63,6 +63,10 @@ public class SanPham {
     @JoinColumn(name = "bo_suu_tap_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_BoSuuTap"))
      BoSuuTap boSuuTap;
 
+    @ManyToOne
+    @JoinColumn(name = "xuat_xu_id", referencedColumnName = "id")
+    XuatXu xuatXu;
+
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("sanPham")
     List<AnhSp> anhSps;

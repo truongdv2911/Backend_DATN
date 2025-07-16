@@ -71,7 +71,6 @@ public class San_pham_Controller {
             anhSpService.uploadAndCreateAnhSp(files, null, null, sanPham.getId());
             
             return ResponseEntity.ok(sanPhamService.convertToResponseDTO(sanPham));
-            
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {

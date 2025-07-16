@@ -28,7 +28,7 @@ public class San_pham_Service {
     private final Anh_sp_Repo anhSpRepo;
     private final Danh_muc_Repo danhMucRepository;
     private final Bo_suu_tap_Repo boSuuTapRepository;
-    private final Khuyen_mai_Repo khuyenMaiRepository;
+    private final XuatXuRepository xuatXuRepository;
     private final KhuyenMaiSanPhamRepository khuyenMaiSanPhamRepository;
     private final AnhSpService anhSpService;
 
@@ -98,6 +98,12 @@ public class San_pham_Service {
             BoSuuTap boSuuTap = boSuuTapRepository.findById(sanPhamDTO.getBoSuuTapId())
                     .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
             sanPham.setBoSuuTap(boSuuTap);
+        }
+
+        if (sanPhamDTO.getXuatXuId() != null) {
+            XuatXu xuatXu = xuatXuRepository.findById(sanPhamDTO.getXuatXuId())
+                    .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
+            sanPham.setXuatXu(xuatXu);
         }
 
         // Gán trạng thái theo số lượng tồn
@@ -370,9 +376,9 @@ public class San_pham_Service {
         dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
         dto.setDanhMucId(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
         dto.setBoSuuTapId(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
+        dto.setXuatXuId(sanPham.getXuatXu() != null ? sanPham.getXuatXu().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
         dto.setAnhUrls(anhUrls);
-
         return dto;
     }
 
