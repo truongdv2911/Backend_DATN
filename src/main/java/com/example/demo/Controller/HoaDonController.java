@@ -36,6 +36,28 @@ public class HoaDonController {
       return ResponseEntity.ok(hoaDonRepository.findAll());
     }
 
+    @GetMapping("/get-phi-ship")
+    public ResponseEntity<?> getPhiShip(
+            @RequestParam String diaChi,
+            @RequestParam(required = false, defaultValue = "0") int isFast
+    ) {
+        String[] addressParts = diaChi.split(",");
+        String province = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : "";
+        String district = addressParts.length > 1 ? addressParts[addressParts.length - 2].trim() : "";
+        String loaiVanChuyen = hoaDonService.getLoaiVanChuyen("Hà Nội", province);
+        String khuVuc = hoaDonService.isNoiThanh(province, district) ? "Nội thành" : "Ngoại thành";
+        java.math.BigDecimal phiShip = hoaDonService.tinhPhiShip(loaiVanChuyen, khuVuc, 0.5);
+        int soNgayGiao = hoaDonService.tinhSoNgayGiao(loaiVanChuyen);
+        if (isFast == 1 && ("DAC_BIET".equals(loaiVanChuyen) || "LIEN_MIEN".equals(loaiVanChuyen))) {
+            phiShip = phiShip.add(java.math.BigDecimal.valueOf(15000));
+            soNgayGiao = Math.max(1, soNgayGiao - 1);
+        }
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("phiShip", phiShip);
+        result.put("soNgayGiao", soNgayGiao);
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createOrder(@Valid @RequestBody DTOhoaDon dtOhoaDon, BindingResult result){
         try {
