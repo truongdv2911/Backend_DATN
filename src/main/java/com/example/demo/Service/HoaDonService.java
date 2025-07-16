@@ -161,16 +161,16 @@ public class HoaDonService {
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: "
                                 + cartItemDto.getIdSanPham()));
 
+                BigDecimal giaBan = khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
+                        ? sanPham.getGia()
+                        : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId());
+
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
                 hoaDonChiTiet.setHd(hoaDon);
                 hoaDonChiTiet.setSp(sanPham);
-                hoaDonChiTiet.setGia(khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
-                        ? sanPham.getGia() : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()));
-
+                hoaDonChiTiet.setGia(giaBan);
                 hoaDonChiTiet.setSoLuong(cartItemDto.getSoLuong());
-                hoaDonChiTiet.setTongTien(khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
-                        ? sanPham.getGia() : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId())
-                        .multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
+                hoaDonChiTiet.setTongTien(giaBan.multiply(BigDecimal.valueOf(cartItemDto.getSoLuong())));
                 donChiTiets.add(hoaDonChiTiet);
 
                 // Trừ số lượng tồn kho cho cả hai loại hóa đơn
@@ -553,9 +553,9 @@ public class HoaDonService {
     public int tinhSoNgayGiao(String loaiVanChuyen) {
         switch (loaiVanChuyen) {
             case "NOI_TINH": return 1; // 12-24h
-            case "NOI_MIEN": return 1; // 24h
-            case "DAC_BIET": return 3; // 3-4 ngày
-            case "LIEN_MIEN": return 3; // 3-5 ngày hoặc 2 ngày (48h)
+            case "NOI_MIEN": return 2; // 24h
+            case "DAC_BIET": return 4; // 3-4 ngày
+            case "LIEN_MIEN": return 4; // 3-5 ngày hoặc 2 ngày (48h)
             default: return 3;
         }
     }
