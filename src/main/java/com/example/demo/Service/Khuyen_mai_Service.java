@@ -10,6 +10,7 @@ import com.example.demo.Repository.Khuyen_mai_Repo;
 import com.example.demo.Repository.San_pham_Repo;
 import com.example.demo.Responses.ChiTietKMResponse;
 import com.example.demo.Responses.ChiTietPhieuResponse;
+import com.example.demo.Responses.SanPhamKMResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class Khuyen_mai_Service {
 
     public ChiTietKMResponse getDetailKM(Integer idKM) {
         Object row = khuyenMaiRepo.getDetailKM(idKM);
+        List<Object> sanPhamKMResponses = khuyenMaiRepo.getSpInKM(idKM);
         if (row == null) {
             throw new RuntimeException("Không tìm thấy phiếu hoặc chưa có dữ liệu thống kê.");
         }
@@ -52,6 +54,7 @@ public class Khuyen_mai_Service {
         response.setTongSoTienGiam((BigDecimal) data[8]);
         response.setTongTienSauGiam((BigDecimal) data[9]);
         response.setSoHoaDon((Integer) data[10]);
+        response.setSanPhamKMResponses(sanPhamKMResponses);
         return response;
     }
 
@@ -80,7 +83,7 @@ public class Khuyen_mai_Service {
             khuyenMai.setTrangThai(tinhTrangThai(khuyenMaiDTO));
             return khuyenMaiRepo.save(khuyenMai);
         }catch (Exception e){
-            throw new Exception("Loi khi tao phieu giam gia", e);
+            throw new Exception( e.getMessage());
         }
     }
 

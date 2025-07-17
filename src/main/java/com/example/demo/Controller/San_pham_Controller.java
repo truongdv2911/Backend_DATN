@@ -68,7 +68,9 @@ public class San_pham_Controller {
             SanPham sanPham = sanPhamService.getSanPhamById(sanPhamResponse.getId());
             
             // Upload và tạo ảnh sử dụng AnhSpService
-            anhSpService.uploadAndCreateAnhSp(files, null, null, sanPham.getId());
+            if (files != null && files.length > 0 && files[0] != null && !files[0].isEmpty()) {
+                anhSpService.uploadAndCreateAnhSp(files, null, null, sanPham.getId());
+            }
             
             return ResponseEntity.ok(sanPhamService.convertToResponseDTO(sanPham));
         } catch (RuntimeException e) {
@@ -103,25 +105,44 @@ public class San_pham_Controller {
     public ResponseEntity<?> getSanPhamById(@PathVariable Integer id) {
         try {
             SanPham responseDTO = sanPhamService.getSanPhamById(id);
-            return ResponseEntity.ok(responseDTO);
+            return ResponseEntity.ok(sanPhamService.convertToResponseDTO(responseDTO));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
     @PutMapping("/Update/{id}")
-    public ResponseEntity<?> updateSanPham(@PathVariable Integer id, @Valid @RequestBody SanPhamUpdateDTO sanPhamDTO, BindingResult result) {
+    public ResponseEntity<?> updateSanPham(@PathVariable Integer id, @Valid @ModelAttribute SanPhamUpdateDTO sanPhamDTO,
+                                           @RequestParam(value = "files", required = false) MultipartFile[] files,
+                                           BindingResult result) {
         try {
             if (result.hasErrors()) {
                 List<String> listErrors = result.getFieldErrors().stream()
                         .map(errors -> errors.getDefaultMessage()).toList();
                 return ResponseEntity.badRequest().body(listErrors);
             }
-            SanPham sanPham = san_pham_repo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id san pham"));
-            if (!isDifferent(sanPhamDTO, sanPham)){
+
+            boolean hasValidFile = false;
+            if (files != null) {
+                for (MultipartFile file : files) {
+                    if (file != null && !file.isEmpty()) {
+                        hasValidFile = true;
+                        break;
+                    }
+                }
+            }
+
+            SanPham sanPham = san_pham_repo.findById(id).orElseThrow(() -> new RuntimeException("khong tim thay id san pham"));
+            if (!isDifferent(sanPhamDTO, sanPham) && !hasValidFile) {
                 return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
             }
-            return ResponseEntity.ok(sanPhamService.updateSanPham(id, sanPhamDTO));
+
+            sanPhamService.updateSanPhamInfo(id, sanPhamDTO);
+
+            if (files != null && files.length > 0 && files[0] != null && !files[0].isEmpty()) {
+                anhSpService.uploadAndCreateAnhSp(files, null, null, id);
+            }
+            return ResponseEntity.ok(sanPhamService.updateSanPhamInfo(id, sanPhamDTO));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

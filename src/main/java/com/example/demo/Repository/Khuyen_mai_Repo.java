@@ -1,6 +1,8 @@
 package com.example.demo.Repository;
 
 import com.example.demo.Entity.KhuyenMai;
+import com.example.demo.Responses.KhuyenMaiSPResponse;
+import com.example.demo.Responses.SanPhamKMResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -40,12 +42,24 @@ LEFT JOIN khuyenMai_sanPham kmsp ON km.id = kmsp.id_khuyen_mai
 LEFT JOIN san_pham sp ON sp.id = kmsp.id_san_pham
 LEFT JOIN hoa_don_chi_tiet hdct ON hdct.san_pham_id = sp.id
 LEFT JOIN hoa_don hd ON hd.id = hdct.hoa_don_id
-    AND hd.ngay_lap BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
-WHERE
-    km.id = :idKM
+    WHERE km.id = :idKM
+      AND hd.ngay_lap BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
 GROUP BY
     km.id, km.ten_khuyen_mai, km.phan_tram_khuyen_mai,
  km.ngay_bat_dau, km.ngay_ket_thuc;
 """, nativeQuery = true)
     Object getDetailKM(Integer idKM);
+
+    @Query("SELECT \n" +
+            "    sp.maSanPham, \n" +
+            "    sp.tenSanPham, \n" +
+            "    sp.gia AS gia_goc, \n" +
+            "    ksp.giaKhuyenMai\n" +
+            "FROM \n" +
+            "    KhuyenMaiSanPham ksp\n" +
+            "JOIN \n" +
+            "    SanPham sp ON ksp.sanPham.id = sp.id\n" +
+            "WHERE \n" +
+            "    ksp.khuyenMai.id = :idKhuyenMai")
+    List<Object> getSpInKM(Integer idKhuyenMai);
 }

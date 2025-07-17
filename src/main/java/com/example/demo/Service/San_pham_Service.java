@@ -270,69 +270,31 @@ public class San_pham_Service {
         }
     }
 
-    public SanPhamResponseDTO updateSanPham(Integer id, SanPhamUpdateDTO sanPhamDTO) {
-        try {
-
-            SanPham sanPham = getSanPhamById(id);
-            if (!sanPham.getTenSanPham().equals(sanPhamDTO.getTenSanPham())
-                    && sanPhamRepository.existsByTenSanPham(sanPhamDTO.getTenSanPham())) {
-                throw new RuntimeException("Tên sản phẩm đã tồn tại!");
-            }
-            sanPham.setTenSanPham(sanPhamDTO.getTenSanPham());
-            sanPham.setDoTuoi(sanPhamDTO.getDoTuoi());
-            sanPham.setMoTa(sanPhamDTO.getMoTa());
-            sanPham.setGia(sanPhamDTO.getGia());
-
-            BigDecimal giaGoc = sanPhamDTO.getGia();
-            BigDecimal giaKhuyenMai = giaGoc; // mặc định bằng giá gốc
-
-//            if (sanPhamDTO.getKhuyenMaiId() != null) {
-//                KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
-//                        .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
-//                if (!"Đang hoạt động".equalsIgnoreCase(khuyenMai.getTrangThai())) {
-//                    throw new RuntimeException("Khuyến mãi không còn hoạt động và không thể áp dụng.");
-//                }
-//                sanPham.setKhuyenMai(khuyenMai);
-
-//                if (khuyenMai.getPhanTramGiam() != null && khuyenMai.getPhanTramGiam() > 0) {
-//                    BigDecimal phanTram = new BigDecimal(khuyenMai.getPhanTramGiam()).divide(BigDecimal.valueOf(100));
-//                    giaKhuyenMai = giaGoc.subtract(giaGoc.multiply(phanTram));
-//                }
-//            }
-
-//            sanPham.setGiaKhuyenMai(giaKhuyenMai);
-
-            sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
-            sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
-
-            if (sanPhamDTO.getDanhMucId() != null) {
-                DanhMuc danhMuc = danhMucRepository.findById(sanPhamDTO.getDanhMucId())
-                        .orElseThrow(() -> new RuntimeException("DanhMuc not found with id: " + sanPhamDTO.getDanhMucId()));
-                sanPham.setDanhMuc(danhMuc);
-            }
-
-            if (sanPhamDTO.getBoSuuTapId() != null) {
-                BoSuuTap boSuuTap = boSuuTapRepository.findById(sanPhamDTO.getBoSuuTapId())
-                        .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
-                sanPham.setBoSuuTap(boSuuTap);
-            }
-
-            // Gán trạng thái theo số lượng tồn
-            sanPham.setTrangThai(tinhTrangThaiTheoTonKho(sanPhamDTO.getSoLuongTon()));
-
-            List<KhuyenMaiSanPham> ds = khuyenMaiSanPhamRepository.findBySanPham_Id(id);
-            for (KhuyenMaiSanPham kmsp : ds) {
-                double phanTram = kmsp.getKhuyenMai().getPhanTramKhuyenMai();
-                BigDecimal giaMoi = sanPham.getGia().multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(phanTram).divide(BigDecimal.valueOf(100))));
-                kmsp.setGiaKhuyenMai(giaMoi);
-                khuyenMaiSanPhamRepository.save(kmsp);
-            }
-
-            SanPham savedSanPham = sanPhamRepository.save(sanPham);
-            return convertToResponseDTO(savedSanPham);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while updating SanPham: " + e.getMessage(), e);
+    // Chỉ update thông tin sản phẩm, không động đến ảnh
+    public SanPhamResponseDTO updateSanPhamInfo(Integer id, SanPhamUpdateDTO spDTO) {
+        SanPham sanPham = getSanPhamById(id);
+        if (!sanPham.getTenSanPham().equals(spDTO.getTenSanPham())
+                && sanPhamRepository.existsByTenSanPham(spDTO.getTenSanPham())) {
+            throw new RuntimeException("Tên sản phẩm đã tồn tại!");
         }
+        sanPham.setTenSanPham(spDTO.getTenSanPham());
+        sanPham.setDoTuoi(spDTO.getDoTuoi());
+        sanPham.setMoTa(spDTO.getMoTa());
+        sanPham.setGia(spDTO.getGia());
+        sanPham.setSoLuongManhGhep(spDTO.getSoLuongManhGhep());
+        sanPham.setSoLuongTon(spDTO.getSoLuongTon());
+        if (spDTO.getDanhMucId() != null) {
+            DanhMuc danhMuc = danhMucRepository.findById(spDTO.getDanhMucId())
+                    .orElseThrow(() -> new RuntimeException("DanhMuc not found with id: " + spDTO.getDanhMucId()));
+            sanPham.setDanhMuc(danhMuc);
+        }
+        if (spDTO.getBoSuuTapId() != null) {
+            BoSuuTap boSuuTap = boSuuTapRepository.findById(spDTO.getBoSuuTapId())
+                    .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + spDTO.getBoSuuTapId()));
+            sanPham.setBoSuuTap(boSuuTap);
+        }
+        sanPham.setTrangThai(tinhTrangThaiTheoTonKho(spDTO.getSoLuongTon()));
+        return convertToResponseDTO(sanPhamRepository.save(sanPham));
     }
 
     public void deleteSanPham(Integer id) {
