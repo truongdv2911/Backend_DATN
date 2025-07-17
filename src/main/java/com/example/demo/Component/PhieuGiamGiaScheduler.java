@@ -73,7 +73,7 @@ public class PhieuGiamGiaScheduler {
         }
     }
 
-    @Scheduled(fixedDelay  = 1000) // mỗi 1 s
+//    @Scheduled(fixedDelay  = 1000) // mỗi 1 s
     public void capNhatGiaKhuyenMai() {
 //        List<KhuyenMaiSanPham> danhSach = kmspRepo.findChuaCapNhatGiaKhuyenMai(LocalDateTime.now());
 //

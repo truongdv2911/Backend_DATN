@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ChiTietKMResponse {
@@ -18,4 +19,5 @@ public class ChiTietKMResponse {
     private BigDecimal tongSoTienGiam;
     private BigDecimal tongTienSauGiam;
     private Integer soHoaDon;
+    private List<Object> sanPhamDaApDung;
 }
