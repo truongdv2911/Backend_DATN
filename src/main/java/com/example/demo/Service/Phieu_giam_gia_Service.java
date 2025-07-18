@@ -187,6 +187,7 @@ public class Phieu_giam_gia_Service {
 
     public ChiTietPhieuResponse getDetail(Integer id) {
         Object row = phieuGiamGiaRepo.getChiTietPhieu(id);
+        List<Object> objects = phieuGiamGiaRepo.getDanhSachNguoiDungSuDungPhieu(id);
         if (row == null) {
             throw new RuntimeException("Không tìm thấy phiếu hoặc chưa có dữ liệu thống kê.");
         }
@@ -197,12 +198,14 @@ public class Phieu_giam_gia_Service {
         response.setMaPhieu((String) data[1]);
         response.setTenPhieu((String) data[2]);
         response.setGiaTriGiam((BigDecimal) data[3]);
-        response.setSoLuotSuDung(((Number) data[4]).intValue());
-        response.setSoNguoiSuDung(((Number) data[5]).intValue());
-        response.setTongTienBanDuoc((BigDecimal) data[6]);
-        response.setTongTienGiam((BigDecimal) data[7]);
-        response.setTongTienTruocGiam((BigDecimal) data[8]);
-
+        response.setTrangThai((String) data[4]);
+        response.setSoLuongPhieu((Integer) data[5]);
+        response.setSoLuotSuDung(((Number) data[6]).intValue());
+        response.setSoNguoiSuDung(((Number) data[7]).intValue());
+        response.setTongTienBanDuoc((BigDecimal) data[8]);
+        response.setTongTienGiam((BigDecimal) data[9]);
+        response.setTongTienTruocGiam((BigDecimal) data[10]);
+        response.setUserDungPGG(objects);
         return response;
     }
 }

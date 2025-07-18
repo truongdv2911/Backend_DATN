@@ -66,7 +66,6 @@ public class Anh_sp_Controller {
             @RequestParam(value = "moTa", required = false) String moTa,
             @RequestParam(value = "anhChinh", required = false) Boolean anhChinh,
             @RequestParam("sanPhamId") Integer sanPhamId) {
-
         try {
             List<Anh_sp_DTO> uploadedImages = anhSpService.uploadAndCreateAnhSp(files, moTa, anhChinh, sanPhamId);
             return new ResponseEntity<>(uploadedImages, HttpStatus.CREATED);

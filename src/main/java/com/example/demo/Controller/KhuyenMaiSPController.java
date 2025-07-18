@@ -18,12 +18,16 @@ public class KhuyenMaiSPController {
     private final KhuyenMaiSanPhamRepository kmspRepo;
 
     @PostMapping("/apply-Khuyen-mai")
-    public ResponseEntity<?> applyKM( @RequestBody KhuyenMaiSanPhamDTO khuyenMaiSanPhamDTO){
+    public ResponseEntity<?> applyKM(@RequestBody KhuyenMaiSanPhamDTO khuyenMaiSanPhamDTO){
         try {
-            khuyen_mai_service.applyKhuyenMai(khuyenMaiSanPhamDTO);
-            return ResponseEntity.ok("Ap dung khuyen mai thanh cong");
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body("Loi khi ap dung km: "+ e.getMessage());
+            List<String> errors = khuyen_mai_service.applyKhuyenMai(khuyenMaiSanPhamDTO);
+            if (errors.isEmpty()) {
+                return ResponseEntity.ok("Áp dụng khuyến mãi thành công");
+            } else {
+                return ResponseEntity.ok().body(errors); // hoặc trả về 207 Multi-Status nếu muốn
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

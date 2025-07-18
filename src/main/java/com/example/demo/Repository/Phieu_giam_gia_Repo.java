@@ -28,6 +28,8 @@ SELECT
     pg.ma_phieu,
     pg.ten_phieu,
     pg.gia_tri_giam,
+    pg.trang_thai ,
+    pg.so_luong ,
     COUNT(DISTINCT hd.id) AS so_luot_su_dung,
     COUNT(DISTINCT hd.user_id) AS so_nguoi_dung_su_dung,
     SUM(hd.tong_tien) AS tong_tien_ban_duoc,
@@ -38,9 +40,28 @@ FROM
 LEFT JOIN hoa_don hd ON hd.id_phieu_khuyen_mai = pg.id
 where pg.id = :idPhieu
 GROUP BY
-    pg.id, pg.ma_phieu, pg.ten_phieu, pg.gia_tri_giam
+    pg.id, pg.ma_phieu, pg.ten_phieu, pg.gia_tri_giam,pg.trang_thai ,
+    pg.so_luong\s
 ORDER BY
     so_luot_su_dung DESC;
 """, nativeQuery = true)
     Object getChiTietPhieu(Integer idPhieu);
+
+    @Query(value = """
+SELECT  u.ID AS id_user,
+    u.ten,
+    u.email,
+    COUNT(hd.ID) AS so_lan_su_dung
+FROM
+    hoa_don hd
+JOIN
+    Users u ON hd.user_id = u.id
+JOIN
+    phieu_giam_gia pg ON hd.id_phieu_khuyen_mai = pg.ID
+WHERE
+    pg.ID = :idPhieu
+GROUP BY
+    u.ID, u.ten, u.email
+""", nativeQuery = true)
+    List<Object> getDanhSachNguoiDungSuDungPhieu(Integer idPhieu);
 }
