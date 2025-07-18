@@ -54,7 +54,7 @@ public class Khuyen_mai_Service {
         response.setTongSoTienGiam((BigDecimal) data[8]);
         response.setTongTienSauGiam((BigDecimal) data[9]);
         response.setSoHoaDon((Integer) data[10]);
-        response.setSanPhamKMResponses(sanPhamKMResponses);
+        response.setSanPhamDaApDung(sanPhamKMResponses);
         return response;
     }
 
@@ -166,7 +166,7 @@ public class Khuyen_mai_Service {
         return "Chưa xác định";
     }
 
-    public void applyKhuyenMai(KhuyenMaiSanPhamDTO request) {
+    public List<String> applyKhuyenMai(KhuyenMaiSanPhamDTO request) {
         KhuyenMai km = khuyenMaiRepo.findById(request.getKhuyenMaiId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khuyến mãi"));
 
@@ -176,6 +176,8 @@ public class Khuyen_mai_Service {
             throw new RuntimeException("Chỉ được áp dụng khuyến mại có trạng thái active hoặc inactive!");
         }
 
+        java.util.List<String> errorMessages = new java.util.ArrayList<>();
+
         for (Integer idSp : request.getListSanPhamId()) {
             if (kmspRepo.existsBySanPham_IdAndKhuyenMai_Id(idSp, km.getId())) continue;
 
@@ -184,13 +186,17 @@ public class Khuyen_mai_Service {
 
             List<KhuyenMaiSanPham> dsKhuyenMaiHienTai = kmspRepo.findBySanPham_Id(sp.getId());
 
+            boolean hasOverlap = false;
             for (KhuyenMaiSanPham kmsp : dsKhuyenMaiHienTai) {
                 KhuyenMai kmCu = kmsp.getKhuyenMai();
                 if (isOverlapping(km.getNgayBatDau(), km.getNgayKetThuc(),
                         kmCu.getNgayBatDau(), kmCu.getNgayKetThuc())) {
-                    throw new RuntimeException("Sản phẩm \"" + sp.getTenSanPham() + "\" đã có khuyến mãi giao thời gian");
+                    errorMessages.add("Sản phẩm \"" + sp.getTenSanPham() + "\" đã có khuyến mãi giao thời gian");
+                    hasOverlap = true;
+                    break; // bỏ qua sản phẩm này, không apply
                 }
             }
+            if (hasOverlap) continue;
 
             // ✅ Tính giá khuyến mãi theo %
             BigDecimal giaKhuyenMai;
@@ -213,6 +219,7 @@ public class Khuyen_mai_Service {
                     .build();
             kmspRepo.save(kmsp);
         }
+        return errorMessages;
     }
 
     boolean isOverlapping(LocalDateTime start1, LocalDateTime end1,
