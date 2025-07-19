@@ -46,6 +46,10 @@ public class HoaDon {
     private String sdt;
     @Column(name = "loai_hoa_don")
     private Integer loaiHD;
+
+    @Column(name = "ten_nguoi_nhan")
+    String tenNguoiNhan;
+
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;

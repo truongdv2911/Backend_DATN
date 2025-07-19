@@ -84,7 +84,7 @@ public class San_pham_Controller {
     @GetMapping("/ReadAll")
     public ResponseEntity<?> getAllSanPhams() {
         try {
-            List<SanPhamResponseDTO> responseDTOs = sanPhamService.getAllSanPhamResponses();
+            List<SanPhamKMResponse> responseDTOs = sanPhamService.getSanPhamKhuyenMaiFullV1();
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

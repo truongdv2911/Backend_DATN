@@ -220,14 +220,64 @@ public class San_pham_Service {
         }).toList();
     }
 
-    public List<SanPhamResponseDTO> getAllSanPhamResponses() {
-        List<SanPham> pageSanPhams = sanPhamRepository.findAll();
-
-        List<SanPhamResponseDTO> dtoList = new ArrayList<>();
-
-        for (SanPham sp : pageSanPhams) {
-            List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(sp.getId());
-
+    public List<SanPhamKMResponse> getSanPhamKhuyenMaiFullV1() {
+        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMaiV1(null, null,null
+                ,null,null,null,null);
+        LocalDateTime now = LocalDateTime.now();
+        return rows.stream().map(r -> {
+            SanPhamKMResponse dto = new SanPhamKMResponse();
+            dto.setId((Integer) r[0]);
+            dto.setTenSanPham((String) r[1]);
+            dto.setMaSanPham((String) r[2]);
+            dto.setDoTuoi((Integer) r[3]);
+            dto.setMoTa((String) r[4]);
+            dto.setGia((BigDecimal) r[5]);
+            dto.setSoLuongManhGhep((Integer) r[6]);
+            dto.setSoLuongTon((Integer) r[7]);
+            dto.setSoLuongVote((Integer) r[8]);
+            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
+            dto.setDanhMucId((Integer) r[10]);
+            dto.setBoSuuTapId((Integer) r[11]);
+            dto.setTrangThai((String) r[12]);
+            dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
+            Double phanTramKM = r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null;
+            dto.setPhanTramKhuyenMai(phanTramKM);
+            if (phanTramKM == null) {
+                dto.setGiaKhuyenMai(dto.getGia());
+            }
+            // Set trạng thái khuyến mại
+            List<KhuyenMaiSanPham> kmspList = khuyenMaiSanPhamRepository.findBySanPham_Id(dto.getId());
+            KhuyenMaiSanPham applying = kmspList.stream()
+                    .filter(kmsp -> {
+                        if (kmsp.getKhuyenMai() == null) return false;
+                        LocalDateTime start = kmsp.getKhuyenMai().getNgayBatDau();
+                        LocalDateTime end = kmsp.getKhuyenMai().getNgayKetThuc();
+                        return (now.isEqual(start) || now.isAfter(start)) && (now.isBefore(end) || now.isEqual(end));
+                    })
+                    .findFirst().orElse(null);
+            if (applying != null) {
+                dto.setTrangThaiKM("Đang áp dụng");
+            } else {
+                KhuyenMaiSanPham newest = kmspList.stream()
+                        .filter(kmsp -> kmsp.getKhuyenMai() != null)
+                        .max((a, b) -> a.getKhuyenMai().getNgayBatDau().compareTo(b.getKhuyenMai().getNgayBatDau()))
+                        .orElse(null);
+                if (newest != null) {
+                    LocalDateTime ngayBatDau = newest.getKhuyenMai().getNgayBatDau();
+                    LocalDateTime ngayKetThuc = newest.getKhuyenMai().getNgayKetThuc();
+                    if (now.isBefore(ngayBatDau)) {
+                        dto.setTrangThaiKM("Khuyến mại chưa bắt đầu");
+                    } else if (now.isAfter(ngayKetThuc)) {
+                        dto.setTrangThaiKM("Khuyến mại đã hết hạn");
+                    } else {
+                        dto.setTrangThaiKM("Đang áp dụng");
+                    }
+                } else {
+                    dto.setTrangThaiKM("Chưa có khuyến mại");
+                }
+            }
+            // Lấy danh sách url ảnh cho sản phẩm
+            List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(dto.getId());
             List<AnhResponse> anhUrls = listAnh.stream()
                     .map(anh -> {
                         AnhResponse response = new AnhResponse();
@@ -236,29 +286,9 @@ public class San_pham_Service {
                         return response;
                     })
                     .toList();
-
-            SanPhamResponseDTO dto = new SanPhamResponseDTO();
-            dto.setId(sp.getId());
-            dto.setTenSanPham(sp.getTenSanPham());
-            dto.setMaSanPham(sp.getMaSanPham());
-            dto.setDoTuoi(sp.getDoTuoi());
-            dto.setMoTa(sp.getMoTa());
-            dto.setGia(sp.getGia());
-//            dto.setGiaKhuyenMai(sp.getGiaKhuyenMai());
-            dto.setSoLuongManhGhep(sp.getSoLuongManhGhep());
-            dto.setSoLuongTon(sp.getSoLuongTon());
-            dto.setSoLuongVote(sp.getSoLuongVote());
-            dto.setDanhGiaTrungBinh(sp.getDanhGiaTrungBinh());
-            dto.setDanhMucId(sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null);
-            dto.setBoSuuTapId(sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null);
-//            dto.setKhuyenMaiId(sp.getKhuyenMai() != null ? sp.getKhuyenMai().getId() : null);
-            dto.setTrangThai(sp.getTrangThai());
             dto.setAnhUrls(anhUrls);
-
-            dtoList.add(dto);
-        }
-
-        return dtoList;
+            return dto;
+        }).toList();
     }
 
     public SanPham getSanPhamById(Integer id) {
