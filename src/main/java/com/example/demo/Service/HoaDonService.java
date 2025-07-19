@@ -119,6 +119,7 @@ public class HoaDonService {
                 // --- KẾT THÚC: Tính phí ship và ngày giao hàng tự động ---
 
             }
+            hoaDon.setTenNguoiNhan(dtOhoaDon.getTenNguoiNhan());
             hoaDon.setNgayTao(LocalDateTime.now());
             hoaDon.setPhuongThucThanhToan(dtOhoaDon.getPhuongThucThanhToan());
             hoaDon.setSdt(dtOhoaDon.getSdt());
@@ -402,6 +403,7 @@ public class HoaDonService {
         response.setTrangThai(hoaDon.getTrangThai());
         response.setPhuongThucThanhToan(hoaDon.getPhuongThucThanhToan());
         response.setPhiShip(hoaDon.getPhiShip());
+        response.setTenNguoiNhan(hoaDon.getTenNguoiNhan());
         response.setSdt1(hoaDon.getSdt());
         if (hoaDon.getUser() != null){
             response.setUserId(hoaDon.getUser().getId());

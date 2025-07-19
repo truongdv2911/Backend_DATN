@@ -48,6 +48,8 @@ public class DTOhoaDon {
 
     private Integer loaiHD;
 
+    private String tenNguoiNhan;
+
     private String qrCodeUrl;
 
     private Integer isFast;

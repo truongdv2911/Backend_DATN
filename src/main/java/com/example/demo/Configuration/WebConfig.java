@@ -1,11 +1,15 @@
 package com.example.demo.Configuration;
 
+import com.example.demo.Entity.Role;
+import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Service.CustomOAuth2UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.demo.Filter.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
@@ -18,25 +22,29 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import java.util.Arrays;
+
 import java.util.List;
 
 @Configuration
 @EnableWebMvc
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class WebConfig {
 
     private final JwtFilter jwtFilter;
 
-    public WebConfig(JwtFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private CustomOAuth2UserService customOAuth2UserService;
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+         String admin = roleRepository.findById(1).orElse(null).getName();
+         String staff = roleRepository.findById(2).orElse(null).getName();
+         String user = roleRepository.findById(3).orElse(null).getName();
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(request -> request
@@ -46,6 +54,55 @@ public class WebConfig {
                                 "/api/lego-store/user/loginBasic"
 
                         ).permitAll()
+//                        .requestMatchers(HttpMethod.GET, ("/api/sanpham/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("/api/sanpham/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.PUT, ("/api/sanpham/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/sanpham/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("/api/khuyenmai/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.POST, ("/api/khuyenmai/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.PUT, ("/api/khuyenmai/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/khuyenmai/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("/api/danhmuc/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("/api/danhmuc/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.PUT, ("/api/danhmuc/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/danhmuc/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("/api/anhsp/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("/api/anhsp/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.PUT, ("/api/anhsp/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/anhsp/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("/api/bosuutap/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("/api/bosuutap/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.PUT, ("/api/bosuutap/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/bosuutap/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("/api/phieugiamgia/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("/api/phieugiamgia/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.PUT, ("/api/phieugiamgia/**")).hasAnyRole(admin, staff)
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/phieugiamgia/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("/api/giohang/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("/api/giohang/**")).permitAll()
+//                        .requestMatchers(HttpMethod.PUT, ("/api/giohang/**")).permitAll()
+//                        .requestMatchers(HttpMethod.DELETE, ("/api/giohang/**")).permitAll()
+//
+//                        .requestMatchers(HttpMethod.GET, ("api/lego-store/hoa-don/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("api/lego-store/hoa-don/**")).permitAll()
+//                        .requestMatchers(HttpMethod.PUT, ("api/lego-store/hoa-don/**")).permitAll()
+//                        .requestMatchers(HttpMethod.DELETE, ("api/lego-store/hoa-don/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("api/lego-store/hoa-don-chi-tiet/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("api/lego-store/hoa-don-chi-tiet/**")).permitAll()
+//                        .requestMatchers(HttpMethod.PUT, ("api/lego-store/hoa-don-chi-tiet/**")).permitAll()
+//                        .requestMatchers(HttpMethod.DELETE, ("api/lego-store/hoa-don-chi-tiet/**")).hasRole(admin)
+//
+//                        .requestMatchers(HttpMethod.GET, ("api/lego-store/thong-tin-nguoi-nhan/**")).permitAll()
+//                        .requestMatchers(HttpMethod.POST, ("api/lego-store/thong-tin-nguoi-nhan/**")).permitAll()
+//                        .requestMatchers(HttpMethod.PUT, ("api/lego-store/thong-tin-nguoi-nhan/**")).permitAll()
+//                        .requestMatchers(HttpMethod.DELETE, ("api/lego-store/thong-tin-nguoi-nhan/**")).hasRole(user)
                         .requestMatchers(
                                 "/api/sanpham/**",
                                 "/api/khuyenmai/**",
