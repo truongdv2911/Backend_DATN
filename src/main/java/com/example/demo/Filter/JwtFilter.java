@@ -2,6 +2,7 @@ package com.example.demo.Filter;
 
 
 import com.example.demo.Component.JwtTokenUntil;
+import com.example.demo.Entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.internal.Pair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -66,7 +66,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         final List<Pair<String, String>> passTokens = Arrays.asList(
                 Pair.of("api/lego-store/user/login", "POST"),
-                Pair.of("api/lego-store/user/register", "POST"),
                 Pair.of("api/lego-store/user/register", "POST")
         );
         for (Pair<String, String> pair:
@@ -77,7 +76,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return true;
             }
         }
-        return true;
-
+        return false;
     }
 }
