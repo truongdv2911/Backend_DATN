@@ -4,6 +4,7 @@ import com.example.demo.DTOs.KhuyenMaiSanPhamDTO;
 import com.example.demo.Entity.KhuyenMaiSanPham;
 import com.example.demo.Repository.KhuyenMaiSanPhamRepository;
 import com.example.demo.Service.Khuyen_mai_Service;
+import com.example.demo.Responses.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +25,11 @@ public class KhuyenMaiSPController {
             if (errors.isEmpty()) {
                 return ResponseEntity.ok("Áp dụng khuyến mãi thành công");
             } else {
-                return ResponseEntity.ok().body(errors); // hoặc trả về 207 Multi-Status nếu muốn
+                String message = String.join(", ", errors);
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 

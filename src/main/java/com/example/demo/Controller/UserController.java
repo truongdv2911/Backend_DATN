@@ -11,6 +11,7 @@ import com.example.demo.Repository.RoleRepository;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Responses.ListUserResponse;
 import com.example.demo.Responses.LoginResponse;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.AuthService;
 import com.example.demo.Service.GioHangService;
 import com.example.demo.Service.UserService;
@@ -49,55 +50,22 @@ public class UserController {
     private final AuthenticationManager authenticationManager;
 
 
-//    @GetMapping("/success")
-//    public ResponseEntity<?> handleGoogleLogin(HttpServletRequest request) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User) {
-//            OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-//            String email = oAuth2User.getAttribute("email");
-//            String name = oAuth2User.getAttribute("name");
-//
-//            // Kiểm tra hoặc tạo người dùng trong database
-//            DTOuser dtoUser = new DTOuser();
-//            dtoUser.setEmail(email);
-//            dtoUser.setTen(name);
-//            dtoUser.setMatKhau("123456@");
-//            // Bạn có thể thêm các thuộc tính khác nếu cần
-//
-//            try {
-//                Optional<User> user = userRepository.findByEmail(email);
-//                if (user.isEmpty()) {
-//                    // Tạo người dùng mới nếu chưa tồn tại
-//                    userService.createUser(dtoUser);
-//                }
-//                // Lưu thông tin vào session
-//                HttpSession session = request.getSession(true);
-//                session.setAttribute("username", email);
-//                return ResponseEntity.ok(new LoginResponse(user.get().getId(), user.get().getTen(), user.get().getEmail(), user.get().getRole().getId(), "Đăng nhập bằng Google thành công"));
-//            } catch (Exception e) {
-//                return ResponseEntity.badRequest().body(new LoginResponse(null, null,null,null, "Lỗi khi xử lý đăng nhập Google"));
-//            }
-//        }
-//        return ResponseEntity.badRequest().body(new LoginResponse(null, null,null,null, "Xác thực không hợp lệ"));
-//    }
-
     @GetMapping("/getRole")
-    public ResponseEntity<?> getRoles(){
+    public ResponseEntity<?> getRoles() {
         return ResponseEntity.ok(roleRepository.findAll());
     }
 
     @PostMapping("/createUser")
-    public ResponseEntity<?> createUser2(@Valid @RequestBody DTOuser user, BindingResult result){
+    public ResponseEntity<?> createUser2(@Valid @RequestBody DTOuser user, BindingResult result) {
         try {
-            if (result.hasErrors()){
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+            if (result.hasErrors()) {
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             User user1 = userService.createUser2(user);
             return ResponseEntity.ok(user1);
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -105,45 +73,43 @@ public class UserController {
     public ResponseEntity<?> login(@Valid @RequestBody DTOlogin dtOlogin, BindingResult result, HttpServletRequest request) {
         try {
             if (result.hasErrors()) {
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
 //                        tạm comment token nhé
-                        String token = userService.login(dtOlogin);
+            String token = userService.login(dtOlogin);
 
             //Lưu vào session or localStogare
-            HttpSession hs= request.getSession(true);
+            HttpSession hs = request.getSession(true);
             hs.setAttribute("username", dtOlogin.getEmail());
 
-            User user = userRepository.findByEmail(dtOlogin.getEmail()).orElseThrow(()->
+            User user = userRepository.findByEmail(dtOlogin.getEmail()).orElseThrow(() ->
                     new RuntimeException("khong tim thay email user"));
-            if (user.getTrangThai() != 1){
-                return ResponseEntity.badRequest().body("Tài khoản của bạn đã bị BAN");
+            if (user.getTrangThai() != 1) {
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "Tài khoản của bạn đã bị BAN"));
             }
             gioHangService.getOrCreateCart(user.getId());
 
-            return ResponseEntity.ok(new LoginResponse(user.getId(), user.getTen(), dtOlogin.getEmail(), user.getRole().getId(), "Dang nhap thanh cong",token));
-        }    catch (Exception e){
-            return ResponseEntity.badRequest().body("Sai thong tin dang nhap");
+            return ResponseEntity.ok(new LoginResponse(user.getId(), user.getTen(), dtOlogin.getEmail(), user.getRole().getId(), "Dang nhap thanh cong", token));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Sai thông tin đăng nhập"));
         }
 
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@Valid @RequestBody DTOuser user, BindingResult result){
+    public ResponseEntity<?> createUser(@Valid @RequestBody DTOuser user, BindingResult result) {
         try {
-            if (result.hasErrors()){
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+            if (result.hasErrors()) {
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             User user1 = userService.createUser(user);
             gioHangService.getOrCreateCart(user1.getId());
             return ResponseEntity.ok(user1);
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 //        @GetMapping("/me")
@@ -175,7 +141,7 @@ public class UserController {
     @GetMapping("/paging")
     public ResponseEntity<?> getAll(
             @RequestParam(value = "keyword", required = false) String keyword
-    ){
+    ) {
         List<User> users = userService.pageUser(keyword);
         return ResponseEntity.ok(users);
     }
@@ -183,7 +149,7 @@ public class UserController {
     @GetMapping("/getTheoRole")
     public ResponseEntity<?> getMembers(
             @RequestParam(value = "roleId", required = false) String roleId
-    ){
+    ) {
         List<User> users = userRepository.pageUser(roleId);
         return ResponseEntity.ok(users);
     }
@@ -192,17 +158,16 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable Integer id,
                                         @Valid @RequestBody UserUpdateDTO user,
                                         BindingResult result
-                                        ){
+    ) {
         try {
-            if (result.hasErrors()){
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+            if (result.hasErrors()) {
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
 
             return ResponseEntity.ok(userService.updateUser(id, user));
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -213,22 +178,21 @@ public class UserController {
             @RequestBody DoiMatKhauRequest request, BindingResult result) {
 
         if (result.hasErrors()) {
-            List<String> listErorrs = result.getFieldErrors().stream().
-                    map(errors -> errors.getDefaultMessage()).toList();
-            return ResponseEntity.badRequest().body(listErorrs);
+            String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
         }
         boolean result1 = userService.AdminDoiMK(id, request.getMatKhauMoi());
         if (result1) {
             return ResponseEntity.ok("Đã đổi mật khẩu thành công cho người dùng ID: " + id);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(404, "Không tìm thấy người dùng."));
         }
     }
 
     @GetMapping("/auth/social-login")
     public ResponseEntity<?> social(@RequestParam("login-type") String loginType,
                                     HttpServletRequest request
-                                    ){
+    ) {
         loginType = loginType.trim().toLowerCase();
         String url = authService.generateAuthUrl(loginType);
         return ResponseEntity.ok(url);
@@ -239,21 +203,21 @@ public class UserController {
             @RequestParam("code") String code,
             @RequestParam("login-type") String loginType,
             HttpServletRequest request
-    ){
+    ) {
         try {
-        Map<String, Object> userInfo = authService.authenticateAndFetchProfile(code, loginType);
-        if (userInfo == null){
-            return ResponseEntity.badRequest().body("Fail to authenticate");
-        }
-        String accountId = "";
-        String name = "";
-        String email ="";
+            Map<String, Object> userInfo = authService.authenticateAndFetchProfile(code, loginType);
+            if (userInfo == null) {
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "Fail to authenticate"));
+            }
+            String accountId = "";
+            String name = "";
+            String email = "";
 
-            if (loginType.trim().equals("google")){
+            if (loginType.trim().equals("google")) {
                 accountId = (String) Objects.requireNonNullElse(userInfo.get("sub"), "");
                 name = (String) Objects.requireNonNullElse(userInfo.get("name"), "");
                 email = (String) Objects.requireNonNullElse(userInfo.get("email"), "");
-            }else if(loginType.trim().equals("facebook")){
+            } else if (loginType.trim().equals("facebook")) {
                 accountId = (String) Objects.requireNonNullElse(userInfo.get("id"), "");
                 name = (String) Objects.requireNonNullElse(userInfo.get("name"), "");
                 email = (String) Objects.requireNonNullElse(userInfo.get("email"), "");
@@ -280,7 +244,7 @@ public class UserController {
                 dtoUser.setTen(name);
                 dtoUser.setMatKhau(""); // Mật khẩu mặc định cho social login
                 dtoUser.setRole_id(3); // Role mặc định cho user thường
-                
+
                 if (loginType.trim().equals("google")) {
                     dtoUser.setGoogleId(accountId);
                 } else if (loginType.trim().equals("facebook")) {
@@ -292,7 +256,7 @@ public class UserController {
 
             // Kiểm tra trạng thái user
             if (user.getTrangThai() != 1) {
-                return ResponseEntity.badRequest().body("Tài khoản của bạn đã bị BAN");
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "Tài khoản của bạn đã bị BAN"));
             }
 
             // Tạo giỏ hàng cho user
@@ -301,17 +265,16 @@ public class UserController {
             String token = jwtTokenUntil.generationToken(user);
 
             return ResponseEntity.ok(new LoginResponse(
-                user.getId(),
-                user.getTen(),
-                user.getEmail(),
-                user.getRole().getId(),
-                "Đăng nhập bằng " + loginType + " thành công",
+                    user.getId(),
+                    user.getTen(),
+                    user.getEmail(),
+                    user.getRole().getId(),
+                    "Đăng nhập bằng " + loginType + " thành công",
                     token
             ));
-            
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().body("Lỗi khi xử lý đăng nhập " + loginType + ": " + e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Lỗi khi xử lý đăng nhập " + loginType + ": " + e.getMessage()));
         }
     }
 }

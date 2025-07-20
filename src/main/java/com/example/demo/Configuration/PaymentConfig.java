@@ -1,4 +1,4 @@
-package com.example.demo.Config;
+package com.example.demo.Configuration;
 
 import jakarta.servlet.http.HttpServletRequest;
 

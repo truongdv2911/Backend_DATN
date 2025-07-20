@@ -6,6 +6,7 @@ import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.San_pham_Repo;
 import com.example.demo.Responses.SanPhamKMResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.San_pham_Service;
 import com.example.demo.Service.AnhSpService;
 import jakarta.validation.Valid;
@@ -36,16 +37,15 @@ public class San_pham_Controller {
     public ResponseEntity<?> createSanPham(@Valid @RequestBody SanPhamUpdateDTO sanPhamDTO, BindingResult result) {
         try {
             if (result.hasErrors()) {
-                List<String> listErrors = result.getFieldErrors().stream()
-                        .map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErrors);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             SanPhamResponseDTO responseDTO = sanPhamService.createSanPham(sanPhamDTO);
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", "Internal Server Error"));
+            return ResponseEntity.status(500).body(new ErrorResponse(500, "Internal Server Error"));
         }
     }
 
@@ -56,9 +56,8 @@ public class San_pham_Controller {
             BindingResult result
             ) {
         if (result.hasErrors()) {
-            List<String> listErrors = result.getFieldErrors().stream()
-                    .map(errors -> errors.getDefaultMessage()).toList();
-            return ResponseEntity.badRequest().body(listErrors);
+            String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
         }
         try {
             // Tạo sản phẩm trước
@@ -74,9 +73,9 @@ public class San_pham_Controller {
             
             return ResponseEntity.ok(sanPhamService.convertToResponseDTO(sanPham));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", "Internal Server Error"));
+            return ResponseEntity.status(500).body(new ErrorResponse(500, "Internal Server Error"));
         }
     }
 
@@ -87,7 +86,7 @@ public class San_pham_Controller {
             List<SanPhamKMResponse> responseDTOs = sanPhamService.getSanPhamKhuyenMaiFullV1();
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -97,7 +96,7 @@ public class San_pham_Controller {
             List<SanPhamKMResponse> responseDTOs = sanPhamService.getSanPhamKhuyenMaiFull();
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -107,7 +106,7 @@ public class San_pham_Controller {
             SanPham responseDTO = sanPhamService.getSanPhamById(id);
             return ResponseEntity.ok(sanPhamService.convertToResponseDTO(responseDTO));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -117,9 +116,8 @@ public class San_pham_Controller {
                                            BindingResult result) {
         try {
             if (result.hasErrors()) {
-                List<String> listErrors = result.getFieldErrors().stream()
-                        .map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErrors);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
 
             boolean hasValidFile = false;
@@ -134,7 +132,7 @@ public class San_pham_Controller {
 
             SanPham sanPham = san_pham_repo.findById(id).orElseThrow(() -> new RuntimeException("khong tim thay id san pham"));
             if (!isDifferent(sanPhamDTO, sanPham) && !hasValidFile) {
-                return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "Không có thay đổi nào được thực hiện."));
             }
 
             sanPhamService.updateSanPhamInfo(id, sanPhamDTO);
@@ -144,7 +142,7 @@ public class San_pham_Controller {
             }
             return ResponseEntity.ok(sanPhamService.updateSanPhamInfo(id, sanPhamDTO));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -154,7 +152,7 @@ public class San_pham_Controller {
             sanPhamService.deleteSanPham(id);
             return ResponseEntity.ok(Map.of("message", "Deleted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
     public static boolean isDifferent(SanPhamUpdateDTO sanPhamDTO, SanPham sanPham) {

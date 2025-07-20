@@ -36,11 +36,13 @@ public class Khuyen_mai_Service {
 
     public ChiTietKMResponse getDetailKM(Integer idKM) {
         Object row = khuyenMaiRepo.getDetailKM(idKM);
+        Object row2 = khuyenMaiRepo.getDetailKMV2(idKM);
         List<Object> sanPhamKMResponses = khuyenMaiRepo.getSpInKM(idKM);
         if (row == null) {
             throw new RuntimeException("Không tìm thấy phiếu hoặc chưa có dữ liệu thống kê.");
         }
         Object[] data = (Object[]) row;
+        Object[] data2 = (Object[]) row2;
 
         ChiTietKMResponse response = new ChiTietKMResponse();
         response.setId((Integer) data[0]);
@@ -49,11 +51,11 @@ public class Khuyen_mai_Service {
         response.setNgayBatDau(((Timestamp) data[3]).toLocalDateTime());
         response.setNgayKetThuc(((Timestamp) data[4]).toLocalDateTime());
         response.setSoSanPhamApDung(((Number) data[5]).intValue());
-        response.setTongSoLuongBan(((Number) data[6]).intValue());
-        response.setTongTienTruocGiam((BigDecimal) data[7]);
-        response.setTongSoTienGiam((BigDecimal) data[8]);
-        response.setTongTienSauGiam((BigDecimal) data[9]);
-        response.setSoHoaDon((Integer) data[10]);
+        response.setTongSoLuongBan(((Number) data2[0]).intValue());
+        response.setTongTienTruocGiam((BigDecimal) data2[1]);
+        response.setTongSoTienGiam((BigDecimal) data2[2]);
+        response.setTongTienSauGiam((BigDecimal) data2[3]);
+        response.setSoHoaDon((Integer) data2[4]);
         response.setSanPhamDaApDung(sanPhamKMResponses);
         return response;
     }

@@ -4,6 +4,7 @@ import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
 import com.example.demo.Responses.ChiTietPhieuResponse;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.Phieu_giam_gia_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +31,12 @@ public class Phieu_giam_gia_Controller {
     public ResponseEntity<?> createPhieuGiamGia(@Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult result) {
         try {
             if (result.hasErrors()) {
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             return ResponseEntity.ok(phieuGiamGiaService.createPhieuGiamGia(phieuGiamGiaDTO));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -47,7 +47,7 @@ public class Phieu_giam_gia_Controller {
             List<PhieuGiamGia> list = phieuGiamGiaService.getAllPhieuGiamGia();
             return ResponseEntity.ok(list);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -58,7 +58,7 @@ public class Phieu_giam_gia_Controller {
             PhieuGiamGia result = phieuGiamGiaService.getPhieuGiamGiaById(id);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(404, e.getMessage()));
         }
     }
 
@@ -68,7 +68,7 @@ public class Phieu_giam_gia_Controller {
             List<PhieuGiamGia> list = phieuGiamGiaService.getByLoaiPhieuGiam(loaiPhieuGiam);
             return ResponseEntity.ok(list);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
     @PutMapping("/Update/{id}")

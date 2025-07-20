@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.DTOs.DTOthongTinNguoiNhan;
 import com.example.demo.Entity.ThongTinNguoiNhan;
 import com.example.demo.Repository.ThongTinNguoiNhanRepository;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.ThongTinNguoiNhanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class ThongTinNguoiNhanController {
         try {
             return ResponseEntity.ok(thongTinNguoiNhanRepository.GetListById(id));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -35,13 +36,12 @@ public class ThongTinNguoiNhanController {
                                             ){
         try {
             if (result.hasErrors()) {
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             return ResponseEntity.ok( thongTinNguoiNhanService.createThongTin(dtOthongTinNguoiNhan));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -51,9 +51,8 @@ public class ThongTinNguoiNhanController {
     ){
         try {
             if (result.hasErrors()) {
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             ThongTinNguoiNhan entity =thongTinNguoiNhanRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi"));
@@ -63,7 +62,7 @@ public class ThongTinNguoiNhanController {
             }
             return ResponseEntity.ok(thongTinNguoiNhanService.updateThongTin(id, dtOthongTinNguoiNhan));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -72,7 +71,7 @@ public class ThongTinNguoiNhanController {
         try {
            return ResponseEntity.ok(thongTinNguoiNhanService.deleteThongTin(id));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
     public boolean isDifferent(DTOthongTinNguoiNhan dto, ThongTinNguoiNhan entity) {

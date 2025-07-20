@@ -30,7 +30,20 @@ SELECT
     km.phan_tram_khuyen_mai,
     km.ngay_bat_dau,
     km.ngay_ket_thuc,
-    COUNT(DISTINCT kmsp.id_san_pham) AS so_san_pham_ap_dung,
+    COUNT( kmsp.id_san_pham) AS so_san_pham_ap_dung
+FROM
+    khuyen_mai km
+LEFT JOIN khuyenMai_sanPham kmsp ON km.id = kmsp.id_khuyen_mai
+LEFT JOIN san_pham sp ON sp.id = kmsp.id_san_pham
+    WHERE km.id = :idKM
+GROUP BY
+    km.id, km.ten_khuyen_mai, km.phan_tram_khuyen_mai,
+ km.ngay_bat_dau, km.ngay_ket_thuc;
+""", nativeQuery = true)
+    Object getDetailKM(Integer idKM);
+
+    @Query(value = """
+SELECT
     SUM(hdct.so_luong) AS tong_so_luong_ban,
     SUM(hdct.so_luong * sp.gia) AS tong_tien_truoc_giam,
     SUM(hdct.so_luong * (sp.gia - COALESCE(kmsp.gia_khuyen_mai, 0))) AS  tong_so_tien_giam,
@@ -48,13 +61,12 @@ GROUP BY
     km.id, km.ten_khuyen_mai, km.phan_tram_khuyen_mai,
  km.ngay_bat_dau, km.ngay_ket_thuc;
 """, nativeQuery = true)
-    Object getDetailKM(Integer idKM);
+    Object getDetailKMV2(Integer idKM);
 
     @Query("SELECT \n" +
-            "    sp.maSanPham, \n" +
+            "  DISTINCT sp.maSanPham, \n" +
             "    sp.tenSanPham, \n" +
-            "    sp.gia AS gia_goc, \n" +
-            "    ksp.giaKhuyenMai\n" +
+            "    sp.trangThai\n" +
             "FROM \n" +
             "    KhuyenMaiSanPham ksp\n" +
             "JOIN \n" +
