@@ -4,6 +4,7 @@ import com.example.demo.DTOs.DTOdanhGia;
 import com.example.demo.Entity.DanhGia;
 import com.example.demo.Entity.User;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.DanhGiaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,13 +34,12 @@ public class DanhGiaController {
     public ResponseEntity<?> createDanhGia(@Valid @RequestBody DTOdanhGia dto, BindingResult result) {
         try {
             if (result.hasErrors()) {
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             return ResponseEntity.ok(danhGiaService.createDanhGia(dto));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -54,7 +54,7 @@ public class DanhGiaController {
         try {
             return ResponseEntity.ok(danhGiaService.updateDanhGia(idDg,phanHoi,idNv));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 

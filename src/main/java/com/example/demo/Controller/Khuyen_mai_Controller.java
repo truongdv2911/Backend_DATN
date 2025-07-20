@@ -6,6 +6,7 @@ import com.example.demo.Entity.KhuyenMai;
 import com.example.demo.Repository.Khuyen_mai_Repo;
 import com.example.demo.Responses.ChiTietKMResponse;
 import com.example.demo.Responses.ChiTietPhieuResponse;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.Khuyen_mai_Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,17 +34,16 @@ public class Khuyen_mai_Controller {
     public ResponseEntity<?> createKhuyenMai(@Valid @RequestBody KhuyenMaiDTO khuyenMaiDTO, BindingResult result) {
         try {
             if (result.hasErrors()){
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             if ( khuyenMaiDTO.getNgayBatDau().isAfter(khuyenMaiDTO.getNgayKetThuc())) {
-                return ResponseEntity.badRequest().body("Ngày bắt đầu phải trước ngày kết thúc");
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "Ngày bắt đầu phải trước ngày kết thúc"));
             }
             KhuyenMai results = khuyenMaiService.createKhuyenMai(khuyenMaiDTO);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -54,7 +54,7 @@ public class Khuyen_mai_Controller {
             List<KhuyenMai> list = khuyenMaiService.getAllKhuyenMai();
             return ResponseEntity.ok(list);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -67,7 +67,7 @@ public class Khuyen_mai_Controller {
             KhuyenMai result = khuyenMaiService.getKhuyenMaiById(id);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(404, e.getMessage()));
         }
     }
 

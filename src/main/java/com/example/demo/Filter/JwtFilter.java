@@ -50,7 +50,6 @@ public class JwtFilter extends OncePerRequestFilter {
                     if (jwtTokenUntil.validateToken(token, user)){
                         UsernamePasswordAuthenticationToken usernamePassword = new
                                 UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
-
                         usernamePassword.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(usernamePassword);
                     }
@@ -58,7 +57,10 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request,response);
         }catch (Exception e){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            String body = "{\"status\":401,\"message\":\"Bạn chưa đăng nhập hoặc token không hợp lệ\"}";
+            response.getWriter().write(body);
         }
 
     }
@@ -66,7 +68,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         final List<Pair<String, String>> passTokens = Arrays.asList(
                 Pair.of("api/lego-store/user/login", "POST"),
-                Pair.of("api/lego-store/user/register", "POST")
+                Pair.of("api/lego-store/user/register", "POST"),
+                Pair.of("/api/sanpham/**", "GET"),
+                Pair.of("/api/danhmuc/**", "GET"),
+                Pair.of("/api/bosuutap/**", "GET"),
+                Pair.of("/api/giohang/**", "GET"),
+                Pair.of("/api/anhsp/**", "GET")
         );
         for (Pair<String, String> pair:
                 passTokens) {
@@ -76,6 +83,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return true;
             }
         }
-        return false;
+        return true;
     }
 }

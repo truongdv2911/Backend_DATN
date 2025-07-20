@@ -5,6 +5,7 @@ import com.example.demo.DTOs.DTOhoaDon;
 import com.example.demo.Entity.HoaDon;
 import com.example.demo.Repository.HoaDonRepository;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Responses.HoaDonResponse;
 import com.example.demo.Service.HoaDonService;
 import jakarta.validation.Valid;
@@ -62,9 +63,8 @@ public class HoaDonController {
     public ResponseEntity<?> createOrder(@Valid @RequestBody DTOhoaDon dtOhoaDon, BindingResult result){
         try {
             if (result.hasErrors()){
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             // Nếu là hóa đơn tại quầy thì lấy user hiện tại làm nhân viên tạo đơn
             if (dtOhoaDon.getLoaiHD() != null && dtOhoaDon.getLoaiHD() == 1) {
@@ -82,7 +82,7 @@ public class HoaDonController {
             HoaDonResponse response = hoaDonService.convertToResponse(hoaDon);
             return ResponseEntity.ok(response);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -92,7 +92,7 @@ public class HoaDonController {
             List<HoaDonResponse> listOrder = hoaDonService.getAll(user_id);
             return ResponseEntity.ok(listOrder);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
     @GetMapping("/{idHD}")
@@ -101,7 +101,7 @@ public class HoaDonController {
             HoaDonResponse order = hoaDonService.findById(idHD);
             return ResponseEntity.ok(order);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -113,13 +113,12 @@ public class HoaDonController {
     ){
         try {
             if (result.hasErrors()){
-                List<String> listErorrs = result.getFieldErrors().stream().
-                        map(errors -> errors.getDefaultMessage()).toList();
-                return ResponseEntity.badRequest().body(listErorrs);
+                String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             return ResponseEntity.ok(hoaDonService.updateHoaDon(idHD, dtOhoaDon, idNV));
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -141,10 +140,7 @@ public class HoaDonController {
             HoaDonResponse response = hoaDonService.updateTrangThai(id, trangThai, idNV);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Cập nhật trạng thái thất bại");
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Cập nhật trạng thái thất bại: " + e.getMessage()));
         }
     }
     @GetMapping("/paging")

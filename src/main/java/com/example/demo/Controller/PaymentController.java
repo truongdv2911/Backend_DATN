@@ -1,11 +1,10 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Config.PaymentConfig;
+import com.example.demo.Configuration.PaymentConfig;
 import com.example.demo.DTOs.PaymentDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;

@@ -4,6 +4,7 @@ import com.example.demo.DTOs.DanhMucDTO;
 import com.example.demo.Entity.DanhMuc;
 import com.example.demo.Repository.Danh_muc_Repo;
 import com.example.demo.Service.Danh_muc_Service;
+import com.example.demo.Responses.ErrorResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +30,13 @@ public class Danh_muc_Controller {
     public ResponseEntity<?> createDanhMuc(@Valid @RequestBody DanhMucDTO danhMucDTO, BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+                String message = String.join(", ", bindingResult.getAllErrors().stream().map(Object::toString).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             DanhMuc result = danhMucService.createDanhMuc(danhMucDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -45,7 +47,7 @@ public class Danh_muc_Controller {
             List<DanhMuc> list = danhMucService.getAllDanhMuc();
             return ResponseEntity.ok(list);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -56,7 +58,7 @@ public class Danh_muc_Controller {
             DanhMuc result = danhMucService.getDanhMucById(id);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(404, e.getMessage()));
         }
     }
 
@@ -65,7 +67,8 @@ public class Danh_muc_Controller {
     public ResponseEntity<?> updateDanhMuc(@PathVariable Integer id, @Valid @RequestBody DanhMucDTO danhMucDTO, BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+                String message = String.join(", ", bindingResult.getAllErrors().stream().map(Object::toString).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             DanhMuc danhMuc = danh_muc_repo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id danh muc"));
             if (!isDifferent(danhMucDTO, danhMuc)) {
@@ -74,7 +77,7 @@ public class Danh_muc_Controller {
             DanhMuc result = danhMucService.updateDanhMuc(id, danhMucDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -87,11 +90,11 @@ public class Danh_muc_Controller {
         } catch (RuntimeException e) {
             // Xử lý trường hợp không thể xóa do còn sản phẩm trong kho
             if (e.getMessage().contains("Vẫn còn sản phẩm trong kho")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(400, e.getMessage()));
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(404, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
