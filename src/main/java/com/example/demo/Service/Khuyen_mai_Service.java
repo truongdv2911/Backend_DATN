@@ -42,7 +42,6 @@ public class Khuyen_mai_Service {
             throw new RuntimeException("Không tìm thấy phiếu hoặc chưa có dữ liệu thống kê.");
         }
         Object[] data = (Object[]) row;
-        Object[] data2 = (Object[]) row2;
 
         ChiTietKMResponse response = new ChiTietKMResponse();
         response.setId((Integer) data[0]);
@@ -51,11 +50,22 @@ public class Khuyen_mai_Service {
         response.setNgayBatDau(((Timestamp) data[3]).toLocalDateTime());
         response.setNgayKetThuc(((Timestamp) data[4]).toLocalDateTime());
         response.setSoSanPhamApDung(((Number) data[5]).intValue());
-        response.setTongSoLuongBan(((Number) data2[0]).intValue());
-        response.setTongTienTruocGiam((BigDecimal) data2[1]);
-        response.setTongSoTienGiam((BigDecimal) data2[2]);
-        response.setTongTienSauGiam((BigDecimal) data2[3]);
-        response.setSoHoaDon((Integer) data2[4]);
+
+        if (row2 != null) {
+            Object[] data2 = (Object[]) row2;
+            response.setTongSoLuongBan(((Number) data2[0]).intValue());
+            response.setTongTienTruocGiam((BigDecimal) data2[1]);
+            response.setTongSoTienGiam((BigDecimal) data2[2]);
+            response.setTongTienSauGiam((BigDecimal) data2[3]);
+            response.setSoHoaDon((Integer) data2[4]);
+        } else {
+            response.setTongSoLuongBan(0);
+            response.setTongTienTruocGiam(BigDecimal.ZERO);
+            response.setTongSoTienGiam(BigDecimal.ZERO);
+            response.setTongTienSauGiam(BigDecimal.ZERO);
+            response.setSoHoaDon(0);
+        }
+
         response.setSanPhamDaApDung(sanPhamKMResponses);
         return response;
     }
