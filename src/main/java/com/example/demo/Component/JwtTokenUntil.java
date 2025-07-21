@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import java.util.function.Function;
 public class JwtTokenUntil {
 
 
-        private final long expirationTime = 3600;
+        private final long expirationTime = Duration.ofDays(30).getSeconds();
         //    private String secretKey="ThisIsA256BitLongSecretKeyForJWTTokenjhvuugcy";
         String secretKey = Base64.getEncoder().encodeToString("ThisIsA256BitLongSecretKeyForJWTTokenjhvuugcy".getBytes());
 
