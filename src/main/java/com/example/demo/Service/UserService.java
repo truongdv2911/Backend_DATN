@@ -18,8 +18,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUntil jwtTokenUntil;
+    private final EmailService emailService;
 
     @Transactional
     public User createUser(DTOuser dtoUser) {
@@ -159,6 +163,42 @@ public class UserService {
         }
         User user = optional.get();
         user.setMatKhau(passwordEncoder.encode(matKhauMoi));
+        userRepository.save(user);
+        return true;
+    }
+
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
+
+        String otp = UUID.randomUUID().toString().substring(0, 6);
+        user.setOtp(otp);
+        user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(3)); // OTP hết hạn sau 5 phút
+        userRepository.save(user);
+        emailService.sendOtpEmail(email, otp);
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
+
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            return false; // OTP không hợp lệ
+        }
+
+        if (user.getOtpExpirationTime().isBefore(LocalDateTime.now())) {
+            return false; // OTP đã hết hạn
+        }
+        return true;
+    }
+
+    public boolean resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
+
+        user.setMatKhau(passwordEncoder.encode(newPassword));
+        user.setOtp(null);
+        user.setOtpExpirationTime(null);
         userRepository.save(user);
         return true;
     }

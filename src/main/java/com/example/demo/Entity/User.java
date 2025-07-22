@@ -18,7 +18,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "Users")
@@ -48,6 +47,26 @@ public class User extends BaseEntity implements UserDetails {
     @ManyToOne
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role;
+
+    @Column(name = "otp")
+    private String otp;
+
+    @Column(name = "otp_expiration_time")
+    private LocalDateTime otpExpirationTime;
+
+    public User(Integer id, String ten, String email, String matKhau, String sdt, LocalDate ngaySinh, String diaChi, int trangThai, String facebookId, String googleId, Role role) {
+        this.id = id;
+        this.ten = ten;
+        this.email = email;
+        this.matKhau = matKhau;
+        this.sdt = sdt;
+        this.ngaySinh = ngaySinh;
+        this.diaChi = diaChi;
+        this.trangThai = trangThai;
+        this.facebookId = facebookId;
+        this.googleId = googleId;
+        this.role = role;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
