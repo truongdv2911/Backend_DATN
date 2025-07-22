@@ -15,9 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,23 +64,6 @@ public class San_pham_Service {
         sanPham.setMoTa(sanPhamDTO.getMoTa());
         sanPham.setGia(sanPhamDTO.getGia());
 
-//        BigDecimal giaGoc = sanPhamDTO.getGia();
-//        BigDecimal giaKhuyenMai = giaGoc; // mặc định bằng giá gốc
-
-//        if (sanPhamDTO.getKhuyenMaiId() != null) {
-//            KhuyenMai khuyenMai = khuyenMaiRepository.findById(sanPhamDTO.getKhuyenMaiId())
-//                    .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + sanPhamDTO.getKhuyenMaiId()));
-//            if (!"Đang hoạt động".equalsIgnoreCase(khuyenMai.getTrangThai())) {
-//                throw new RuntimeException("Khuyến mãi không còn hoạt động và không thể áp dụng.");
-//            }
-//            sanPham.setKhuyenMai(khuyenMai);
-//            if (khuyenMai.getPhanTramGiam() != null && khuyenMai.getPhanTramGiam() > 0) {
-//                BigDecimal phanTram = new BigDecimal(khuyenMai.getPhanTramGiam()).divide(BigDecimal.valueOf(100));
-//                giaKhuyenMai = giaGoc.subtract(giaGoc.multiply(phanTram));
-//            }
-//        }
-
-//        sanPham.setGiaKhuyenMai(giaKhuyenMai);
         sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
         sanPham.setSoLuongVote(0);
@@ -149,144 +130,215 @@ public class San_pham_Service {
         return convertToResponseDTO(sanPham);
     }
 
-    public List<SanPhamKMResponse> getSanPhamKhuyenMaiFull() {
-        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai(null, null,null
-                ,null,null,null,null);
+    public List<SanPhamKMResponse> getSanPhamWithKhuyenMai() {
+        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMai(null, null, null,
+                null, null, null, null);
+
+        if (rows.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         LocalDateTime now = LocalDateTime.now();
+
+        // Lấy tất cả product IDs
+        Set<Integer> productIds = rows.stream()
+                .map(r -> (Integer) r[0])
+                .collect(Collectors.toSet());
+
+        // Batch load khuyến mại và ảnh để tránh N+1 query
+        Map<Integer, List<KhuyenMaiSanPham>> kmspMap = khuyenMaiSanPhamRepository
+                .findBySanPham_IdIn(productIds)
+                .stream()
+                .collect(Collectors.groupingBy(kmsp -> kmsp.getSanPham().getId()));
+
+        Map<Integer, List<AnhSp>> anhMap = anhSpRepo.findBySanPhamIdIn(productIds)
+                .stream()
+                .collect(Collectors.groupingBy(kmsp -> kmsp.getSanPham().getId()));
+
         return rows.stream().map(r -> {
             SanPhamKMResponse dto = new SanPhamKMResponse();
-            dto.setId((Integer) r[0]);
+            Integer productId = (Integer) r[0];
+
+            // Basic product info
+            dto.setId(productId);
             dto.setTenSanPham((String) r[1]);
             dto.setMaSanPham((String) r[2]);
             dto.setDoTuoi((Integer) r[3]);
             dto.setMoTa((String) r[4]);
-            dto.setGia((BigDecimal) r[5]);
             dto.setSoLuongManhGhep((Integer) r[6]);
             dto.setSoLuongTon((Integer) r[7]);
             dto.setSoLuongVote((Integer) r[8]);
-            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
             dto.setDanhMucId((Integer) r[10]);
             dto.setBoSuuTapId((Integer) r[11]);
             dto.setTrangThai((String) r[12]);
-            dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
-            Double phanTramKM = r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null;
+
+            // Handle price conversion safely
+            dto.setGia(convertToBigDecimal(r[5]));
+
+            // Handle rating
+            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
+
+            // Handle promotion price and percentage
+            BigDecimal giaKhuyenMai = convertToBigDecimal(r[13]);
+            Double phanTramKM = r[14] != null ? ((Number) r[14]).doubleValue() : null;
+
             dto.setPhanTramKhuyenMai(phanTramKM);
-            if (phanTramKM == null) {
-                dto.setGiaKhuyenMai(dto.getGia());
-            }
-            // Set trạng thái khuyến mại
-            List<KhuyenMaiSanPham> kmspList = khuyenMaiSanPhamRepository.findBySanPham_Id(dto.getId());
-            KhuyenMaiSanPham applying = kmspList.stream()
-                .filter(kmsp -> {
-                    if (kmsp.getKhuyenMai() == null) return false;
-                    LocalDateTime start = kmsp.getKhuyenMai().getNgayBatDau();
-                    LocalDateTime end = kmsp.getKhuyenMai().getNgayKetThuc();
-                    return (now.isEqual(start) || now.isAfter(start)) && (now.isBefore(end) || now.isEqual(end));
-                })
-                .findFirst().orElse(null);
-            if (applying != null) {
-                dto.setTrangThaiKM("Đang áp dụng");
-            } else {
-                KhuyenMaiSanPham newest = kmspList.stream()
-                    .filter(kmsp -> kmsp.getKhuyenMai() != null)
-                    .max((a, b) -> a.getKhuyenMai().getNgayBatDau().compareTo(b.getKhuyenMai().getNgayBatDau()))
-                    .orElse(null);
-                if (newest != null) {
-                    LocalDateTime ngayBatDau = newest.getKhuyenMai().getNgayBatDau();
-                    LocalDateTime ngayKetThuc = newest.getKhuyenMai().getNgayKetThuc();
-                    if (now.isBefore(ngayBatDau)) {
-                        dto.setTrangThaiKM("Khuyến mại chưa bắt đầu");
-                    } else if (now.isAfter(ngayKetThuc)) {
-                        dto.setTrangThaiKM("Khuyến mại đã hết hạn");
-                    } else {
-                        dto.setTrangThaiKM("Đang áp dụng");
-                    }
-                } else {
-                    dto.setTrangThaiKM("Chưa có khuyến mại");
-                }
-            }
-            // Lấy danh sách url ảnh cho sản phẩm
-            List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(dto.getId());
-            List<AnhResponse> anhUrls = listAnh.stream()
-                    .map(anh -> {
-                        AnhResponse response = new AnhResponse();
-                        response.setUrl(anh.getUrl());
-                        response.setAnhChinh(anh.getAnhChinh());
-                        return response;
-                    })
-                    .toList();
-            dto.setAnhUrls(anhUrls);
+            dto.setGiaKhuyenMai(giaKhuyenMai != null ? giaKhuyenMai : dto.getGia());
+
+            // Set promotion status
+            List<KhuyenMaiSanPham> kmspList = kmspMap.getOrDefault(productId, Collections.emptyList());
+            dto.setTrangThaiKM(determinePromotionStatus(kmspList, now));
+
+            // Set product images
+            List<AnhSp> listAnh = anhMap.getOrDefault(productId, Collections.emptyList());
+            dto.setAnhUrls(convertToAnhResponses(listAnh));
+
             return dto;
         }).toList();
     }
 
+    // Helper method để convert safely sang BigDecimal
+    private BigDecimal convertToBigDecimal(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof BigDecimal) {
+            return (BigDecimal) value;
+        } else if (value instanceof Number) {
+            return BigDecimal.valueOf(((Number) value).doubleValue());
+        }
+
+        try {
+            return new BigDecimal(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    // Helper method để xác định trạng thái khuyến mại
+    private String determinePromotionStatus(List<KhuyenMaiSanPham> kmspList, LocalDateTime now) {
+        if (kmspList.isEmpty()) {
+            return "Chưa có khuyến mại";
+        }
+
+        // Tìm khuyến mại đang áp dụng
+        Optional<KhuyenMaiSanPham> applying = kmspList.stream()
+                .filter(kmsp -> kmsp.getKhuyenMai() != null)
+                .filter(kmsp -> {
+                    LocalDateTime start = kmsp.getKhuyenMai().getNgayBatDau();
+                    LocalDateTime end = kmsp.getKhuyenMai().getNgayKetThuc();
+                    return !now.isBefore(start) && !now.isAfter(end);
+                })
+                .findFirst();
+
+        if (applying.isPresent()) {
+            return "Đang áp dụng";
+        }
+
+        // Tìm khuyến mái mới nhất
+        Optional<KhuyenMaiSanPham> newest = kmspList.stream()
+                .filter(kmsp -> kmsp.getKhuyenMai() != null)
+                .max(Comparator.comparing(kmsp -> kmsp.getKhuyenMai().getNgayBatDau()));
+
+        if (newest.isPresent()) {
+            LocalDateTime ngayBatDau = newest.get().getKhuyenMai().getNgayBatDau();
+            LocalDateTime ngayKetThuc = newest.get().getKhuyenMai().getNgayKetThuc();
+
+            if (now.isBefore(ngayBatDau)) {
+                return "Khuyến mại chưa bắt đầu";
+            } else if (now.isAfter(ngayKetThuc)) {
+                return "Khuyến mại đã hết hạn";
+            } else {
+                return "Đang áp dụng"; // Shouldn't reach here but just in case
+            }
+        }
+
+        return "Chưa có khuyến mại";
+    }
+
+    // Helper method để convert ảnh
+    private List<AnhResponse> convertToAnhResponses(List<AnhSp> listAnh) {
+        return listAnh.stream()
+                .map(anh -> {
+                    AnhResponse response = new AnhResponse();
+                    response.setUrl(anh.getUrl());
+                    response.setAnhChinh(anh.getAnhChinh());
+                    return response;
+                })
+                .toList();
+    }
+
     public List<SanPhamKMResponse> getSanPhamKhuyenMaiFullV1() {
-        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMaiV1(null, null,null
-                ,null,null,null,null);
+        List<Object[]> rows = sanPhamRepository.findSanPhamWithCurrentKhuyenMaiV1(null, null, null,
+                null, null, null, null);
+
+        if (rows.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         LocalDateTime now = LocalDateTime.now();
+
+        // Lấy tất cả product IDs để batch load
+        Set<Integer> productIds = rows.stream()
+                .map(r -> (Integer) r[0])
+                .collect(Collectors.toSet());
+
+        // Batch load khuyến mại và ảnh để tránh N+1 query
+        Map<Integer, List<KhuyenMaiSanPham>> kmspMap = khuyenMaiSanPhamRepository
+                .findBySanPham_IdIn(productIds)
+                .stream()
+                .collect(Collectors.groupingBy(kmsp -> kmsp.getSanPham().getId()));
+
+        Map<Integer, List<AnhSp>> anhMap = anhSpRepo.findBySanPhamIdIn(productIds)
+                .stream()
+                .collect(Collectors.groupingBy(kmsp -> kmsp.getSanPham().getId()));
+
         return rows.stream().map(r -> {
             SanPhamKMResponse dto = new SanPhamKMResponse();
-            dto.setId((Integer) r[0]);
+            Integer productId = (Integer) r[0];
+
+            // Basic product information
+            dto.setId(productId);
             dto.setTenSanPham((String) r[1]);
             dto.setMaSanPham((String) r[2]);
             dto.setDoTuoi((Integer) r[3]);
             dto.setMoTa((String) r[4]);
-            dto.setGia((BigDecimal) r[5]);
             dto.setSoLuongManhGhep((Integer) r[6]);
             dto.setSoLuongTon((Integer) r[7]);
             dto.setSoLuongVote((Integer) r[8]);
-            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
             dto.setDanhMucId((Integer) r[10]);
             dto.setBoSuuTapId((Integer) r[11]);
             dto.setTrangThai((String) r[12]);
-            dto.setGiaKhuyenMai((BigDecimal) r[13]); // Có thể null
-            Double phanTramKM = r[14] != null ? ((BigDecimal) r[14]).doubleValue() : null;
+
+            // Handle price conversion safely
+            dto.setGia(convertToBigDecimal(r[5]));
+
+            // Handle rating
+            dto.setDanhGiaTrungBinh(r[9] != null ? ((Number) r[9]).doubleValue() : null);
+
+            // Handle promotion price
+            if (r[13] != null) {
+                dto.setGiaKhuyenMai(convertToBigDecimal(r[13]));
+            }
+
+            // Handle promotion percentage
+            Double phanTramKM = r[14] != null ? ((Number) r[14]).doubleValue() : null;
             dto.setPhanTramKhuyenMai(phanTramKM);
-            if (phanTramKM == null) {
+
+            // Set default promotion price if no percentage
+            if (phanTramKM == null && dto.getGiaKhuyenMai() == null) {
                 dto.setGiaKhuyenMai(dto.getGia());
             }
-            // Set trạng thái khuyến mại
-            List<KhuyenMaiSanPham> kmspList = khuyenMaiSanPhamRepository.findBySanPham_Id(dto.getId());
-            KhuyenMaiSanPham applying = kmspList.stream()
-                    .filter(kmsp -> {
-                        if (kmsp.getKhuyenMai() == null) return false;
-                        LocalDateTime start = kmsp.getKhuyenMai().getNgayBatDau();
-                        LocalDateTime end = kmsp.getKhuyenMai().getNgayKetThuc();
-                        return (now.isEqual(start) || now.isAfter(start)) && (now.isBefore(end) || now.isEqual(end));
-                    })
-                    .findFirst().orElse(null);
-            if (applying != null) {
-                dto.setTrangThaiKM("Đang áp dụng");
-            } else {
-                KhuyenMaiSanPham newest = kmspList.stream()
-                        .filter(kmsp -> kmsp.getKhuyenMai() != null)
-                        .max((a, b) -> a.getKhuyenMai().getNgayBatDau().compareTo(b.getKhuyenMai().getNgayBatDau()))
-                        .orElse(null);
-                if (newest != null) {
-                    LocalDateTime ngayBatDau = newest.getKhuyenMai().getNgayBatDau();
-                    LocalDateTime ngayKetThuc = newest.getKhuyenMai().getNgayKetThuc();
-                    if (now.isBefore(ngayBatDau)) {
-                        dto.setTrangThaiKM("Khuyến mại chưa bắt đầu");
-                    } else if (now.isAfter(ngayKetThuc)) {
-                        dto.setTrangThaiKM("Khuyến mại đã hết hạn");
-                    } else {
-                        dto.setTrangThaiKM("Đang áp dụng");
-                    }
-                } else {
-                    dto.setTrangThaiKM("Chưa có khuyến mại");
-                }
-            }
-            // Lấy danh sách url ảnh cho sản phẩm
-            List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(dto.getId());
-            List<AnhResponse> anhUrls = listAnh.stream()
-                    .map(anh -> {
-                        AnhResponse response = new AnhResponse();
-                        response.setUrl(anh.getUrl());
-                        response.setAnhChinh(anh.getAnhChinh());
-                        return response;
-                    })
-                    .toList();
-            dto.setAnhUrls(anhUrls);
+
+            // Set promotion status using batch loaded data
+            List<KhuyenMaiSanPham> kmspList = kmspMap.getOrDefault(productId, Collections.emptyList());
+            dto.setTrangThaiKM(determinePromotionStatus(kmspList, now));
+
+            // Set product images using batch loaded data
+            List<AnhSp> listAnh = anhMap.getOrDefault(productId, Collections.emptyList());
+            dto.setAnhUrls(convertToAnhResponses(listAnh));
+
             return dto;
         }).toList();
     }
