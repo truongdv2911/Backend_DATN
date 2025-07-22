@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface KhuyenMaiSanPhamRepository extends JpaRepository<KhuyenMaiSanPham, Integer> {
@@ -32,4 +33,6 @@ public interface KhuyenMaiSanPhamRepository extends JpaRepository<KhuyenMaiSanPh
         AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc;
         """, nativeQuery = true)
     BigDecimal getGiaKM(Integer idSP);
+
+    List<KhuyenMaiSanPham> findBySanPham_IdIn(Collection<Integer> sanPhamIds);
 }

@@ -93,7 +93,7 @@ public class San_pham_Controller {
     @GetMapping("/ReadAllV2")
     public ResponseEntity<?> getAllSanPhamsV2() {
         try {
-            List<SanPhamKMResponse> responseDTOs = sanPhamService.getSanPhamKhuyenMaiFull();
+            List<SanPhamKMResponse> responseDTOs = sanPhamService.getSanPhamWithKhuyenMai();
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -106,7 +106,7 @@ public class San_pham_Controller {
             SanPham responseDTO = sanPhamService.getSanPhamById(id);
             return ResponseEntity.ok(sanPhamService.convertToResponseDTO(responseDTO));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
         }
     }
 

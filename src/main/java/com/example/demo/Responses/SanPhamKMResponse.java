@@ -20,8 +20,8 @@ public class SanPhamKMResponse {
     private Integer danhMucId;
     private Integer boSuuTapId;
     private String trangThai;
-    private BigDecimal GiaKhuyenMai;
-    private Double PhanTramKhuyenMai;
+    private BigDecimal giaKhuyenMai;
+    private Double phanTramKhuyenMai;
     private String trangThaiKM;
     private List<AnhResponse> anhUrls;
 }
