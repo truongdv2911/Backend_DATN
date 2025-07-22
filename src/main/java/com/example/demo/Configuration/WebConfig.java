@@ -65,6 +65,9 @@ public class WebConfig {
                                 "/api/lego-store/user/register",
                                 "/api/lego-store/user/login",
                                 "/api/lego-store/user/loginBasic",
+                                "/api/lego-store/user/forgot-password",
+                                "/api/lego-store/user/verify-otp",
+                                "/api/lego-store/user/reset-password",
                                 "/api/**"
                         ).permitAll()
 //                        .requestMatchers(HttpMethod.GET, ("/api/sanpham/**")).permitAll()

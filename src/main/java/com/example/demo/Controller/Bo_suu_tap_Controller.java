@@ -4,7 +4,6 @@ import com.example.demo.DTOs.BoSuuTapDTO;
 import com.example.demo.Entity.BoSuuTap;
 import com.example.demo.Repository.Bo_suu_tap_Repo;
 import com.example.demo.Service.Bo_suu_tap_Service;
-import com.example.demo.Responses.ErrorResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,13 +27,12 @@ public class Bo_suu_tap_Controller {
     public ResponseEntity<?> createBoSuuTap(@Valid @RequestBody BoSuuTapDTO boSuuTapDTO, BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {
-                String message = String.join(", ", bindingResult.getAllErrors().stream().map(Object::toString).toList());
-                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
+                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
             }
             BoSuuTap result = boSuuTapService.createBoSuuTap(boSuuTapDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
     @GetMapping("/ReadAll")
@@ -43,7 +41,7 @@ public class Bo_suu_tap_Controller {
             List<BoSuuTap> list = boSuuTapService.getAllBoSuuTap();
             return ResponseEntity.ok(list);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 

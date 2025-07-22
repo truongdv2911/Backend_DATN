@@ -66,7 +66,9 @@ GROUP BY
     @Query("SELECT \n" +
             "  DISTINCT sp.maSanPham, \n" +
             "    sp.tenSanPham, \n" +
-            "    sp.trangThai\n" +
+            "    sp.trangThai, \n" +
+            "    sp.gia, \n" +
+            "  ksp.giaKhuyenMai\n" +
             "FROM \n" +
             "    KhuyenMaiSanPham ksp\n" +
             "JOIN \n" +

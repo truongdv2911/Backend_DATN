@@ -2,11 +2,13 @@ package com.example.demo.Controller;
 
 
 import com.example.demo.DTOs.DTOhoaDon;
+import com.example.demo.DTOs.HoaDonEmailDTO;
 import com.example.demo.Entity.HoaDon;
 import com.example.demo.Repository.HoaDonRepository;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Responses.HoaDonResponse;
+import com.example.demo.Service.EmailService;
 import com.example.demo.Service.HoaDonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class HoaDonController {
     private final HoaDonService hoaDonService;
     private final HoaDonRepository hoaDonRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @GetMapping("/get-all-hoa-don")
     public ResponseEntity<?> getAll(){
@@ -81,6 +84,16 @@ public class HoaDonController {
             HoaDon hoaDon = hoaDonService.createHoaDon(dtOhoaDon);
             HoaDonResponse response = hoaDonService.convertToResponse(hoaDon);
             return ResponseEntity.ok(response);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/send-order-email")
+    public ResponseEntity<?> sendEmail(@RequestBody HoaDonEmailDTO req){
+        try {
+            emailService.sendOrderEmail(req);
+            return ResponseEntity.ok("Đã gửi hóa đơn điện tử");
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }

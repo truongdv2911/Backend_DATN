@@ -36,6 +36,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -275,6 +278,54 @@ public class UserController {
         }catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(new ErrorResponse(400, "Lỗi khi xử lý đăng nhập " + loginType + ": " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        if (email == null || email.isBlank() || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Email không đúng định dạng"));
+        }
+        try {
+            userService.forgotPassword(email);
+            return ResponseEntity.ok("OTP đã được gửi.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        try {
+            boolean isValid = userService.verifyOtp(email, otp);
+            if (isValid) {
+                return ResponseEntity.ok("OTP đã được xác nhận.");
+            } else {
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "OTP sai hoặc đã hết hạn."));
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String email,
+                                           @RequestParam String newPassword) {
+        if (email == null || email.isBlank() || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Email không đúng định dạng"));
+        }
+        if (newPassword == null || newPassword.isBlank() || !newPassword.matches("^(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?])[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]{6,}$")) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Mật khẩu phải tối thiểu 8 ký tự, bao gồm chữ và số, kí tự đặc biệt"));
+        }
+        try {
+            boolean result = userService.resetPassword(email, newPassword);
+            if (result) {
+                return ResponseEntity.ok("Thay đổi mật khẩu thành công !");
+            } else {
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "lỗi không xác định"));
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 }

@@ -67,13 +67,16 @@ public class JwtFilter extends OncePerRequestFilter {
     private Boolean isPassToken(HttpServletRequest request){
 
         final List<Pair<String, String>> passTokens = Arrays.asList(
-                Pair.of("api/lego-store/user/login", "POST"),
-                Pair.of("api/lego-store/user/register", "POST"),
-                Pair.of("/api/sanpham/**", "GET"),
-                Pair.of("/api/danhmuc/**", "GET"),
-                Pair.of("/api/bosuutap/**", "GET"),
-                Pair.of("/api/giohang/**", "GET"),
-                Pair.of("/api/anhsp/**", "GET")
+                Pair.of("/api/lego-store/user/login", "POST"),
+                Pair.of("/api/lego-store/user/register", "POST"),
+                Pair.of("/api/lego-store/user/forgot-password", "POST"),
+                Pair.of("/api/lego-store/user/verify-otp", "POST"),
+                Pair.of("/api/lego-store/user/reset-password", "POST"),
+                Pair.of("/api/sanpham/", "GET"),
+                Pair.of("/api/danhmuc/", "GET"),
+                Pair.of("/api/bosuutap/", "GET"),
+                Pair.of("/api/giohang/", "GET"),
+                Pair.of("/api/anhsp/", "GET")
         );
         for (Pair<String, String> pair:
                 passTokens) {
