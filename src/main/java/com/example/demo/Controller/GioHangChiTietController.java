@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/giohangchitiet")
-public class Gio_hang_chi_tiet_Controller {
+public class GioHangChiTietController {
 
     @Autowired
     private Gio_hang_chi_tiet_Service gioHangChiTietService;

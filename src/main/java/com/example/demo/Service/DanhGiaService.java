@@ -1,10 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTOs.DTOdanhGia;
-import com.example.demo.Entity.AnhDanhGia;
-import com.example.demo.Entity.DanhGia;
-import com.example.demo.Entity.User;
-import com.example.demo.Entity.VideoDanhGia;
+import com.example.demo.Entity.*;
 import com.example.demo.Repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -46,15 +43,26 @@ public class DanhGiaService {
         try {
             // validate
             boolean daMua = hoaDonChiTietRepository.hasUserPurchasedSanPham(dtOdanhGia.getUser_id(), dtOdanhGia.getSp_id());
-            boolean daDanhGia = danhGiaRepository.existsByUserIdAndSpIdAndAndDhctId(
-                    dtOdanhGia.getUser_id(), dtOdanhGia.getSp_id(), dtOdanhGia.getHdct_id()
-            );
             if (!daMua) {
-                throw new Exception("Bạn chưa mua sản phẩm này nên không thể đánh giá.");
+                throw new RuntimeException("Bạn chưa mua sản phẩm này nên không thể đánh giá.");
             }
 
-            if (daDanhGia) {
-                throw new Exception("Bạn đã đánh giá sản phẩm này trong đơn hàng này.");
+            // Tìm HDCT phù hợp để đánh giá
+            List<Integer> hdctToRate = findHdctForRating(dtOdanhGia.getUser_id(), dtOdanhGia.getSp_id());
+            if (hdctToRate == null || hdctToRate.isEmpty()) {
+                throw new Exception("Đơn hàng của bạn chưa để điều kiện để đánh giá.");
+            }
+
+            // Kiểm tra đã đánh giá chưa
+            for (Integer i:
+                    hdctToRate) {
+                boolean daDanhGia = danhGiaRepository.existsByUserAndSpAndDhct(
+                        userRepository.findById(dtOdanhGia.getUser_id()).orElse(null),
+                        san_pham_repo.findById(dtOdanhGia.getSp_id()).orElse(null),
+                        hoaDonChiTietRepository.findById(i).orElse(null));
+                if (daDanhGia) {
+                    throw new Exception("Bạn đã đánh giá sản phẩm này trong đơn hàng này.");
+                }
             }
 
             // tao danh gia
@@ -65,19 +73,42 @@ public class DanhGiaService {
             dg.setSp(san_pham_repo.findById(dtOdanhGia.getSp_id()).orElseThrow(() ->
                     new RuntimeException("Khong tim thay id san pham")
                     ));
-            dg.setDhct(hoaDonChiTietRepository.findById(dtOdanhGia.getHdct_id()).orElseThrow(() ->
-                    new RuntimeException("khong tim thay id hoa don")
-                    )); // phải đảm bảo liên kết đơn hàng
+            dg.setDhct(hoaDonChiTietRepository.findById(hdctToRate.get(0)).orElse(null));
             dg.setTieuDe(dtOdanhGia.getTieuDe());
             dg.setTextDanhGia(dtOdanhGia.getTextDanhGia());
             dg.setSoSao(dtOdanhGia.getSoSao());
             dg.setNgayDanhGia(LocalDateTime.now());
             danhGiaRepository.save(dg);
+
+            SanPham sanPham = san_pham_repo.findById(dtOdanhGia.getSp_id()).orElseThrow(() ->
+                    new RuntimeException("Khong tim thay id san pham"));
+            List<DanhGia> danhGias = danhGiaRepository.findAllBySpId(sanPham.getId());
+            sanPham.setSoLuongVote(danhGias.size());
+            sanPham.setDanhGiaTrungBinh(setDanhGiaTrungBinh(danhGias));
             return dg;
 
         }catch (Exception e){
-            throw new Exception("Loi khi tao danh gia", e);
+            throw new Exception( e.getMessage());
         }
+    }
+
+    public double setDanhGiaTrungBinh(List<DanhGia> danhGias) {
+        if (danhGias == null || danhGias.isEmpty()) {
+            return 0.0;
+        }
+
+        double tongSoSao = 0.0;
+        for (DanhGia dg : danhGias) {
+            tongSoSao += dg.getSoSao(); // giả sử soSao là int hoặc double
+        }
+
+        // Làm tròn 1 chữ số sau dấu phẩy
+        return Math.round((tongSoSao / danhGias.size()) * 10.0) / 10.0;
+    }
+
+    private List<Integer> findHdctForRating(Integer userId, Integer spId) {
+        List<Integer> allHdct = hoaDonChiTietRepository.findByUserAndSanPhamOrderByDateDesc(userId, spId);
+        return allHdct.isEmpty() ? null : allHdct;
     }
 
     public List<DanhGia> getDanhGiaByIdSp(Integer idSp){

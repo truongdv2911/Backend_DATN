@@ -6,6 +6,8 @@ import com.example.demo.Repository.Phieu_giam_gia_Repo;
 import com.example.demo.Responses.ChiTietPhieuResponse;
 import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.Phieu_giam_gia_Service;
+import com.example.demo.Service.LichSuLogService;
+import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +24,10 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/phieugiamgia")
 @RequiredArgsConstructor
-public class Phieu_giam_gia_Controller {
+public class PhieuGiamGiaController {
     private final Phieu_giam_gia_Service phieuGiamGiaService;
     private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
+    private final LichSuLogService lichSuLogService;
 
 
     @PostMapping("/Create")
@@ -34,7 +37,11 @@ public class Phieu_giam_gia_Controller {
                 String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
-            return ResponseEntity.ok(phieuGiamGiaService.createPhieuGiamGia(phieuGiamGiaDTO));
+            PhieuGiamGia resultObj = phieuGiamGiaService.createPhieuGiamGia(phieuGiamGiaDTO);
+            // Log lịch sử tạo mới
+            String moTa = "Tạo mới phiếu giảm giá: " + resultObj.getTenPhieu() + " - ID: " + resultObj.getMaPhieu();
+            lichSuLogService.saveLog("TẠO MỚI", "PhieuGiamGia", moTa, lichSuLogService.getCurrentUserId());
+            return ResponseEntity.ok(resultObj);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
@@ -85,6 +92,10 @@ public class Phieu_giam_gia_Controller {
             if (!isDifferent(phieuGiamGiaDTO, phieuGiamGia)){
                 return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
             }
+            // Log sự thay đổi
+            String logThayDoi = ObjectChangeLogger.generateChangeLog(phieuGiamGia, phieuGiamGiaDTO);
+            String moTa = "Cập nhật phiếu giảm giá Mã: " + phieuGiamGia.getMaPhieu() + ". Thay đổi: " + logThayDoi;
+            lichSuLogService.saveLog("CẬP NHẬT", "PhieuGiamGia", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(phieuGiamGiaService.updatePhieuGiamGia(id, phieuGiamGiaDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -103,7 +114,11 @@ public class Phieu_giam_gia_Controller {
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deletePhieuGiamGia(@PathVariable Integer id) {
         try {
+            PhieuGiamGia phieuGiamGia = phieuGiamGiaRepo.findById(id).orElse(null);
             phieuGiamGiaService.deletePhieuGiamGia(id);
+            // Log lịch sử xóa
+            String moTa = "Xóa phiếu giảm giá mã: " + phieuGiamGia.getMaPhieu() + (phieuGiamGia != null ? (", Tên: " + phieuGiamGia.getTenPhieu()) : "");
+            lichSuLogService.saveLog("XÓA", "PhieuGiamGia", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok("Xóa thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

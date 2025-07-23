@@ -67,10 +67,16 @@ public class SanPham {
     @JoinColumn(name = "xuat_xu_id", referencedColumnName = "id")
     XuatXu xuatXu;
 
+    @ManyToOne
+    @JoinColumn(name = "thuong_hieu_id", referencedColumnName = "id")
+    ThuongHieu thuongHieu;
+
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("sanPham")
     List<AnhSp> anhSps;
     @Column(name = "trang_thai")
      String trangThai;
+    @Column(name = "is_noi_bat")
+    Integer noiBat;
 
 }

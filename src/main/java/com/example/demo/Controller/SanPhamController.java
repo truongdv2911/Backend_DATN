@@ -9,6 +9,8 @@ import com.example.demo.Responses.SanPhamResponseDTO;
 import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.San_pham_Service;
 import com.example.demo.Service.AnhSpService;
+import com.example.demo.Service.LichSuLogService;
+import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,11 +29,12 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/sanpham")
 @RequiredArgsConstructor
-public class San_pham_Controller {
+public class SanPhamController {
 
     private final San_pham_Service sanPhamService;
     private final San_pham_Repo san_pham_repo;
     private final AnhSpService anhSpService;
+    private final LichSuLogService lichSuLogService;
 
     @PostMapping("/Create")
     public ResponseEntity<?> createSanPham(@Valid @RequestBody SanPhamUpdateDTO sanPhamDTO, BindingResult result) {
@@ -41,6 +44,9 @@ public class San_pham_Controller {
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             SanPhamResponseDTO responseDTO = sanPhamService.createSanPham(sanPhamDTO);
+            // Log lịch sử tạo mới
+            String moTa = "Tạo mới sản phẩm: " + sanPhamDTO.getTenSanPham() + " - ID: " + responseDTO.getId();
+            lichSuLogService.saveLog("TẠO MỚI", "SanPham", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -134,6 +140,10 @@ public class San_pham_Controller {
             if (!isDifferent(sanPhamDTO, sanPham) && !hasValidFile) {
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, "Không có thay đổi nào được thực hiện."));
             }
+            // Log sự thay đổi
+            String logThayDoi = ObjectChangeLogger.generateChangeLog(sanPham, sanPhamDTO);
+            String moTa = "Cập nhật sản phẩm ID: " + id + ". Thay đổi: " + logThayDoi;
+            lichSuLogService.saveLog("CẬP NHẬT", "SanPham", moTa, lichSuLogService.getCurrentUserId());
 
             sanPhamService.updateSanPhamInfo(id, sanPhamDTO);
 
@@ -149,7 +159,11 @@ public class San_pham_Controller {
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deleteSanPham(@PathVariable Integer id) {
         try {
+            SanPham sanPham = san_pham_repo.findById(id).orElse(null);
             sanPhamService.deleteSanPham(id);
+            // Log lịch sử xóa
+            String moTa = "Xóa sản phẩm ID: " + id + (sanPham != null ? (", Tên: " + sanPham.getTenSanPham()) : "");
+            lichSuLogService.saveLog("XÓA", "SanPham", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(Map.of("message", "Deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));

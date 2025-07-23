@@ -15,16 +15,17 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @JsonIgnoreProperties({"sanPhams"})
-@Table(name = "Xuat_xu")
-public class XuatXu {
+@Table(name = "Thuong_hieu")
+public class ThuongHieu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "ten_xuat_xu")
+
+    @Column(name = "ten_thuong_hieu")
     private String ten;
     @Column(name = "mo_ta")
     private String moTa;
 
-    @OneToMany(mappedBy = "xuatXu", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "thuongHieu", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SanPham> sanPhams;
 }

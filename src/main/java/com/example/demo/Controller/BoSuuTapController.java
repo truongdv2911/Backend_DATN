@@ -4,6 +4,8 @@ import com.example.demo.DTOs.BoSuuTapDTO;
 import com.example.demo.Entity.BoSuuTap;
 import com.example.demo.Repository.Bo_suu_tap_Repo;
 import com.example.demo.Service.Bo_suu_tap_Service;
+import com.example.demo.Service.LichSuLogService;
+import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +18,14 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/bosuutap")
-public class Bo_suu_tap_Controller {
+public class BoSuuTapController {
 
     @Autowired
     private Bo_suu_tap_Service boSuuTapService;
     @Autowired
     private Bo_suu_tap_Repo bo;
+    @Autowired
+    private LichSuLogService lichSuLogService;
 
     @PostMapping("/Create")
     public ResponseEntity<?> createBoSuuTap(@Valid @RequestBody BoSuuTapDTO boSuuTapDTO, BindingResult bindingResult) {
@@ -30,6 +34,9 @@ public class Bo_suu_tap_Controller {
                 return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
             }
             BoSuuTap result = boSuuTapService.createBoSuuTap(boSuuTapDTO);
+            // Log lịch sử tạo mới
+            String moTa = "Tạo mới bộ sưu tập: " + result.getTenBoSuuTap() + " - ID: " + result.getId();
+            lichSuLogService.saveLog("TẠO MỚI", "BoSuuTap", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -64,6 +71,10 @@ public class Bo_suu_tap_Controller {
             if (!isDifferent(boSuuTapDTO, boSuuTap)) {
                 throw new IllegalArgumentException("Không có thay đổi nào để cập nhật");
             }
+            // Log sự thay đổi
+            String logThayDoi = ObjectChangeLogger.generateChangeLog(boSuuTap, boSuuTapDTO);
+            String moTa = "Cập nhật bộ sưu tập ID: " + id + ". Thay đổi: " + logThayDoi;
+            lichSuLogService.saveLog("CẬP NHẬT", "BoSuuTap", moTa, lichSuLogService.getCurrentUserId());
             BoSuuTap result = boSuuTapService.updateBoSuuTap(id, boSuuTapDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -74,7 +85,11 @@ public class Bo_suu_tap_Controller {
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deleteBoSuuTap(@PathVariable Integer id) {
         try {
+            BoSuuTap boSuuTap = bo.findById(id).orElse(null);
             boSuuTapService.deleteBoSuuTap(id);
+            // Log lịch sử xóa
+            String moTa = "Xóa bộ sưu tập ID: " + id + (boSuuTap != null ? (", Tên: " + boSuuTap.getTenBoSuuTap()) : "");
+            lichSuLogService.saveLog("XÓA", "BoSuuTap", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok("Xóa thành công");
         } catch (RuntimeException e) {
             // Xử lý trường hợp không thể xóa do còn sản phẩm trong kho

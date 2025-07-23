@@ -10,6 +10,8 @@ import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Responses.HoaDonResponse;
 import com.example.demo.Service.EmailService;
 import com.example.demo.Service.HoaDonService;
+import com.example.demo.Service.LichSuLogService;
+import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -34,6 +36,7 @@ public class HoaDonController {
     private final HoaDonRepository hoaDonRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final LichSuLogService lichSuLogService;
 
     @GetMapping("/get-all-hoa-don")
     public ResponseEntity<?> getAll(){
@@ -83,6 +86,9 @@ public class HoaDonController {
             }
             HoaDon hoaDon = hoaDonService.createHoaDon(dtOhoaDon);
             HoaDonResponse response = hoaDonService.convertToResponse(hoaDon);
+            // Log lịch sử tạo mới
+//            String moTa = "Tạo mới hóa đơn: " + hoaDon.getMaHD() + " - ID: " + hoaDon.getId();
+//            lichSuLogService.saveLog("TẠO MỚI", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(response);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -129,6 +135,11 @@ public class HoaDonController {
                 String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
+            HoaDon hoaDonOld = hoaDonRepository.findById(idHD).orElseThrow(() -> new RuntimeException("khong tim thay hoa don"));
+            // Log sự thay đổi
+            String logThayDoi = ObjectChangeLogger.generateChangeLog(hoaDonOld, dtOhoaDon);
+            String moTa = "Cập nhật hóa đơn ID: " + idHD + ". Thay đổi: " + logThayDoi;
+            lichSuLogService.saveLog("CẬP NHẬT", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(hoaDonService.updateHoaDon(idHD, dtOhoaDon, idNV));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -137,7 +148,11 @@ public class HoaDonController {
 
     @DeleteMapping("delete/{id}")
     public ResponseEntity<?> delete(@Valid@PathVariable Integer id) throws Exception {
+        HoaDon hoaDon = hoaDonRepository.findById(id).orElse(null);
         hoaDonService.deleteHoaDon(id);
+        // Log lịch sử xóa
+        String moTa = "Xóa hóa đơn ID: " + id + (hoaDon != null ? (", Mã: " + hoaDon.getMaHD()) : "");
+        lichSuLogService.saveLog("XÓA", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
         return ResponseEntity.ok("Xoa thanh cong");
     }
     @GetMapping("/status-count")
@@ -150,7 +165,12 @@ public class HoaDonController {
             @RequestParam String trangThai,
             @RequestParam Integer idNV) {
         try {
+            HoaDon hoaDonOld = hoaDonRepository.findById(id).orElseThrow(() -> new RuntimeException("khong tim thay hoa don"));
+            String trangThaiCu = hoaDonOld.getTrangThai();
             HoaDonResponse response = hoaDonService.updateTrangThai(id, trangThai, idNV);
+            // Log lịch sử cập nhật trạng thái
+            String moTa = "Cập nhật trạng thái hóa đơn Mã: " + response.getMaHD() + ". Trạng thái: [" + trangThaiCu + "] -> [" + trangThai + "]";
+            lichSuLogService.saveLog("CẬP NHẬT", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, "Cập nhật trạng thái thất bại: " + e.getMessage()));

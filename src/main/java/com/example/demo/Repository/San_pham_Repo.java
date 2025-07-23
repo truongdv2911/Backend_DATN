@@ -39,6 +39,9 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
                 sp.trang_thai,
                 kmsp.gia_khuyen_mai,
                 km.phan_tram_khuyen_mai,
+                sp.thuong_hieu_id,
+                sp.xuat_xu_id,
+                sp.is_noi_bat,
                 ROW_NUMBER() OVER (
                     PARTITION BY sp.id
                     ORDER BY
@@ -71,7 +74,10 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             bo_suu_tap_id,
             trang_thai,
             gia_khuyen_mai,
-            phan_tram_khuyen_mai
+            phan_tram_khuyen_mai,
+            thuong_hieu_id,
+            xuat_xu_id,
+            is_noi_bat
         FROM sp_km
         WHERE rn = 1
           AND (trang_thai LIKE N'Đang kinh doanh' OR trang_thai LIKE N'Hết hàng')
@@ -111,6 +117,9 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
                 sp.trang_thai,
                 kmsp.gia_khuyen_mai,
                 km.phan_tram_khuyen_mai,
+                sp.thuong_hieu_id,
+                sp.xuat_xu_id,
+                sp.is_noi_bat,
                 ROW_NUMBER() OVER (
                     PARTITION BY sp.id
                     ORDER BY
@@ -143,7 +152,10 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             bo_suu_tap_id,
             trang_thai,
             gia_khuyen_mai,
-            phan_tram_khuyen_mai
+            phan_tram_khuyen_mai,
+            thuong_hieu_id,
+            xuat_xu_id,
+            is_noi_bat
         FROM sp_km
         WHERE rn = 1
         AND (:keyword IS NULL OR LOWER(ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')))
