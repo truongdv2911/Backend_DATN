@@ -41,7 +41,6 @@ public class Bo_suu_tap_Service {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Bộ sưu tập với id: " + id));
     }
 
-
     public BoSuuTap updateBoSuuTap(Integer id, @Valid BoSuuTapDTO boSuuTapDTO) {
         BoSuuTap boSuuTap = getBoSuuTapById(id);
         if (!boSuuTap.getTenBoSuuTap().equals(boSuuTapDTO.getTenBoSuuTap())
@@ -54,7 +53,6 @@ public class Bo_suu_tap_Service {
         return boSuuTapRepo.save(boSuuTap);
     }
 
-
     public void deleteBoSuuTap(Integer id) {
         BoSuuTap boSuuTap = getBoSuuTapById(id);
         
@@ -64,7 +62,6 @@ public class Bo_suu_tap_Service {
                     Integer soLuongTon = sanPham.getSoLuongTon();
                     return soLuongTon != null && soLuongTon > 0;
                 });
-        
         if (hasProductsInStock) {
             throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
         }

@@ -19,6 +19,9 @@ public class SanPhamKMResponse {
     private Double danhGiaTrungBinh;
     private Integer danhMucId;
     private Integer boSuuTapId;
+    private Integer xuatXuId;
+    private Integer thuongHieuId;
+    private Integer noiBat;
     private String trangThai;
     private BigDecimal giaKhuyenMai;
     private Double phanTramKhuyenMai;

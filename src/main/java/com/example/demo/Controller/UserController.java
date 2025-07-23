@@ -15,6 +15,8 @@ import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.AuthService;
 import com.example.demo.Service.GioHangService;
 import com.example.demo.Service.UserService;
+import com.example.demo.Service.LichSuLogService;
+import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -36,9 +38,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -51,6 +50,7 @@ public class UserController {
     private final AuthService authService;
     private final JwtTokenUntil jwtTokenUntil;
     private final AuthenticationManager authenticationManager;
+    private final LichSuLogService lichSuLogService;
 
 
     @GetMapping("/getRole")
@@ -66,6 +66,9 @@ public class UserController {
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             User user1 = userService.createUser2(user);
+            // Log lịch sử tạo mới
+            String moTa = "Tạo mới user: " + user1.getTen() + " - ID: " + user1.getId();
+            lichSuLogService.saveLog("TẠO MỚI", "User", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(user1);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -110,6 +113,9 @@ public class UserController {
             }
             User user1 = userService.createUser(user);
             gioHangService.getOrCreateCart(user1.getId());
+            // Log lịch sử tạo mới
+            String moTa = "Tạo mới user: " + user1.getTen() + " - ID: " + user1.getId();
+            lichSuLogService.saveLog("TẠO MỚI", "User", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(user1);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -167,7 +173,11 @@ public class UserController {
                 String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
-
+            User userOld = userRepository.findById(id).orElseThrow(() -> new RuntimeException("khong tim thay user"));
+            // Log sự thay đổi
+            String logThayDoi = ObjectChangeLogger.generateChangeLog(userOld, user);
+            String moTa = "Cập nhật user ID: " + id + ". Thay đổi: " + logThayDoi;
+            lichSuLogService.saveLog("CẬP NHẬT", "User", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(userService.updateUser(id, user));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -280,7 +290,6 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, "Lỗi khi xử lý đăng nhập " + loginType + ": " + e.getMessage()));
         }
     }
-
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         if (email == null || email.isBlank() || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {

@@ -8,6 +8,8 @@ import com.example.demo.Responses.ChiTietKMResponse;
 import com.example.demo.Responses.ChiTietPhieuResponse;
 import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.Khuyen_mai_Service;
+import com.example.demo.Service.LichSuLogService;
+import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +25,12 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/khuyenmai")
 @RequiredArgsConstructor
-public class Khuyen_mai_Controller {
+public class KhuyenMaiController {
 
 
     private final Khuyen_mai_Service khuyenMaiService;
     private final Khuyen_mai_Repo khuyenMaiRepo;
+    private final LichSuLogService lichSuLogService;
 
 
     @PostMapping("/Create")
@@ -41,6 +44,9 @@ public class Khuyen_mai_Controller {
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, "Ngày bắt đầu phải trước ngày kết thúc"));
             }
             KhuyenMai results = khuyenMaiService.createKhuyenMai(khuyenMaiDTO);
+            // Log lịch sử tạo mới
+            String moTa = "Tạo mới khuyến mãi: " + results.getTenKhuyenMai() + " - ID: " + results.getMaKhuyenMai();
+            lichSuLogService.saveLog("TẠO MỚI", "KhuyenMai", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
@@ -86,6 +92,10 @@ public class Khuyen_mai_Controller {
             if (!isDifferent(khuyenMaiDTO, khuyenMai)) {
                 throw new IllegalArgumentException("Không có thay đổi nào để cập nhật");
             }
+            // Log sự thay đổi
+            String logThayDoi = ObjectChangeLogger.generateChangeLog(khuyenMai, khuyenMaiDTO);
+            String moTa = "Cập nhật khuyến mãi mã: " + khuyenMai.getMaKhuyenMai() + ". Thay đổi: " + logThayDoi;
+            lichSuLogService.saveLog("CẬP NHẬT", "KhuyenMai", moTa, lichSuLogService.getCurrentUserId());
             KhuyenMai result = khuyenMaiService.updateKhuyenMai(id, khuyenMaiDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -97,7 +107,11 @@ public class Khuyen_mai_Controller {
     @DeleteMapping("/Delete/{id}")
     public ResponseEntity<?> deleteKhuyenMai(@PathVariable Integer id) {
         try {
+            KhuyenMai khuyenMai = khuyenMaiRepo.findById(id).orElse(null);
             khuyenMaiService.deleteKhuyenMai(id);
+            // Log lịch sử xóa
+            String moTa = "Ngừng khuyến mãi Mã: " + khuyenMai.getMaKhuyenMai() + (khuyenMai != null ? (", Tên: " + khuyenMai.getTenKhuyenMai()) : "");
+            lichSuLogService.saveLog("Ngừng", "KhuyenMai", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok("Xóa thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

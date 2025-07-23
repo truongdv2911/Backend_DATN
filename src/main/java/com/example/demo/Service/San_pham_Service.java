@@ -28,6 +28,7 @@ public class San_pham_Service {
     private final Bo_suu_tap_Repo boSuuTapRepository;
     private final XuatXuRepository xuatXuRepository;
     private final KhuyenMaiSanPhamRepository khuyenMaiSanPhamRepository;
+    private final ThuongHieuRepository thuongHieuRepository;
     private final AnhSpService anhSpService;
 
     // Phương thức helper tính trạng thái theo số lượng tồn
@@ -63,7 +64,7 @@ public class San_pham_Service {
         sanPham.setDoTuoi(sanPhamDTO.getDoTuoi());
         sanPham.setMoTa(sanPhamDTO.getMoTa());
         sanPham.setGia(sanPhamDTO.getGia());
-
+        sanPham.setNoiBat(sanPhamDTO.getNoiBat());
         sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
         sanPham.setSoLuongVote(0);
@@ -83,8 +84,14 @@ public class San_pham_Service {
 
         if (sanPhamDTO.getXuatXuId() != null) {
             XuatXu xuatXu = xuatXuRepository.findById(sanPhamDTO.getXuatXuId())
-                    .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getBoSuuTapId()));
+                    .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + sanPhamDTO.getXuatXuId()));
             sanPham.setXuatXu(xuatXu);
+        }
+
+        if (sanPhamDTO.getThuongHieuId() != null) {
+            ThuongHieu thuongHieu = thuongHieuRepository.findById(sanPhamDTO.getThuongHieuId())
+                    .orElseThrow(() -> new RuntimeException("ThuongHieu not found with id: " + sanPhamDTO.getThuongHieuId()));
+            sanPham.setThuongHieu(thuongHieu);
         }
 
         // Gán trạng thái theo số lượng tồn
@@ -192,7 +199,9 @@ public class San_pham_Service {
             // Set product images
             List<AnhSp> listAnh = anhMap.getOrDefault(productId, Collections.emptyList());
             dto.setAnhUrls(convertToAnhResponses(listAnh));
-
+            dto.setXuatXuId((Integer) r[16]);
+            dto.setThuongHieuId((Integer) r[15]);
+            dto.setNoiBat(r[17] != null ? ((Boolean) r[17] ? 1 : 0) : 0);
             return dto;
         }).toList();
     }
@@ -339,6 +348,9 @@ public class San_pham_Service {
             List<AnhSp> listAnh = anhMap.getOrDefault(productId, Collections.emptyList());
             dto.setAnhUrls(convertToAnhResponses(listAnh));
 
+            dto.setXuatXuId((Integer) r[16]);
+            dto.setThuongHieuId((Integer) r[15]);
+            dto.setNoiBat(r[17] != null ? ((Boolean) r[17] ? 1 : 0) : 0);
             return dto;
         }).toList();
     }
@@ -422,6 +434,8 @@ public class San_pham_Service {
         dto.setBoSuuTapId(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
         dto.setXuatXuId(sanPham.getXuatXu() != null ? sanPham.getXuatXu().getId() : null);
         dto.setTrangThai(sanPham.getTrangThai());
+        dto.setThuongHieuId(sanPham.getThuongHieu() != null ? sanPham.getThuongHieu().getId() : null);
+        dto.setNoiBat(sanPham.getNoiBat() != null ? sanPham.getNoiBat() : null);
         dto.setAnhUrls(anhUrls);
         return dto;
     }

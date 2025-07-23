@@ -42,10 +42,14 @@ public class SanPhamUpdateDTO {
     @DecimalMin(value = "0.0", message = "Đánh giá trung bình phải lớn hơn hoặc bằng 0")
     Double danhGiaTrungBinh;
 
+    Integer noiBat;
+
     @NotNull(message = "Danh mục không được để trống")
     Integer danhMucId;
     @NotNull(message = "Bộ sưu tập không được để trống")
     Integer boSuuTapId;
     @NotNull(message = "Xuất xứ không được để trống")
     Integer xuatXuId;
+    @NotNull
+    Integer thuongHieuId;
 }
