@@ -22,11 +22,8 @@ public class DTOthongTinNguoiNhan extends BaseEntity {
     private String duong;
     @NotEmpty(message = "không để trống xã")
     private String xa;
-    @NotEmpty(message = "không để trống huyện")
-    private String huyen;
-    @NotEmpty(message = "không để trống thành phố")
+    @NotEmpty(message = "không để trống, phường thành phố")
     private String thanhPho;
-    private LocalDateTime ngayTao;
     @Min(0)
     @Max(1)
     private Integer isMacDinh;
