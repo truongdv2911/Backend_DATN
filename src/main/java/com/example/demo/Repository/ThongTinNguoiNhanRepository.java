@@ -9,4 +9,6 @@ import java.util.List;
 public interface ThongTinNguoiNhanRepository extends JpaRepository<ThongTinNguoiNhan, Integer> {
     @Query("select t from ThongTinNguoiNhan t where t.user.id = :id")
     List<ThongTinNguoiNhan> GetListById(Integer id);
+
+    ThongTinNguoiNhan findByIsMacDinh(Integer isMacDinh);
 }

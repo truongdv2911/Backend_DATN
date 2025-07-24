@@ -20,40 +20,102 @@ public class ThongTinNguoiNhanService {
     public ThongTinNguoiNhan createThongTin(DTOthongTinNguoiNhan dtOthongTinNguoiNhan) throws Exception {
         try {
             List<ThongTinNguoiNhan> thongTinNguoiNhan = thongTinNguoiNhanRepository.findAll();
-            return thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(null,
-                    dtOthongTinNguoiNhan.getHoTen(),
-                    dtOthongTinNguoiNhan.getSdt(),
-                    dtOthongTinNguoiNhan.getDuong(),
-                    dtOthongTinNguoiNhan.getXa(),
-                    dtOthongTinNguoiNhan.getHuyen(),
-                    dtOthongTinNguoiNhan.getThanhPho(),
-                    thongTinNguoiNhan.size()== 0 ? 1 : 0,
-                    userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+            if (thongTinNguoiNhan.size() == 0){
+                return  thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(null,
+                        dtOthongTinNguoiNhan.getHoTen(),
+                        dtOthongTinNguoiNhan.getSdt(),
+                        dtOthongTinNguoiNhan.getDuong(),
+                        dtOthongTinNguoiNhan.getXa(),
+                        dtOthongTinNguoiNhan.getThanhPho(),
+                        1,
+                        userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+                ));
+            }else {
+                if (dtOthongTinNguoiNhan.getIsMacDinh() == 1){
+                    ThongTinNguoiNhan nguoiNhan= thongTinNguoiNhanRepository.findByIsMacDinh(1);
+                    nguoiNhan.setIsMacDinh(0);
+                    thongTinNguoiNhanRepository.save(nguoiNhan);
+                    return  thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(null,
+                            dtOthongTinNguoiNhan.getHoTen(),
+                            dtOthongTinNguoiNhan.getSdt(),
+                            dtOthongTinNguoiNhan.getDuong(),
+                            dtOthongTinNguoiNhan.getXa(),
+                            dtOthongTinNguoiNhan.getThanhPho(),
+                            1,
+                            userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
                     ));
+                }else {
+                    return  thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(null,
+                            dtOthongTinNguoiNhan.getHoTen(),
+                            dtOthongTinNguoiNhan.getSdt(),
+                            dtOthongTinNguoiNhan.getDuong(),
+                            dtOthongTinNguoiNhan.getXa(),
+                            dtOthongTinNguoiNhan.getThanhPho(),
+                            0,
+                            userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+                    ));
+                }
+            }
         }catch (Exception e){
             throw new Exception(e.getMessage());
         }
     }
 
-    public ThongTinNguoiNhan updateThongTin(Integer id,
-            DTOthongTinNguoiNhan dtOthongTinNguoiNhan
-    ) throws Exception
-    {
+    public ThongTinNguoiNhan updateThongTin(Integer id, DTOthongTinNguoiNhan dtOthongTinNguoiNhan) throws Exception {
         try {
-            ThongTinNguoiNhan existing = thongTinNguoiNhanRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi"));
+            List<ThongTinNguoiNhan> thongTinNguoiNhan = thongTinNguoiNhanRepository.findAll();
+            if (thongTinNguoiNhan.size() == 1) {
+                return thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(id,
+                        dtOthongTinNguoiNhan.getHoTen(),
+                        dtOthongTinNguoiNhan.getSdt(),
+                        dtOthongTinNguoiNhan.getDuong(),
+                        dtOthongTinNguoiNhan.getXa(),
+                        dtOthongTinNguoiNhan.getThanhPho(),
+                        1,
+                        userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+                ));
+            } else if (thongTinNguoiNhan.size() > 1) {
+                if (dtOthongTinNguoiNhan.getIsMacDinh() == 1) {
+                    ThongTinNguoiNhan nguoiNhan = thongTinNguoiNhanRepository.findByIsMacDinh(1);
+                    nguoiNhan.setIsMacDinh(0);
+                    thongTinNguoiNhanRepository.save(nguoiNhan);
+                    return thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(id,
+                            dtOthongTinNguoiNhan.getHoTen(),
+                            dtOthongTinNguoiNhan.getSdt(),
+                            dtOthongTinNguoiNhan.getDuong(),
+                            dtOthongTinNguoiNhan.getXa(),
+                            dtOthongTinNguoiNhan.getThanhPho(),
+                            1,
+                            userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+                    ));
+                } else {
+                    ThongTinNguoiNhan nguoiNhan = thongTinNguoiNhanRepository.findById(id).orElseThrow(()-> new RuntimeException("Khong tim thay id user"));
+                    if (nguoiNhan.getIsMacDinh()==1){
+                        return thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(id,
+                                dtOthongTinNguoiNhan.getHoTen(),
+                                dtOthongTinNguoiNhan.getSdt(),
+                                dtOthongTinNguoiNhan.getDuong(),
+                                dtOthongTinNguoiNhan.getXa(),
+                                dtOthongTinNguoiNhan.getThanhPho(),
+                                1,
+                                userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+                        ));
+                    }else {
+                        return thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(id,
+                                dtOthongTinNguoiNhan.getHoTen(),
+                                dtOthongTinNguoiNhan.getSdt(),
+                                dtOthongTinNguoiNhan.getDuong(),
+                                dtOthongTinNguoiNhan.getXa(),
+                                dtOthongTinNguoiNhan.getThanhPho(),
+                                0,
+                                userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() -> new RuntimeException("Khong tim thay id user"))
+                        ));
+                    }
 
-                    existing.setHoTen(dtOthongTinNguoiNhan.getHoTen());
-                    existing.setSdt(dtOthongTinNguoiNhan.getSdt());
-                    existing.setDuong(dtOthongTinNguoiNhan.getDuong());
-                    existing.setXa(dtOthongTinNguoiNhan.getXa());
-                    existing.setHuyen(dtOthongTinNguoiNhan.getHuyen());
-                    existing.setThanhPho(dtOthongTinNguoiNhan.getThanhPho());
-                    existing.setIsMacDinh(dtOthongTinNguoiNhan.getIsMacDinh());
-                    existing.setUser(userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElseThrow(() ->
-                            new RuntimeException("Khong tim thay id user")));
-
-             return thongTinNguoiNhanRepository.save(existing);
+                }
+            }else {
+                throw new Exception("Lỗi khi cập nhật thông tin");
+            }
         }catch (Exception e){
             throw new Exception(e.getMessage());
         }
@@ -66,6 +128,4 @@ public class ThongTinNguoiNhanService {
         thongTinNguoiNhanRepository.deleteById(id);
         return "Xóa thông tin người nhận thành công";
     }
-
-
 }

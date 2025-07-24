@@ -24,7 +24,6 @@ public class ThongTinNguoiNhan extends BaseEntity{
     private String sdt;
     private String duong;
     private String xa;
-    private String huyen;
     @Column(name = "thanh_pho")
     private String thanhPho;
     @Column(name = "mac_dinh")

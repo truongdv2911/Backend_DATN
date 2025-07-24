@@ -79,7 +79,6 @@ public class ThongTinNguoiNhanController {
         if (!Objects.equals(dto.getSdt(), entity.getSdt())) return true;
         if (!Objects.equals(dto.getDuong(), entity.getDuong())) return true;
         if (!Objects.equals(dto.getXa(), entity.getXa())) return true;
-        if (!Objects.equals(dto.getHuyen(), entity.getHuyen())) return true;
         if (!Objects.equals(dto.getThanhPho(), entity.getThanhPho())) return true;
         if (!Objects.equals(dto.getIsMacDinh(), entity.getIsMacDinh())) return true;
         if (!Objects.equals(dto.getIdUser(), entity.getUser().getId())) return true;

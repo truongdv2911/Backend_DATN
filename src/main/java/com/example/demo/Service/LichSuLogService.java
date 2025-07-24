@@ -27,8 +27,10 @@ public class LichSuLogService {
     public Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            User userDetails = (User) authentication.getPrincipal();
-            return userDetails.getId();
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User) {
+                return ((User) principal).getId();
+            }
         }
         return null;
     }
