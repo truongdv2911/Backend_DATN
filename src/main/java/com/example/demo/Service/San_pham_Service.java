@@ -387,6 +387,17 @@ public class San_pham_Service {
                     .orElseThrow(() -> new RuntimeException("BoSuuTap not found with id: " + spDTO.getBoSuuTapId()));
             sanPham.setBoSuuTap(boSuuTap);
         }
+        if (spDTO.getThuongHieuId() != null) {
+            ThuongHieu thuongHieu = thuongHieuRepository.findById(spDTO.getThuongHieuId())
+                    .orElseThrow(() -> new RuntimeException("Thuong hieu not found with id: " + spDTO.getThuongHieuId()));
+            sanPham.setThuongHieu(thuongHieu);
+        }
+        if (spDTO.getXuatXuId() != null) {
+            XuatXu xx = xuatXuRepository.findById(spDTO.getXuatXuId())
+                    .orElseThrow(() -> new RuntimeException("Xuat xu not found with id: " + spDTO.getXuatXuId()));
+            sanPham.setXuatXu(xx);
+        }
+        sanPham.setNoiBat(spDTO.getNoiBat());
         sanPham.setTrangThai(tinhTrangThaiTheoTonKho(spDTO.getSoLuongTon()));
         return convertToResponseDTO(sanPhamRepository.save(sanPham));
     }
