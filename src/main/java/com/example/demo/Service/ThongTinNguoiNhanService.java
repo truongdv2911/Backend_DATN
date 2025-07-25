@@ -34,6 +34,7 @@ public class ThongTinNguoiNhanService {
                 if (dtOthongTinNguoiNhan.getIsMacDinh() == 1){
                     ThongTinNguoiNhan nguoiNhan= thongTinNguoiNhanRepository.findByIsMacDinh(1);
                     nguoiNhan.setIsMacDinh(0);
+
                     thongTinNguoiNhanRepository.save(nguoiNhan);
                     return  thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(null,
                             dtOthongTinNguoiNhan.getHoTen(),
