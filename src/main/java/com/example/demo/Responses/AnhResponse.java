@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AnhResponse {
+    private Integer id;
     private String url;
     private Boolean anhChinh;
 }

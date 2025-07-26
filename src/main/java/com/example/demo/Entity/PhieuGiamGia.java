@@ -45,4 +45,7 @@ public class PhieuGiamGia {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;
 
+    @Column(name = "is_noi_bat")
+    private Integer noiBat;
+
 }

@@ -102,7 +102,7 @@ public class DanhMucController {
             // Log lịch sử xóa
             String moTa = "Xóa danh mục ID: " + id + (danhMuc != null ? (", Tên: " + danhMuc.getTenDanhMuc()) : "");
             lichSuLogService.saveLog("XÓA", "DanhMuc", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok("Xóa thành công");
+            return ResponseEntity.ok(new ErrorResponse(200,"Xóa thành công"));
         } catch (RuntimeException e) {
             // Xử lý trường hợp không thể xóa do còn sản phẩm trong kho
             if (e.getMessage().contains("Vẫn còn sản phẩm trong kho")) {

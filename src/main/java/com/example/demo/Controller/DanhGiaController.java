@@ -62,10 +62,10 @@ public class DanhGiaController {
     public ResponseEntity<?> deleteDanhGia(@PathVariable Integer idDg, @PathVariable Integer idNv) {
         User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
         if (user.getRole().getId() == 2) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền xóa đánh giá này.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403,"Bạn không có quyền xóa đánh giá này."));
         }
         danhGiaService.deleteDanhGia(idDg);
-        return ResponseEntity.ok("Đã xóa đánh giá");
+        return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa đánh giá"));
     }
 
     @PostMapping(value = "/anh/{danhGiaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -73,7 +73,7 @@ public class DanhGiaController {
             @PathVariable Integer danhGiaId,
             @RequestParam("images") List<MultipartFile> images) throws Exception {
             danhGiaService.uploadAnh(danhGiaId, images);
-        return ResponseEntity.ok("Đã upload ảnh");
+        return ResponseEntity.ok(new ErrorResponse(200,"Đã upload ảnh"));
     }
 
     @PostMapping(value = "/video/{danhGiaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -81,7 +81,7 @@ public class DanhGiaController {
             @PathVariable Integer danhGiaId,
             @RequestParam("video") MultipartFile video) throws IOException {
         danhGiaService.uploadVideo(danhGiaId, video);
-        return ResponseEntity.ok("Đã upload video");
+        return ResponseEntity.ok(new ErrorResponse(200,"Đã upload video"));
     }
 
     @GetMapping("/images/{imgName}")

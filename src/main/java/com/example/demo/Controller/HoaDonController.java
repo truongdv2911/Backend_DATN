@@ -99,7 +99,7 @@ public class HoaDonController {
     public ResponseEntity<?> sendEmail(@RequestBody HoaDonEmailDTO req){
         try {
             emailService.sendOrderEmail(req);
-            return ResponseEntity.ok("Đã gửi hóa đơn điện tử");
+            return ResponseEntity.ok(new ErrorResponse(200,"Đã gửi hóa đơn điện tử"));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
@@ -153,7 +153,7 @@ public class HoaDonController {
         // Log lịch sử xóa
         String moTa = "Xóa hóa đơn ID: " + id + (hoaDon != null ? (", Mã: " + hoaDon.getMaHD()) : "");
         lichSuLogService.saveLog("XÓA", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
-        return ResponseEntity.ok("Xoa thanh cong");
+        return ResponseEntity.ok(new ErrorResponse(200, "Ẩn thành công"));
     }
     @GetMapping("/status-count")
     public ResponseEntity<Map<String, Long>> getCountByStatus() {

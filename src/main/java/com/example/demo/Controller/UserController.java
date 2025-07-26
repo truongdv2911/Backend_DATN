@@ -297,7 +297,7 @@ public class UserController {
         }
         try {
             userService.forgotPassword(email);
-            return ResponseEntity.ok("OTP đã được gửi.");
+            return ResponseEntity.ok(new ErrorResponse(200, "OTP đã được gửi."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
@@ -308,7 +308,7 @@ public class UserController {
         try {
             boolean isValid = userService.verifyOtp(email, otp);
             if (isValid) {
-                return ResponseEntity.ok("OTP đã được xác nhận.");
+                return ResponseEntity.ok(new ErrorResponse(200, "OTP đã được xác nhận."));
             } else {
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, "OTP sai hoặc đã hết hạn."));
             }
@@ -329,9 +329,9 @@ public class UserController {
         try {
             boolean result = userService.resetPassword(email, newPassword);
             if (result) {
-                return ResponseEntity.ok("Thay đổi mật khẩu thành công !");
+                return ResponseEntity.ok(new ErrorResponse(200, "Thay đổi mật khẩu thành công !"));
             } else {
-                return ResponseEntity.badRequest().body(new ErrorResponse(400, "lỗi không xác định"));
+                return ResponseEntity.badRequest().body(new ErrorResponse(500, "lỗi không xác định"));
             }
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));

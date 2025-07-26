@@ -164,7 +164,7 @@ public class SanPhamController {
             // Log lịch sử xóa
             String moTa = "Xóa sản phẩm ID: " + id + (sanPham != null ? (", Tên: " + sanPham.getTenSanPham()) : "");
             lichSuLogService.saveLog("XÓA", "SanPham", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok(Map.of("message", "Deleted successfully"));
+            return ResponseEntity.ok(new ErrorResponse(200, "Sản phẩm đã được ẩn"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }

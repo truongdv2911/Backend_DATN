@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.DTOs.BoSuuTapDTO;
 import com.example.demo.Entity.BoSuuTap;
 import com.example.demo.Repository.Bo_suu_tap_Repo;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.Bo_suu_tap_Service;
 import com.example.demo.Service.LichSuLogService;
 import com.example.demo.Component.ObjectChangeLogger;
@@ -90,7 +91,7 @@ public class BoSuuTapController {
             // Log lịch sử xóa
             String moTa = "Xóa bộ sưu tập ID: " + id + (boSuuTap != null ? (", Tên: " + boSuuTap.getTenBoSuuTap()) : "");
             lichSuLogService.saveLog("XÓA", "BoSuuTap", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok("Xóa thành công");
+            return ResponseEntity.ok(new ErrorResponse(200,"Xóa thành công"));
         } catch (RuntimeException e) {
             // Xử lý trường hợp không thể xóa do còn sản phẩm trong kho
             if (e.getMessage().contains("Vẫn còn sản phẩm trong kho")) {
