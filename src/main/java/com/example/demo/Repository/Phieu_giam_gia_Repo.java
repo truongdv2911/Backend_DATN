@@ -64,4 +64,6 @@ GROUP BY
     u.ID, u.ten, u.email
 """, nativeQuery = true)
     List<Object> getDanhSachNguoiDungSuDungPhieu(Integer idPhieu);
+    @Query("SELECT k FROM PhieuGiamGia k WHERE k.noiBat = :noiBat and k.trangThai <> 'isDelete'")
+    List<PhieuGiamGia> findByPhieuNoiBat(Integer noiBat);
 }

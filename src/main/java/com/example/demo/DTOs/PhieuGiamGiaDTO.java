@@ -53,4 +53,6 @@ public class PhieuGiamGiaDTO {
     @Future(message = "Ngày kết thúc ít nhất phải ngày mai")
     LocalDateTime ngayKetThuc;
 
+    @NotNull(message = "Không để trống nổi bật")
+    private Integer noiBat;
 }

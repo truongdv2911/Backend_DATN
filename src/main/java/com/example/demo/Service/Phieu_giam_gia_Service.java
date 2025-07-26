@@ -68,7 +68,7 @@ public class Phieu_giam_gia_Service {
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());
         phieuGiamGia.setGiaTriToiThieu(phieuGiamGiaDTO.getGiaTriToiThieu());
-
+        phieuGiamGia.setNoiBat(phieuGiamGiaDTO.getNoiBat());
         if (phieuGiamGiaDTO.getNgayKetThuc().isBefore(phieuGiamGiaDTO.getNgayBatDau())){
             throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
         }
@@ -103,6 +103,10 @@ public class Phieu_giam_gia_Service {
 
     public List<PhieuGiamGia> getAllPhieuGiamGia() {
         return phieuGiamGiaRepo.findAllPhieuKhongBiXoa();
+    }
+
+    public List<PhieuGiamGia> getphieuNoibat(Integer isNoiBat) {
+        return phieuGiamGiaRepo.findByPhieuNoiBat(isNoiBat);
     }
 
 
@@ -142,6 +146,7 @@ public class Phieu_giam_gia_Service {
         if (phieuGiamGiaDTO.getNgayKetThuc().isBefore(phieuGiamGiaDTO.getNgayBatDau())){
             throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
         }
+        phieuGiamGia.setNoiBat(phieuGiamGiaDTO.getNoiBat());
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
         phieuGiamGia.setTrangThai(tinhTrangThai(phieuGiamGiaDTO));

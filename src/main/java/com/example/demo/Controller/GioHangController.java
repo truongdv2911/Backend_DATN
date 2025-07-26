@@ -5,6 +5,7 @@ import com.example.demo.Entity.GioHang;
 import com.example.demo.Entity.GioHangChiTiet;
 import com.example.demo.Entity.User;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.GioHangService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -64,7 +65,7 @@ public class GioHangController {
             GioHangChiTiet item = gioHangService.updateCartItem(userId, itemId, soLuong);
             return ResponseEntity.ok(item);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
 
@@ -106,7 +107,7 @@ public class GioHangController {
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
             gioHangService.removeCartItem(userId, itemId);
-            return ResponseEntity.ok("Xóa sản phẩm thành công");
+            return ResponseEntity.ok(new ErrorResponse(200, "Xóa sản phẩm thành công"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

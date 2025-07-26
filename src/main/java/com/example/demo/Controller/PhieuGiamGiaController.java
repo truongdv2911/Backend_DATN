@@ -29,7 +29,6 @@ public class PhieuGiamGiaController {
     private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
     private final LichSuLogService lichSuLogService;
 
-
     @PostMapping("/Create")
     public ResponseEntity<?> createPhieuGiamGia(@Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO, BindingResult result) {
         try {
@@ -47,7 +46,6 @@ public class PhieuGiamGiaController {
         }
     }
 
-
     @GetMapping("/ReadAll")
     public ResponseEntity<?> getAllPhieuGiamGia() {
         try {
@@ -58,6 +56,15 @@ public class PhieuGiamGiaController {
         }
     }
 
+    @GetMapping("/get-phieu-noi-bat")
+    public ResponseEntity<?> getPhieuNoibat(@RequestParam Integer isNoiBat) {
+        try {
+            List<PhieuGiamGia> list = phieuGiamGiaService.getphieuNoibat(isNoiBat);
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
+        }
+    }
 
     @GetMapping("/ReadOne/{id}")
     public ResponseEntity<?> getPhieuGiamGiaById(@PathVariable Integer id) {
@@ -90,7 +97,7 @@ public class PhieuGiamGiaController {
             }
             PhieuGiamGia phieuGiamGia = phieuGiamGiaRepo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id phieu giam"));
             if (!isDifferent(phieuGiamGiaDTO, phieuGiamGia)){
-                return ResponseEntity.badRequest().body("Không có thay đổi nào được thực hiện.");
+                return ResponseEntity.badRequest().body(new ErrorResponse(200, "Không có thay đổi nào được thực hiện."));
             }
             // Log sự thay đổi
             String logThayDoi = ObjectChangeLogger.generateChangeLog(phieuGiamGia, phieuGiamGiaDTO);
@@ -119,7 +126,7 @@ public class PhieuGiamGiaController {
             // Log lịch sử xóa
             String moTa = "Xóa phiếu giảm giá mã: " + phieuGiamGia.getMaPhieu() + (phieuGiamGia != null ? (", Tên: " + phieuGiamGia.getTenPhieu()) : "");
             lichSuLogService.saveLog("XÓA", "PhieuGiamGia", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok("Xóa thành công");
+            return ResponseEntity.ok(new ErrorResponse(200, "Ẩn thành công phiếu giảm"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -130,7 +137,7 @@ public class PhieuGiamGiaController {
         try {
             return ResponseEntity.ok(phieuGiamGiaRepo.getPGGPhuHop(tamTinh));
         }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Loi khi tai phieu"+e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -140,7 +147,7 @@ public class PhieuGiamGiaController {
             ChiTietPhieuResponse chiTietPhieuResponse = phieuGiamGiaService.getDetail(id);
             return ResponseEntity.ok(chiTietPhieuResponse);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body("loi"+e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
         }
     }
 

@@ -85,7 +85,7 @@ public class XuatXuController {
             // Log lịch sử xóa
             String moTa = "Xóa xuất xứ ID: " + id + ", Tên: " + xuatXu.getTen();
             lichSuLogService.saveLog("XÓA", "XuatXu", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok("xoa thanh cong");
+            return ResponseEntity.ok(new ErrorResponse(200,"xoa thanh cong"));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }

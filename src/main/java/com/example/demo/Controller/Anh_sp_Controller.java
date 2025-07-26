@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.DTOs.Anh_sp_DTO;
 
 import com.example.demo.Entity.AnhSp;
+import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.AnhSpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -52,7 +53,7 @@ public class Anh_sp_Controller {
     public ResponseEntity<?> deleteAnhSp(@PathVariable Integer id) {
         try {
             anhSpService.deleteAnhSp(id);
-            return ResponseEntity.ok("Xóa ảnh với ID " + id + " thành công");
+            return ResponseEntity.ok(new ErrorResponse(200, "Xóa ảnh với ID " + id + " thành công"));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Không thể xóa ảnh với ID: " + id + " - " + e.getMessage());
@@ -132,6 +133,4 @@ public class Anh_sp_Controller {
                     .body("Không tìm thấy ảnh cho sản phẩm ID: " + sanPhamId + " - " + e.getMessage());
         }
     }
-
-
 }

@@ -40,7 +40,7 @@ public class KhuyenMaiSPController {
             lichSuLogService.saveLog("ÁP DỤNG KM", "KhuyenMaiSanPham", moTa, lichSuLogService.getCurrentUserId());
 
             if (errors.isEmpty()) {
-                return ResponseEntity.ok("Áp dụng khuyến mãi thành công");
+                return ResponseEntity.ok(new ErrorResponse(200,"Áp dụng khuyến mãi thành công"));
             } else {
                 String message = String.join(", ", errors);
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
@@ -63,7 +63,7 @@ public class KhuyenMaiSPController {
             }).toList();
             return ResponseEntity.ok(responseList);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body("loi:"+ e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
         }
     }
 }

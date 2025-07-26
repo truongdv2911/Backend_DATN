@@ -53,7 +53,7 @@ public class HoaDonChiTietController {
                 return ResponseEntity.badRequest().body(listErorrs);
             }
             hoaDonChiTietService.updateHoaDonChiTiet(id, dtOhoaDonChiTiet);
-            return ResponseEntity.ok("Update thanh cong");
+            return ResponseEntity.ok(new ErrorResponse(200,"Update thanh cong"));
         }catch (Exception e){
             return ResponseEntity.badRequest().body("Co loi");
         }
@@ -62,6 +62,6 @@ public class HoaDonChiTietController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) throws Exception {
         hoaDonChiTietService.deleteHoaDonChiTiet(id);
-        return ResponseEntity.ok("Xoa thanh cong");
+        return ResponseEntity.ok(new ErrorResponse(200,"Xoa thanh cong"));
     }
 }

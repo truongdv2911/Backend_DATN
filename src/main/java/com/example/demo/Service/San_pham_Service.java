@@ -271,6 +271,7 @@ public class San_pham_Service {
         return listAnh.stream()
                 .map(anh -> {
                     AnhResponse response = new AnhResponse();
+                    response.setId(anh.getId());
                     response.setUrl(anh.getUrl());
                     response.setAnhChinh(anh.getAnhChinh());
                     return response;
@@ -424,6 +425,7 @@ public class San_pham_Service {
         List<AnhResponse> anhUrls = listAnh.stream()
                 .map(anh -> {
                     AnhResponse response = new AnhResponse();
+                    response.setId(anh.getId());
                     response.setUrl(anh.getUrl());
                     response.setAnhChinh(anh.getAnhChinh());
                     return response;

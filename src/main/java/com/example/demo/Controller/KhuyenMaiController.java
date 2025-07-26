@@ -86,7 +86,7 @@ public class KhuyenMaiController {
             }
             if (khuyenMaiDTO.getNgayBatDau() != null && khuyenMaiDTO.getNgayKetThuc() != null
                     && khuyenMaiDTO.getNgayBatDau().isAfter(khuyenMaiDTO.getNgayKetThuc())) {
-                return ResponseEntity.badRequest().body("Ngày bắt đầu phải trước ngày kết thúc");
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, "Ngày bắt đầu phải trước ngày kết thúc"));
             }
             KhuyenMai khuyenMai = khuyenMaiRepo.findById(id).orElseThrow(()-> new RuntimeException("khong tim thay id khuyen mai"));
             if (!isDifferent(khuyenMaiDTO, khuyenMai)) {
@@ -99,7 +99,7 @@ public class KhuyenMaiController {
             KhuyenMai result = khuyenMaiService.updateKhuyenMai(id, khuyenMaiDTO);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -112,9 +112,9 @@ public class KhuyenMaiController {
             // Log lịch sử xóa
             String moTa = "Ngừng khuyến mãi Mã: " + khuyenMai.getMaKhuyenMai() + (khuyenMai != null ? (", Tên: " + khuyenMai.getTenKhuyenMai()) : "");
             lichSuLogService.saveLog("Ngừng", "KhuyenMai", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok("Xóa thành công");
+            return ResponseEntity.ok(new ErrorResponse(200, "Ẩn thành công"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -124,7 +124,7 @@ public class KhuyenMaiController {
             ChiTietKMResponse response = khuyenMaiService.getDetailKM(id);
             return ResponseEntity.ok(response);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body("loi"+e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
