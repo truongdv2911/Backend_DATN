@@ -71,6 +71,9 @@ public class AnhSpService {
 public void deleteAnhSp(Integer id) {
     AnhSp anh = anhSpRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
+    SanPham sanPham = anh.getSanPham();
+    boolean isAnhChinh = Boolean.TRUE.equals(anh.getAnhChinh());
+
     Path path = uploadDir.resolve(anh.getUrl());
     try {
         Files.deleteIfExists(path);
@@ -78,6 +81,16 @@ public void deleteAnhSp(Integer id) {
         System.out.println("Không thể xóa file vật lý: " + e.getMessage());
     }
     anhSpRepository.deleteById(id);
+    // Nếu ảnh bị xoá là ảnh chính, cần cập nhật lại ảnh chính mới
+    if (isAnhChinh) {
+        List<AnhSp> remainingImages = anhSpRepository.findBySanPhamId(sanPham.getId());
+        if (!remainingImages.isEmpty()) {
+            // Gán ảnh đầu tiên làm ảnh chính mới
+            AnhSp newAnhChinh = remainingImages.get(0);
+            newAnhChinh.setAnhChinh(true);
+            anhSpRepository.save(newAnhChinh);
+        }
+    }
 }
 
 
@@ -140,7 +153,6 @@ public void deleteAnhSp(Integer id) {
         if (files == null || files.length == 0) {
             throw new RuntimeException("Chưa chọn ảnh để upload.");
         }
-
         try {
             // Kiểm tra thư mục tồn tại
             if (!Files.exists(uploadDir)) {
@@ -155,20 +167,15 @@ public void deleteAnhSp(Integer id) {
             List<AnhSp> existingImages = anhSpRepository.findBySanPhamId(sanPhamId);
             int totalImagesAfterUpload = existingImages.size() + files.length;
 
-            if (totalImagesAfterUpload > 5) {
+            if (totalImagesAfterUpload > 7) {
                 throw new RuntimeException("Sản phẩm đã có " + existingImages.size() + " ảnh. "
-                        + "Chỉ được upload tối đa 5 ảnh. Chỉ có thể thêm " + (5 - existingImages.size()) + " ảnh nữa.");
+                        + "Chỉ được upload tối đa 7 ảnh. Chỉ có thể thêm " + (7 - existingImages.size()) + " ảnh nữa.");
             }
 
-            // Kiểm tra trùng lặp số thứ tự
-            Set<Integer> usedOrders = existingImages.stream()
-                    .map(AnhSp::getThuTu)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
 
             List<Anh_sp_DTO> anhSpList = new ArrayList<>();
-            boolean daSetAnhDaiDien = existingImages.isEmpty(); // Chỉ gán ảnh đại diện nếu chưa có
-
+            boolean daCoAnhChinh = existingImages.stream().anyMatch(AnhSp::getAnhChinh);
+            boolean daGanAnhChinh = false;
             for (int i = 0; i < files.length; i++) {
                 MultipartFile file = files[i];
 
@@ -208,16 +215,15 @@ public void deleteAnhSp(Integer id) {
                 AnhSp anhSp = new AnhSp();
                 anhSp.setUrl(url);
                 anhSp.setMoTa(moTa);
-
-                // Set anhChinh: true cho ảnh đầu tiên trong lần upload này, nhưng chỉ nếu không có ảnh chính nào khác
-                boolean isFirstImage = (i == 0);
-                boolean daCoAnhChinh = existingImages.stream().anyMatch(AnhSp::getAnhChinh);
-                if (!daCoAnhChinh && i == 0) {
+                // --- XỬ LÝ ẢNH CHÍNH ---
+                if (!daCoAnhChinh && !daGanAnhChinh) {
+                    // Nếu chưa có ảnh chính trước đó, gán ảnh đầu tiên là ảnh chính
                     anhSp.setAnhChinh(true);
                     sanPham.setAnhDaiDien(url);
-                    sanPhamRepository.save(sanPham);
-                    daCoAnhChinh = true;
-                } else if (Boolean.TRUE.equals(anhChinh)) {
+                    daGanAnhChinh = true;
+                } else if (Boolean.TRUE.equals(anhChinh) && !daGanAnhChinh) {
+                    // Nếu người dùng yêu cầu ảnh chính (qua param) thì:
+                    // Gỡ bỏ ảnh chính cũ (nếu có)
                     for (AnhSp img : existingImages) {
                         if (Boolean.TRUE.equals(img.getAnhChinh())) {
                             img.setAnhChinh(false);
@@ -226,8 +232,7 @@ public void deleteAnhSp(Integer id) {
                     }
                     anhSp.setAnhChinh(true);
                     sanPham.setAnhDaiDien(url);
-                    sanPhamRepository.save(sanPham);
-                    daCoAnhChinh = true;
+                    daGanAnhChinh = true;
                 } else {
                     anhSp.setAnhChinh(false);
                 }
@@ -249,6 +254,7 @@ public void deleteAnhSp(Integer id) {
             throw new RuntimeException("Lỗi khi upload ảnh", e);
         }
     }
+
     public UrlResource loadImage(String fileName) {
         try {
             Path imagePath = uploadDir.resolve(fileName);

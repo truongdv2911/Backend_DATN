@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -100,6 +101,29 @@ public class DanhGiaController {
             }
         }catch (Exception e){
             return ResponseEntity.notFound().build();
+        }
+    }
+    @GetMapping("/videos/{videoName}")
+    public ResponseEntity<?> viewVideo(@PathVariable String videoName) {
+        try {
+            Path videoPath = Paths.get("UploadsFeedback/" + videoName);
+            UrlResource resource = new UrlResource(videoPath.toUri());
+
+            if (resource.exists()) {
+                // Xác định loại MIME dựa vào đuôi file
+                String contentType = Files.probeContentType(videoPath);
+                if (contentType == null) {
+                    contentType = "application/octet-stream"; // fallback
+                }
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Không thể tải video.");
         }
     }
 }
