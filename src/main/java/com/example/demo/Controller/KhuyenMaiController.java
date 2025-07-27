@@ -82,7 +82,8 @@ public class KhuyenMaiController {
     public ResponseEntity<?> updateKhuyenMai(@PathVariable Integer id, @Valid @RequestBody KhuyenMaiDTO khuyenMaiDTO, BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+                String message = String.join(", ", bindingResult.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+                return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             if (khuyenMaiDTO.getNgayBatDau() != null && khuyenMaiDTO.getNgayKetThuc() != null
                     && khuyenMaiDTO.getNgayBatDau().isAfter(khuyenMaiDTO.getNgayKetThuc())) {

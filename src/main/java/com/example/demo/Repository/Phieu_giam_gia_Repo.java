@@ -30,7 +30,7 @@ SELECT
     pg.gia_tri_giam,
     pg.trang_thai ,
     pg.so_luong ,
-    COUNT(DISTINCT hd.id) AS so_luot_su_dung,
+    COUNT( hd.id) AS so_luot_su_dung,
     COUNT(DISTINCT hd.user_id) AS so_nguoi_dung_su_dung,
     SUM(hd.tong_tien) AS tong_tien_ban_duoc,
     SUM(hd.so_tien_giam) AS tong_so_tien_giam,
@@ -56,14 +56,14 @@ FROM
     hoa_don hd
 JOIN
     Users u ON hd.user_id = u.id
-JOIN
-    phieu_giam_gia pg ON hd.id_phieu_khuyen_mai = pg.ID
 WHERE
-    pg.ID = :idPhieu
+    hd.id_phieu_khuyen_mai = :idPhieu
 GROUP BY
     u.ID, u.ten, u.email
 """, nativeQuery = true)
     List<Object> getDanhSachNguoiDungSuDungPhieu(Integer idPhieu);
+
+
     @Query("SELECT k FROM PhieuGiamGia k WHERE k.noiBat = :noiBat and k.trangThai <> 'isDelete'")
     List<PhieuGiamGia> findByPhieuNoiBat(Integer noiBat);
 }

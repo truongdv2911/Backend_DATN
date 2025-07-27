@@ -87,8 +87,10 @@ public class HoaDonController {
             HoaDon hoaDon = hoaDonService.createHoaDon(dtOhoaDon);
             HoaDonResponse response = hoaDonService.convertToResponse(hoaDon);
             // Log lịch sử tạo mới
-//            String moTa = "Tạo mới hóa đơn: " + hoaDon.getMaHD() + " - ID: " + hoaDon.getId();
-//            lichSuLogService.saveLog("TẠO MỚI", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
+            if (dtOhoaDon.getNvId() != null){
+                String moTa = "Tạo mới đơn hàng: " + hoaDon.getMaHD() + " - ID: " + hoaDon.getId();
+                lichSuLogService.saveLog("TẠO MỚI", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
+            }
             return ResponseEntity.ok(response);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
