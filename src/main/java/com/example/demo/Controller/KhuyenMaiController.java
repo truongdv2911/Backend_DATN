@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import com.example.demo.DTOs.KMUpdateDTO;
 import com.example.demo.DTOs.KhuyenMaiDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.KhuyenMai;
@@ -79,7 +80,7 @@ public class KhuyenMaiController {
 
 //1111
     @PutMapping("/Update/{id}")
-    public ResponseEntity<?> updateKhuyenMai(@PathVariable Integer id, @Valid @RequestBody KhuyenMaiDTO khuyenMaiDTO, BindingResult bindingResult) {
+    public ResponseEntity<?> updateKhuyenMai(@PathVariable Integer id, @Valid @RequestBody KMUpdateDTO khuyenMaiDTO, BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {
                 String message = String.join(", ", bindingResult.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
@@ -129,14 +130,13 @@ public class KhuyenMaiController {
         }
     }
 
-    public static boolean isDifferent(KhuyenMaiDTO dto, KhuyenMai entity) {
+    public static boolean isDifferent(KMUpdateDTO dto, KhuyenMai entity) {
         if (dto == null || entity == null) return true;
 
         return !Objects.equals(dto.getNgayBatDau(), entity.getNgayBatDau())
                 || !Objects.equals(dto.getNgayKetThuc(), entity.getNgayKetThuc())
                 || !Objects.equals(dto.getTenKhuyenMai(), entity.getTenKhuyenMai())
-                || !Objects.equals(dto.getPhanTramKhuyenMai(), entity.getPhanTramKhuyenMai())
-                || !Objects.equals(dto.getTrangThai(), entity.getTrangThai());
+                || !Objects.equals(dto.getPhanTramKhuyenMai(), entity.getPhanTramKhuyenMai());
     }
     private static boolean compareBigDecimal(BigDecimal a, BigDecimal b) {
         if (a == null && b == null) return false; // giống nhau

@@ -1,26 +1,12 @@
 package com.example.demo.DTOs;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.Data;
 
+import java.time.LocalDateTime;
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Setter
-@Getter
-@FieldDefaults(level = AccessLevel.PRIVATE )
-public class KhuyenMaiDTO {
-
-    private String maKhuyenMai;
-
+public class KMUpdateDTO {
     @NotNull
     private String tenKhuyenMai;
 
@@ -31,7 +17,6 @@ public class KhuyenMaiDTO {
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     @NotNull(message = "Ngày bắt đầu không được để trống")
-    @FutureOrPresent(message = "Ngày bắt đầu ít nhất từ bây giờ")
     private LocalDateTime ngayBatDau;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -40,7 +25,5 @@ public class KhuyenMaiDTO {
     private LocalDateTime ngayKetThuc;
 
     private LocalDateTime ngayTao = LocalDateTime.now();
-
-    private String trangThai;
 
 }
