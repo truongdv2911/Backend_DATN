@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTOs.KhuyenMaiDTO;
+import com.example.demo.DTOs.PGGUpdateDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
@@ -74,11 +75,32 @@ public class Phieu_giam_gia_Service {
         }
         phieuGiamGia.setNgayBatDau(phieuGiamGiaDTO.getNgayBatDau());
         phieuGiamGia.setNgayKetThuc(phieuGiamGiaDTO.getNgayKetThuc());
-        phieuGiamGia.setTrangThai(tinhTrangThai(phieuGiamGiaDTO));
+        phieuGiamGia.setTrangThai(tinhTrangThai2(phieuGiamGiaDTO));
         return phieuGiamGiaRepo.save(phieuGiamGia);
     }
 
-    private String tinhTrangThai(PhieuGiamGiaDTO dto) {
+    private String tinhTrangThai(PGGUpdateDTO dto) {
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime ngayBatDau = dto.getNgayBatDau();
+        LocalDateTime ngayKetThuc = dto.getNgayKetThuc();
+
+        if (ngayBatDau != null && ngayKetThuc != null) {
+            if ((today.isEqual(ngayBatDau) || today.isAfter(ngayBatDau)) &&
+                    (today.isEqual(ngayKetThuc) || today.isBefore(ngayKetThuc))) {
+                return "active";
+            }
+
+            if (today.isBefore(ngayBatDau)) {
+                return "inactive";
+            }
+
+            if (today.isAfter(ngayKetThuc)) {
+                return "expired";
+            }
+        }
+        return "Chưa xác định";
+    }
+    private String tinhTrangThai2(PhieuGiamGiaDTO dto) {
         LocalDateTime today = LocalDateTime.now();
         LocalDateTime ngayBatDau = dto.getNgayBatDau();
         LocalDateTime ngayKetThuc = dto.getNgayKetThuc();
@@ -117,7 +139,7 @@ public class Phieu_giam_gia_Service {
 
 
 
-    public PhieuGiamGia updatePhieuGiamGia(Integer id, PhieuGiamGiaDTO phieuGiamGiaDTO) {
+    public PhieuGiamGia updatePhieuGiamGia(Integer id, PGGUpdateDTO phieuGiamGiaDTO) {
         // Validate loại phiếu giảm giá
         String loai = phieuGiamGiaDTO.getLoaiPhieuGiam().trim();
         if ("Theo %".equalsIgnoreCase(loai)) {

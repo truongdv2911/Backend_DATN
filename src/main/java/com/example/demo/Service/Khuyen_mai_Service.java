@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.DTOs.KMUpdateDTO;
 import com.example.demo.DTOs.KhuyenMaiDTO;
 import com.example.demo.DTOs.KhuyenMaiSanPhamDTO;
 import com.example.demo.Entity.KhuyenMai;
@@ -108,7 +109,7 @@ public class Khuyen_mai_Service {
                 .orElseThrow(() -> new RuntimeException("KhuyenMai not found with id: " + id));
     }
 
-    public KhuyenMai updateKhuyenMai(Integer id, @Valid KhuyenMaiDTO khuyenMaiDTO) {
+    public KhuyenMai updateKhuyenMai(Integer id, @Valid KMUpdateDTO khuyenMaiDTO) {
 //        String maKhuyenMai = khuyenMaiDTO.getMaKhuyenMai();
 //        if (maKhuyenMai == null || maKhuyenMai.isBlank()) {
 //            int maxTry = 10;
@@ -135,7 +136,7 @@ public class Khuyen_mai_Service {
         khuyenMai.setPhanTramKhuyenMai(khuyenMaiDTO.getPhanTramKhuyenMai());
         khuyenMai.setNgayBatDau(khuyenMaiDTO.getNgayBatDau());
         khuyenMai.setNgayKetThuc(khuyenMaiDTO.getNgayKetThuc());
-        khuyenMai.setTrangThai(khuyenMaiDTO.getTrangThai());
+        khuyenMai.setTrangThai(tinhTrangThai2(khuyenMaiDTO));
         return khuyenMaiRepo.save(khuyenMai);
     }
 
@@ -157,6 +158,27 @@ public class Khuyen_mai_Service {
     }
 
     private String tinhTrangThai(KhuyenMaiDTO dto) {
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime ngayBatDau = dto.getNgayBatDau();
+        LocalDateTime ngayKetThuc = dto.getNgayKetThuc();
+
+        if (ngayBatDau != null && ngayKetThuc != null) {
+            if ((today.isEqual(ngayBatDau) || today.isAfter(ngayBatDau)) &&
+                    (today.isEqual(ngayKetThuc) || today.isBefore(ngayKetThuc))) {
+                return "active";
+            }
+
+            if (today.isBefore(ngayBatDau)) {
+                return "inactive";
+            }
+
+            if (today.isAfter(ngayKetThuc)) {
+                return "expired";
+            }
+        }
+        return "Chưa xác định";
+    }
+    private String tinhTrangThai2(KMUpdateDTO dto) {
         LocalDateTime today = LocalDateTime.now();
         LocalDateTime ngayBatDau = dto.getNgayBatDau();
         LocalDateTime ngayKetThuc = dto.getNgayKetThuc();

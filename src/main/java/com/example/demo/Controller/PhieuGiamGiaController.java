@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import com.example.demo.DTOs.PGGUpdateDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
@@ -87,7 +88,7 @@ public class PhieuGiamGiaController {
     }
     @PutMapping("/Update/{id}")
     public ResponseEntity<?> updatePhieuGiamGia(@PathVariable Integer id,
-                                                @Valid @RequestBody PhieuGiamGiaDTO phieuGiamGiaDTO,
+                                                @Valid @RequestBody PGGUpdateDTO phieuGiamGiaDTO,
                                                 BindingResult result) {
         try {
             if (result.hasErrors()) {
@@ -151,7 +152,7 @@ public class PhieuGiamGiaController {
         }
     }
 
-    public static boolean isDifferent(PhieuGiamGiaDTO other, PhieuGiamGia phieuGiamGia) {
+    public static boolean isDifferent(PGGUpdateDTO other, PhieuGiamGia phieuGiamGia) {
         if (other == null) return true;
 
         return !Objects.equals(phieuGiamGia.getSoLuong(), other.getSoLuong())
