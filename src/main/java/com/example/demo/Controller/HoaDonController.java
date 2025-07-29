@@ -187,4 +187,9 @@ public class HoaDonController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/get-one-hoa-don/{id}")
+    public ResponseEntity<?> getone(@PathVariable Integer id){
+        return ResponseEntity.ok(hoaDonRepository.findById(id).orElseThrow(() -> new RuntimeException("không tìm thấy id hóa đơn")));
+    }
+
 }
