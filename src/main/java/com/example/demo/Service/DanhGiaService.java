@@ -3,6 +3,8 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.DTOdanhGia;
 import com.example.demo.Entity.*;
 import com.example.demo.Repository.*;
+import com.example.demo.Responses.AnhResponse;
+import com.example.demo.Responses.DanhGiaResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -167,25 +169,29 @@ public class DanhGiaService {
         }
     }
 
-    public void uploadVideo(Integer danhGiaId, MultipartFile file) throws IOException {
-        DanhGia dg = danhGiaRepository.findById(danhGiaId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+    public void uploadVideo(Integer danhGiaId, MultipartFile file) throws Exception {
+        try {
+            DanhGia dg = danhGiaRepository.findById(danhGiaId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
 
-        if (videoDanhGiaRepository.existsByDanhGiaId(danhGiaId))
-            throw new RuntimeException("Mỗi đánh giá chỉ có 1 video");
+            if (videoDanhGiaRepository.existsByDanhGiaId(danhGiaId))
+                throw new RuntimeException("Mỗi đánh giá chỉ có 1 video");
 
-        if (!VIDEO_TYPES.contains(file.getContentType())) {
-            throw new RuntimeException("Chỉ cho phép video MP4, MOV, AVI");
+            if (!VIDEO_TYPES.contains(file.getContentType())) {
+                throw new RuntimeException("Chỉ cho phép video MP4, MOV, AVI");
+            }
+            if (file.getSize() > MAX_VIDEO_SIZE) {
+                throw new RuntimeException("Video vượt quá dung lượng 50MB");
+            }
+
+            String fileName = saveFile(file);
+            VideoDanhGia vf = new VideoDanhGia();
+            vf.setUrl(fileName);
+            vf.setDanhGia(dg);
+            videoDanhGiaRepository.save(vf);
+        }catch (Exception e){
+            throw new Exception("loi khi upload video danh gia");
         }
-        if (file.getSize() > MAX_VIDEO_SIZE) {
-            throw new RuntimeException("Video vượt quá dung lượng 50MB");
-        }
-
-        String fileName = saveFile(file);
-        VideoDanhGia vf = new VideoDanhGia();
-        vf.setUrl(fileName);
-        vf.setDanhGia(dg);
-        videoDanhGiaRepository.save(vf);
     }
 
     private String saveFile(MultipartFile file) throws IOException {
@@ -208,5 +214,43 @@ public class DanhGiaService {
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
         return fileName; // hoặc return path.toString() nếu bạn muốn đường dẫn đầy đủ
+    }
+
+    public DanhGiaResponse convertToResponseDTO(DanhGia danhGia) {
+        List<AnhDanhGia> listAnh = anhDanhGiaRepository.findByDanhGiaId(danhGia.getId());
+
+        List<AnhResponse> anhUrls = listAnh.stream()
+                .map(anh -> {
+                    AnhResponse response = new AnhResponse();
+                    response.setId(anh.getId());
+                    response.setUrl(anh.getUrl());
+                    return response;
+                })
+                .toList();
+
+        VideoDanhGia video = videoDanhGiaRepository.findByDanhGiaId(danhGia.getId());
+        AnhResponse videoResponse = null;
+
+        if (video != null) {
+            videoResponse = new AnhResponse();
+            videoResponse.setId(video.getId());
+            videoResponse.setUrl(video.getUrl());
+        }
+
+        DanhGiaResponse dto = new DanhGiaResponse();
+        dto.setId(danhGia.getId());
+        dto.setTieuDe(danhGia.getTieuDe());
+        dto.setTextDanhGia(danhGia.getTextDanhGia());
+        dto.setSoSao(danhGia.getSoSao());
+        dto.setNgayDanhGia(danhGia.getNgayDanhGia());
+        dto.setNgayPhanHoi(danhGia.getNgayPhanHoi());
+        dto.setUserId(danhGia.getUser() != null ? danhGia.getUser().getId() : null);
+        dto.setNvId(danhGia.getNv() != null ? danhGia.getNv().getId() : null);
+        dto.setDhctId(danhGia.getDhct() != null ? danhGia.getDhct().getId() : null);
+        dto.setSpId(danhGia.getSp() != null ? danhGia.getSp().getId() : null);
+        dto.setAnhUrls(anhUrls);
+        dto.setVideo(videoResponse); // có thể là null nếu không có video
+
+        return dto;
     }
 }
