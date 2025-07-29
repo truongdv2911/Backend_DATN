@@ -35,7 +35,7 @@ public class KhuyenMaiSPController {
             // Ghi log
             String moTa = String.format(
                 "Áp dụng khuyến mãi Mã: %s cho %d sản phẩm. Thành công: %d, Thất bại: %d. Lỗi: %s",
-                    khuyenMai.getMaKhuyenMai(), tong, success, fail, errors.toString()
+                    khuyenMai.getMaKhuyenMai(), tong, success, fail, String.join(", ", errors)
             );
             lichSuLogService.saveLog("ÁP DỤNG KM", "KhuyenMaiSanPham", moTa, lichSuLogService.getCurrentUserId());
 

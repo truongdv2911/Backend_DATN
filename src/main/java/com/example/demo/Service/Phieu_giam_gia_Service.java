@@ -2,9 +2,14 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.KhuyenMaiDTO;
 import com.example.demo.DTOs.PGGUpdateDTO;
+import com.example.demo.DTOs.PGGUserDTO;
 import com.example.demo.DTOs.PhieuGiamGiaDTO;
 import com.example.demo.Entity.PhieuGiamGia;
+import com.example.demo.Entity.User;
+import com.example.demo.Entity.ViPhieuGiamGia;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
+import com.example.demo.Repository.UserRepository;
+import com.example.demo.Repository.ViPhieuGiamGiaRepository;
 import com.example.demo.Responses.ChiTietPhieuResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,16 +20,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class Phieu_giam_gia_Service {
 
-    @Autowired
-    private Phieu_giam_gia_Repo phieuGiamGiaRepo;
+    private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
+    private final UserRepository userRepository;
+    private final ViPhieuGiamGiaRepository viPhieuGiamGiaRepository;
 
     public PhieuGiamGia createPhieuGiamGia(PhieuGiamGiaDTO phieuGiamGiaDTO) {
         if (phieuGiamGiaRepo.existsByTenPhieu(phieuGiamGiaDTO.getTenPhieu())) {
@@ -51,7 +56,7 @@ public class Phieu_giam_gia_Service {
 
         // Validate loại phiếu giảm giá
         String loai = phieuGiamGiaDTO.getLoaiPhieuGiam().trim();
-        if ("Theo %".equalsIgnoreCase(loai)) {
+        if ("theo_phan_tram".equalsIgnoreCase(loai)) {
             if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
                 throw new IllegalArgumentException("Giá trị giảm theo % không được lớn hơn 100%");
             }
@@ -59,7 +64,7 @@ public class Phieu_giam_gia_Service {
                 throw new IllegalArgumentException("Giảm tối đa phải lớn hơn 0 với phiếu giảm theo %");
             }
             phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiamToiDa());
-        } else if ("Theo số tiền".equalsIgnoreCase(loai)) {
+        } else if ("theo_so_tien".equalsIgnoreCase(loai)) {
             phieuGiamGia.setGiamToiDa(phieuGiamGiaDTO.getGiaTriGiam());
         }
 
@@ -142,14 +147,14 @@ public class Phieu_giam_gia_Service {
     public PhieuGiamGia updatePhieuGiamGia(Integer id, PGGUpdateDTO phieuGiamGiaDTO) {
         // Validate loại phiếu giảm giá
         String loai = phieuGiamGiaDTO.getLoaiPhieuGiam().trim();
-        if ("Theo %".equalsIgnoreCase(loai)) {
+        if ("theo_phan_tram".equalsIgnoreCase(loai)) {
             if (phieuGiamGiaDTO.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
                 throw new IllegalArgumentException("Giá trị giảm theo % không được lớn hơn 100%");
             }
             if (phieuGiamGiaDTO.getGiamToiDa() == null || phieuGiamGiaDTO.getGiamToiDa().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("Giảm tối đa phải lớn hơn 0 với phiếu giảm theo %");
             }
-        } else if ("Theo số tiền".equalsIgnoreCase(loai)) {
+        } else if ("theo_so_tien".equalsIgnoreCase(loai)) {
             if (phieuGiamGiaDTO.getGiamToiDa() != null && phieuGiamGiaDTO.getGiaTriGiam().compareTo(phieuGiamGiaDTO.getGiamToiDa()) > 0) {
                 throw new IllegalArgumentException("Giá trị giảm không được lớn hơn giảm tối đa");
             }
@@ -234,5 +239,42 @@ public class Phieu_giam_gia_Service {
         response.setTongTienTruocGiam((BigDecimal) data[10]);
         response.setUserDungPGG(objects);
         return response;
+    }
+
+    public List<String> assignVoucherToUsers(PGGUserDTO dto) {
+        List<String> errors = new ArrayList<>();
+        // 1. Validate voucher
+        PhieuGiamGia pgg = phieuGiamGiaRepo.findById(dto.getPhieuGiamGiaId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu giảm giá"));
+
+        if ("expired".equalsIgnoreCase(pgg.getTrangThai()) || "isDelete".equalsIgnoreCase(pgg.getTrangThai())) {
+            throw new IllegalStateException("Phiếu giảm giá đã hết hạn");
+        }
+        // 2. Duyệt danh sách user
+        for (Integer userId : dto.getListUserId()) {
+            Map<String, Object> failEntry = new HashMap<>();
+            failEntry.put("userId", userId);
+
+            try {
+                User user = userRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+                boolean daCo = viPhieuGiamGiaRepository.existsByUserIdAndPhieuGiamGiaId(userId, pgg.getId());
+                if (daCo) {
+                    errors.add("User ID " + userId + ": đã có voucher này");
+                    continue;
+                }
+
+                // Lưu vào ví
+                ViPhieuGiamGia v = ViPhieuGiamGia.builder()
+                        .user(user)
+                        .phieuGiamGia(pgg)
+                        .build();
+                viPhieuGiamGiaRepository.save(v);
+            } catch (Exception e) {
+                errors.add("User ID " + userId + ": " + e.getMessage());
+            }
+        }
+        return errors;
     }
 }

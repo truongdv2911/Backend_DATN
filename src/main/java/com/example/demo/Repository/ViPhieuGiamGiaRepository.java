@@ -8,4 +8,5 @@ import java.util.List;
 public interface ViPhieuGiamGiaRepository extends JpaRepository<ViPhieuGiamGia, Long> {
     boolean existsByUser_IdAndPhieuGiamGia_Id(Integer userId, Integer phieuId);
     List<ViPhieuGiamGia> findByUser_Id(Integer userId);
+    boolean existsByUserIdAndPhieuGiamGiaId(Integer userId, Integer phieuGiamGiaId);
 }

@@ -19,7 +19,7 @@ public class ThongTinNguoiNhanService {
 
     public ThongTinNguoiNhan createThongTin(DTOthongTinNguoiNhan dtOthongTinNguoiNhan) throws Exception {
         try {
-            List<ThongTinNguoiNhan> thongTinNguoiNhan = thongTinNguoiNhanRepository.findAll();
+            List<ThongTinNguoiNhan> thongTinNguoiNhan = thongTinNguoiNhanRepository.findByUser(userRepository.findById(dtOthongTinNguoiNhan.getIdUser()).orElse(null));
             if (thongTinNguoiNhan.size() == 0){
                 return  thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(null,
                         dtOthongTinNguoiNhan.getHoTen(),

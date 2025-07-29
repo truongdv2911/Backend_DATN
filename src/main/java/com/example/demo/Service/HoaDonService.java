@@ -198,14 +198,14 @@ public class HoaDonService {
                 String loai = phieuGiamGia.getLoaiPhieuGiam();
 
                 switch (loai) {
-                    case "Theo %":
+                    case "theo_phan_tram":
                         soTienGiam = totalHd.multiply(phieuGiamGia.getGiaTriGiam().divide(BigDecimal.valueOf(100)));
                         if (soTienGiam.compareTo(phieuGiamGia.getGiamToiDa()) > 0) {
                             soTienGiam = phieuGiamGia.getGiamToiDa();
                         }
                         break;
 
-                    case "Theo số tiền":
+                    case "theo_so_tien":
                         soTienGiam = phieuGiamGia.getGiaTriGiam();
                         if (soTienGiam.compareTo(phieuGiamGia.getGiamToiDa()) > 0) {
                             soTienGiam = phieuGiamGia.getGiamToiDa();; // không thể giảm nhiều hơn tổng hóa đơn
@@ -322,14 +322,14 @@ public class HoaDonService {
 
             if (isValid) {
                 switch (phieu.getLoaiPhieuGiam()) {
-                    case "Theo %":
+                    case "theo_phan_tram":
                         soTienGiam = tong.multiply(phieu.getGiaTriGiam().divide(BigDecimal.valueOf(100)));
                         if (soTienGiam.compareTo(phieu.getGiamToiDa()) > 0) {
                             soTienGiam = phieu.getGiamToiDa();
                         }
                         break;
 
-                    case "Theo số tiền":
+                    case "theo_so_tien":
                         soTienGiam = phieu.getGiaTriGiam();
                         if (soTienGiam.compareTo(phieu.getGiamToiDa()) > 0) {
                             soTienGiam = phieu.getGiamToiDa();
@@ -429,6 +429,20 @@ public class HoaDonService {
         if (!isValidTrangThaiTransition(hoaDon.getTrangThai(), trangThai)) {
             throw new Exception("Chuyển đổi trạng thái từ " + hoaDon.getTrangThai() + " sang " + trangThai + " không hợp lệ");
         }
+
+        //Cập nhật lại số lượng khi bị hủy
+        if ((trangThai.equalsIgnoreCase("Đã hủy") || trangThai.equalsIgnoreCase("Thất bại"))
+                && !(hoaDon.getTrangThai().equalsIgnoreCase("Đã hủy") || hoaDon.getTrangThai().equalsIgnoreCase("Thất bại"))) {
+            List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
+
+            for (HoaDonChiTiet chiTiet : chiTietList) {
+                SanPham sp = chiTiet.getSp();
+                int soLuongHoanLai = chiTiet.getSoLuong();
+                sp.setSoLuongTon(sp.getSoLuongTon() + soLuongHoanLai);
+                san_pham_repo.save(sp); // Lưu lại số lượng mới
+            }
+        }
+
         hoaDon.setTrangThai(trangThai);
 
         // Cập nhật nhân viên sửa trạng thái
