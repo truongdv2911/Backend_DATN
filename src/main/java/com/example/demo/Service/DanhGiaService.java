@@ -14,11 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +35,7 @@ public class DanhGiaService {
     private final San_pham_Repo san_pham_repo;
     private final AnhDanhGiaRepository anhDanhGiaRepository;
     private final VideoDanhGiaRepository videoDanhGiaRepository;
+    private final GoogleDriveService googleDriveService;
 
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
@@ -194,7 +197,7 @@ public class DanhGiaService {
         }
     }
 
-    private String saveFile(MultipartFile file) throws IOException {
+    private String saveFile(MultipartFile file) throws IOException, GeneralSecurityException {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
         if (originalFileName.contains("..")) {
             throw new IOException("Tên file không hợp lệ: " + originalFileName);
@@ -204,16 +207,12 @@ public class DanhGiaService {
         String fileName = UUID.randomUUID() + "_" + originalFileName;
 
         // Đảm bảo thư mục tồn tại
-        Path uploadDir = Paths.get("UploadsFeedback");
-        if (!Files.exists(uploadDir)) {
-            Files.createDirectories(uploadDir);
-        }
+        String folderId = "1wQ-GboJWblOmxvFBaHvaxzKDZ1JnBIkZ";
+        File fileTemp = File.createTempFile("temp", null);
+        file.transferTo(fileTemp);
+        String url = googleDriveService.uploadFileToDrive(fileTemp, folderId);
 
-        // Ghi file
-        Path path = uploadDir.resolve(fileName);
-        Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-        return fileName; // hoặc return path.toString() nếu bạn muốn đường dẫn đầy đủ
+        return url;
     }
 
     public DanhGiaResponse convertToResponseDTO(DanhGia danhGia) {

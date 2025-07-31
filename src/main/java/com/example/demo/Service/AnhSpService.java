@@ -5,12 +5,14 @@ import com.example.demo.Entity.AnhSp;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.Anh_sp_Repo;
 import com.example.demo.Repository.San_pham_Repo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-
+@RequiredArgsConstructor
 public class AnhSpService {
 
     // Giả định các biến tĩnh
@@ -32,16 +34,12 @@ public class AnhSpService {
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
     private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "gif");
+    private static final String folderId = "1HOeJiTw28bO9QKkYayBpqh9_hl6OzoSE";
 
     // Giả định repository
     private final Anh_sp_Repo anhSpRepository;
     private final San_pham_Repo sanPhamRepository;
-
-    @Autowired
-    public AnhSpService(Anh_sp_Repo anhSpRepository, San_pham_Repo sanPhamRepository) {
-        this.anhSpRepository = anhSpRepository;
-        this.sanPhamRepository = sanPhamRepository;
-    }
+    private final GoogleDriveService googleDriveService;
 
 
     public List<Anh_sp_DTO> getAllAnhSp() {
@@ -154,11 +152,6 @@ public void deleteAnhSp(Integer id) {
             throw new RuntimeException("Chưa chọn ảnh để upload.");
         }
         try {
-            // Kiểm tra thư mục tồn tại
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
-
             // Lấy sản phẩm
             SanPham sanPham = sanPhamRepository.findById(sanPhamId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
@@ -182,7 +175,6 @@ public void deleteAnhSp(Integer id) {
                 if (file.getSize() > MAX_FILE_SIZE) {
                     throw new RuntimeException("Kích thước file vượt quá 10 MB: " + file.getOriginalFilename());
                 }
-
                 String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
                 if (originalFilename.contains("..")) {
                     throw new RuntimeException("Tên file không hợp lệ: " + originalFilename);
@@ -200,17 +192,9 @@ public void deleteAnhSp(Integer id) {
                     throw new IllegalArgumentException("Định dạng file ảnh không hợp lệ: ." + extension);
                 }
 
-                String randomString = generateRandomString(10);
-                String uniqueFilename = "anh_" + randomString + "_" + originalFilename;
-                Path destination = uploadDir.resolve(uniqueFilename);
-
-                if (Files.exists(destination)) {
-                    throw new RuntimeException("File đã tồn tại: " + uniqueFilename);
-                }
-
-                Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-
-                String url = uniqueFilename;
+                File fileTemp = File.createTempFile("temp", null);
+                file.transferTo(fileTemp);
+                String url = googleDriveService.uploadFileToDrive(fileTemp, folderId);
 
                 AnhSp anhSp = new AnhSp();
                 anhSp.setUrl(url);
@@ -250,7 +234,7 @@ public void deleteAnhSp(Integer id) {
 
             return anhSpList;
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Lỗi khi upload ảnh", e);
         }
     }

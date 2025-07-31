@@ -175,7 +175,6 @@ public class DanhGiaController {
         List<DanhGiaResponse> responseList = danhGiaRepository.findAll().stream()
                 .map(danhGiaService::convertToResponseDTO)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(responseList);
     }
 }
