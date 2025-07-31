@@ -68,8 +68,14 @@ public class DanhGiaController {
             DanhGia danhGia = danhGiaService.createDanhGia(dto);
 
             // Upload và tạo ảnh sử dụng AnhSpService
+            if (fileAnh != null && !fileAnh.isEmpty() && fileAnh.get(0).getSize() > 0) {
                 danhGiaService.uploadAnh(danhGia.getId(), fileAnh);
+            }
+
+            // Nếu có video thì upload
+            if (fileVid != null && !fileVid.isEmpty() && fileVid.getSize() > 0) {
                 danhGiaService.uploadVideo(danhGia.getId(), fileVid);
+            }
             return ResponseEntity.ok(danhGiaService.convertToResponseDTO(danhGia));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -80,8 +86,10 @@ public class DanhGiaController {
 
     @GetMapping("/{sanPhamId}")
     public ResponseEntity<?> getDanhGiaBySanPham(@PathVariable Integer sanPhamId) {
-        List<DanhGia> danhGias = danhGiaService.getDanhGiaByIdSp(sanPhamId);
-        return ResponseEntity.ok(danhGias);
+        List<DanhGiaResponse> responseList = danhGiaService.getDanhGiaByIdSp(sanPhamId)
+                .stream().map(danhGiaService::convertToResponseDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responseList);
     }
 
     @PutMapping("/update/{idDg}/{idNv}")

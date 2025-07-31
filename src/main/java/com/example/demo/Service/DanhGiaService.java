@@ -239,6 +239,7 @@ public class DanhGiaService {
 
         DanhGiaResponse dto = new DanhGiaResponse();
         dto.setId(danhGia.getId());
+        dto.setTenKH(userRepository.findById(danhGia.getUser().getId()).orElse(null).getTen());
         dto.setTieuDe(danhGia.getTieuDe());
         dto.setTextDanhGia(danhGia.getTextDanhGia());
         dto.setSoSao(danhGia.getSoSao());
