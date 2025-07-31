@@ -1,6 +1,7 @@
 package com.example.demo.Controller;
 
 
+import com.example.demo.DTOs.CapNhatTrangThaiHoaDonDTO;
 import com.example.demo.DTOs.DTOhoaDon;
 import com.example.demo.DTOs.HoaDonEmailDTO;
 import com.example.demo.Entity.HoaDon;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,21 +165,41 @@ public class HoaDonController {
     }
     @PutMapping("/{id}/trang-thai")
     public ResponseEntity<?> updateTrangThai(
-            @PathVariable Integer id,
-            @RequestParam String trangThai,
-            @RequestParam Integer idNV) {
-        try {
-            HoaDon hoaDonOld = hoaDonRepository.findById(id).orElseThrow(() -> new RuntimeException("khong tim thay hoa don"));
-            String trangThaiCu = hoaDonOld.getTrangThai();
-            HoaDonResponse response = hoaDonService.updateTrangThai(id, trangThai, idNV);
-            // Log lịch sử cập nhật trạng thái
-            String moTa = "Cập nhật trạng thái hóa đơn Mã: " + response.getMaHD() + ". Trạng thái: [" + trangThaiCu + "] -> [" + trangThai + "]";
-            lichSuLogService.saveLog("CẬP NHẬT", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ErrorResponse(400, "Cập nhật trạng thái thất bại: " + e.getMessage()));
+            @RequestBody CapNhatTrangThaiHoaDonDTO dto) {
+        List<String> errors = new ArrayList<>();
+        List<HoaDonResponse> ketQuaThanhCong = new ArrayList<>();
+
+        for (Integer id : dto.getHoaDonIds()) {
+            try {
+                HoaDon hoaDonOld = hoaDonRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với ID: " + id));
+                String trangThaiCu = hoaDonOld.getTrangThai();
+
+                HoaDonResponse response = hoaDonService.updateTrangThai(id, dto.getTrangThai(), dto.getIdNV());
+                ketQuaThanhCong.add(response);
+
+                String moTa = "Cập nhật trạng thái hóa đơn Mã: " + response.getMaHD()
+                        + ". Trạng thái: [" + trangThaiCu + "] -> [" + dto.getTrangThai() + "]";
+                lichSuLogService.saveLog("CẬP NHẬT", "HoaDon", moTa, lichSuLogService.getCurrentUserId());
+
+            } catch (Exception e) {
+                String loi = "Hóa đơn ID " + id + " lỗi: " + e.getMessage();
+                errors.add(loi);
+                hoaDonRepository.findById(id).ifPresent(hoaDon -> {
+                    // Ghi log thất bại
+                    String moTaLoi = "Cập nhật trạng thái hóa đơn Mã: " + hoaDon.getMaHD()
+                            + " thất bại. Lý do: " + e.getMessage();
+                    lichSuLogService.saveLog("CẬP NHẬT THẤT BẠI", "HoaDon", moTaLoi, lichSuLogService.getCurrentUserId());
+                });
+            }
         }
+        Map<String, Object> result = new HashMap<>();
+        result.put("thanhCong", ketQuaThanhCong);
+        result.put("loi", errors);
+
+        return ResponseEntity.ok(result);
     }
+
     @GetMapping("/paging")
     public ResponseEntity<Page<HoaDonResponse>> getAllHoaDonPaged(
             @RequestParam(defaultValue = "0") int page,

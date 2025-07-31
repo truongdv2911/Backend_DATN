@@ -14,6 +14,7 @@ import java.util.List;
 @Data
 public class DanhGiaResponse {
     private Integer id;
+    private String tenKH;
     private String tieuDe;
     private String textDanhGia;
     private String textPhanHoi;

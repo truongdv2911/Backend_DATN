@@ -21,9 +21,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DTOdanhGia {
-    @NotEmpty(message = "không để trống tiêu đề")
     private String tieuDe;
-    @NotEmpty(message = "không để trống đánh giá")
     private String textDanhGia;
     private String textPhanHoi;
     @NotNull(message = "Vui lòng điền số sao")
