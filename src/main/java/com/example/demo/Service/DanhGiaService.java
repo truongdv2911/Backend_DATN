@@ -117,7 +117,7 @@ public class DanhGiaService {
         return danhGiaRepository.findBySpId(idSp);
     }
 
-    public DanhGia updateDanhGia(Integer idDanhGia, String phanHoi, Integer idNv) throws Exception {
+    public DanhGiaResponse updateDanhGia(Integer idDanhGia, String phanHoi, Integer idNv) throws Exception {
         try {
             User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
             if (user.getRole().getId() == 2) {
@@ -126,10 +126,11 @@ public class DanhGiaService {
             DanhGia dg = danhGiaRepository.findById(idDanhGia).orElseThrow(() ->
                     new RuntimeException("Khong tim thay id danh gia"));
             dg.setTextPhanHoi(phanHoi);
-            dg.setNv(userRepository.findById(idNv).orElse(null));
+            dg.setNv(user);
             dg.setNgayPhanHoi(LocalDateTime.now());
-            danhGiaRepository.save(dg);
-            return dg;
+            DanhGia danhGia = danhGiaRepository.save(dg);
+            DanhGiaResponse response = convertToResponseDTO(danhGia);
+            return response;
         }catch (Exception e){
             throw new Exception("Loi khi sua danh gia", e);
         }
@@ -242,6 +243,7 @@ public class DanhGiaService {
         dto.setTenKH(userRepository.findById(danhGia.getUser().getId()).orElse(null).getTen());
         dto.setTieuDe(danhGia.getTieuDe());
         dto.setTextDanhGia(danhGia.getTextDanhGia());
+        dto.setTextPhanHoi(danhGia.getTextPhanHoi());
         dto.setSoSao(danhGia.getSoSao());
         dto.setNgayDanhGia(danhGia.getNgayDanhGia());
         dto.setNgayPhanHoi(danhGia.getNgayPhanHoi());
@@ -249,9 +251,10 @@ public class DanhGiaService {
         dto.setNvId(danhGia.getNv() != null ? danhGia.getNv().getId() : null);
         dto.setDhctId(danhGia.getDhct() != null ? danhGia.getDhct().getId() : null);
         dto.setSpId(danhGia.getSp() != null ? danhGia.getSp().getId() : null);
+        dto.setMaSP(danhGia.getSp()!= null ? danhGia.getSp().getMaSanPham() : null);
+        dto.setTenSP(danhGia.getSp()!= null ? danhGia.getSp().getTenSanPham() : null);
         dto.setAnhUrls(anhUrls);
         dto.setVideo(videoResponse); // có thể là null nếu không có video
-
         return dto;
     }
 }
