@@ -29,6 +29,8 @@ public class DanhGiaResponse {
     private Integer dhctId;
 
     private Integer spId;
+    private String maSP;
+    private String tenSP;
 
     private List<AnhResponse> anhUrls;
     private AnhResponse video;
