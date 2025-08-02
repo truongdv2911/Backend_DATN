@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -33,6 +34,7 @@ public class DanhGiaService {
     private final San_pham_Repo san_pham_repo;
     private final AnhDanhGiaRepository anhDanhGiaRepository;
     private final VideoDanhGiaRepository videoDanhGiaRepository;
+    private final CloudinaryService cloudinaryService;
 
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
@@ -138,7 +140,21 @@ public class DanhGiaService {
 
     public String deleteDanhGia(Integer id){
         DanhGia dg = danhGiaRepository.findById(id).orElseThrow(() -> new RuntimeException("khong tim thay id danh gia"));
+        try {
+            if (dg.getVideoFeedback() != null) {
+                deleteVideoDG(dg.getVideoFeedback().getId());
+            }
+            List<AnhDanhGia> anhDanhGias = dg.getAnhFeedbacks();
+            if (anhDanhGias != null && !anhDanhGias.isEmpty()){
+                for (AnhDanhGia anhDanhGia : anhDanhGias){
+                    deleteAnhDG(anhDanhGia.getId());
+                }
+            }
+        }catch (Exception e){
+            throw new RuntimeException("Loi khi xoa danh gia");
+        }
         danhGiaRepository.delete(dg);
+
         return "Xoa danh gia thanh cong";
     }
 
@@ -159,15 +175,42 @@ public class DanhGiaService {
                     throw new RuntimeException("Ảnh vượt quá dung lượng 5MB");
                 }
 
-                String fileName = saveFile(file);
+                String fileName = saveFile(file).get("url").toString();
+                String mota = saveFile(file).get("public_id").toString();
                 AnhDanhGia af = new AnhDanhGia();
                 af.setUrl(fileName);
+                af.setMota(mota);
                 af.setDanhGia(dg);
                 anhDanhGiaRepository.save(af);
             }
         }catch (Exception e){
             throw new Exception("loi khi upload anh danh gia");
         }
+    }
+
+    public void deleteAnhDG(Integer id) {
+        AnhDanhGia anh = anhDanhGiaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
+        String publicId = anh.getMota();
+        try {
+            cloudinaryService.delete(publicId, "image");
+        }catch (Exception e){
+            throw new RuntimeException("Loi khi xoa anh");
+        }
+        anhDanhGiaRepository.deleteById(id);
+    }
+
+    public void deleteVideoDG(Integer id) {
+        VideoDanhGia videoDanhGia = videoDanhGiaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh"));
+
+        String publicId = videoDanhGia.getMota();
+        try {
+            cloudinaryService.delete(publicId, "video");
+        }catch (Exception e){
+            throw new RuntimeException("Loi khi xoa video");
+        }
+        videoDanhGiaRepository.deleteById(id);
     }
 
     public void uploadVideo(Integer danhGiaId, MultipartFile file) throws Exception {
@@ -185,9 +228,11 @@ public class DanhGiaService {
                 throw new RuntimeException("Video vượt quá dung lượng 50MB");
             }
 
-            String fileName = saveFile(file);
+            String fileName = saveFile(file).get("url").toString();
+            String mota = saveFile(file).get("public_id").toString();
             VideoDanhGia vf = new VideoDanhGia();
             vf.setUrl(fileName);
+            vf.setMota(mota);
             vf.setDanhGia(dg);
             videoDanhGiaRepository.save(vf);
         }catch (Exception e){
@@ -195,26 +240,14 @@ public class DanhGiaService {
         }
     }
 
-    private String saveFile(MultipartFile file) throws IOException {
+    private Map saveFile(MultipartFile file) throws IOException {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
         if (originalFileName.contains("..")) {
             throw new IOException("Tên file không hợp lệ: " + originalFileName);
         }
-
         // Tạo tên file duy nhất
-        String fileName = UUID.randomUUID() + "_" + originalFileName;
-
-        // Đảm bảo thư mục tồn tại
-        Path uploadDir = Paths.get("UploadsFeedback");
-        if (!Files.exists(uploadDir)) {
-            Files.createDirectories(uploadDir);
-        }
-
-        // Ghi file
-        Path path = uploadDir.resolve(fileName);
-        Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-        return fileName; // hoặc return path.toString() nếu bạn muốn đường dẫn đầy đủ
+        Map result = cloudinaryService.upload(file);
+        return result;
     }
 
     public DanhGiaResponse convertToResponseDTO(DanhGia danhGia) {

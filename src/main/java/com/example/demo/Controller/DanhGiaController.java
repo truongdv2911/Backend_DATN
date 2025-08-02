@@ -5,8 +5,11 @@ import com.example.demo.DTOs.SanPhamUpdateDTO;
 import com.example.demo.Entity.DanhGia;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Entity.User;
+import com.example.demo.Entity.VideoDanhGia;
+import com.example.demo.Repository.AnhDanhGiaRepository;
 import com.example.demo.Repository.DanhGiaRepository;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Repository.VideoDanhGiaRepository;
 import com.example.demo.Responses.DanhGiaResponse;
 import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Responses.SanPhamResponseDTO;
@@ -113,6 +116,26 @@ public class DanhGiaController {
         return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa đánh giá"));
     }
 
+    @DeleteMapping("/delete-anh/{idAnh}/{idNv}")
+    public ResponseEntity<?> deleteAnh(@PathVariable Integer idAnh, @PathVariable Integer idNv) {
+        User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
+        if (user.getRole().getId() == 2) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403,"Bạn không có quyền xóa đánh giá này."));
+        }
+        danhGiaService.deleteAnhDG(idAnh);
+        return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa anh đánh giá"));
+    }
+
+    @DeleteMapping("/delete-vid/{idVid}/{idNv}")
+    public ResponseEntity<?> deleteVideo(@PathVariable Integer idVid, @PathVariable Integer idNv) {
+        User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
+        if (user.getRole().getId() == 2) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403,"Bạn không có quyền xóa đánh giá này."));
+        }
+        danhGiaService.deleteVideoDG(idVid);
+        return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa video danh gia"));
+    }
+
     @PostMapping(value = "/anh/{danhGiaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadAnh(
             @PathVariable Integer danhGiaId,
@@ -129,53 +152,52 @@ public class DanhGiaController {
         return ResponseEntity.ok(new ErrorResponse(200,"Đã upload video"));
     }
 
-    @GetMapping("/images/{imgName}")
-    public ResponseEntity<?> viewImage(@PathVariable String imgName){
-        try {
-            Path imgPath = Paths.get("UploadsFeedback/"+imgName);
-            UrlResource resource = new UrlResource(imgPath.toUri());
-
-            if (resource.exists()){
-                return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG)
-                        .body(resource);
-            }
-            else{
-                return ResponseEntity.notFound().build();
-            }
-        }catch (Exception e){
-            return ResponseEntity.notFound().build();
-        }
-    }
-    @GetMapping("/videos/{videoName}")
-    public ResponseEntity<?> viewVideo(@PathVariable String videoName) {
-        try {
-            Path videoPath = Paths.get("UploadsFeedback/" + videoName);
-            UrlResource resource = new UrlResource(videoPath.toUri());
-
-            if (resource.exists()) {
-                // Xác định loại MIME dựa vào đuôi file
-                String contentType = Files.probeContentType(videoPath);
-                if (contentType == null) {
-                    contentType = "application/octet-stream"; // fallback
-                }
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Không thể tải video.");
-        }
-    }
+//    @GetMapping("/images/{imgName}")
+//    public ResponseEntity<?> viewImage(@PathVariable String imgName){
+//        try {
+//            Path imgPath = Paths.get("UploadsFeedback/"+imgName);
+//            UrlResource resource = new UrlResource(imgPath.toUri());
+//
+//            if (resource.exists()){
+//                return ResponseEntity.ok()
+//                        .contentType(MediaType.IMAGE_JPEG)
+//                        .body(resource);
+//            }
+//            else{
+//                return ResponseEntity.notFound().build();
+//            }
+//        }catch (Exception e){
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
+//    @GetMapping("/videos/{videoName}")
+//    public ResponseEntity<?> viewVideo(@PathVariable String videoName) {
+//        try {
+//            Path videoPath = Paths.get("UploadsFeedback/" + videoName);
+//            UrlResource resource = new UrlResource(videoPath.toUri());
+//
+//            if (resource.exists()) {
+//                // Xác định loại MIME dựa vào đuôi file
+//                String contentType = Files.probeContentType(videoPath);
+//                if (contentType == null) {
+//                    contentType = "application/octet-stream"; // fallback
+//                }
+//
+//                return ResponseEntity.ok()
+//                        .contentType(MediaType.parseMediaType(contentType))
+//                        .body(resource);
+//            } else {
+//                return ResponseEntity.notFound().build();
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Không thể tải video.");
+//        }
+//    }
     @GetMapping("/getAll")
     public ResponseEntity<?> getAll(){
         List<DanhGiaResponse> responseList = danhGiaRepository.findAll().stream()
                 .map(danhGiaService::convertToResponseDTO)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(responseList);
     }
 }

@@ -17,7 +17,7 @@ public class VideoDanhGia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String url;
-
+    private String mota;
     @OneToOne
     @JoinColumn(name = "danh_gia_id", referencedColumnName = "id")
     private DanhGia danhGia;
