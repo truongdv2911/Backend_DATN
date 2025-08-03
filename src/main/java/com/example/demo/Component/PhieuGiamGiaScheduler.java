@@ -95,9 +95,7 @@ public class PhieuGiamGiaScheduler {
         for (KhuyenMaiSanPham kmsp : danhSach) {
             KhuyenMai km = kmsp.getKhuyenMai();
             SanPham sp = kmsp.getSanPham();
-
             if (km == null || sp == null) continue;
-
             BigDecimal giaGoc = sp.getGia();
 
             if (now.isAfter(km.getNgayBatDau()) && now.isBefore(km.getNgayKetThuc())) {

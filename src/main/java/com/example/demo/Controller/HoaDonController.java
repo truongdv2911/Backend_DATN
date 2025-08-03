@@ -163,7 +163,7 @@ public class HoaDonController {
     public ResponseEntity<Map<String, Long>> getCountByStatus() {
         return ResponseEntity.ok(hoaDonService.countByTrangThai());
     }
-    @PutMapping("/{id}/trang-thai")
+    @PutMapping("/trang-thai")
     public ResponseEntity<?> updateTrangThai(
             @RequestBody CapNhatTrangThaiHoaDonDTO dto) {
         List<String> errors = new ArrayList<>();

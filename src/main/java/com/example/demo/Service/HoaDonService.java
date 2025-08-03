@@ -176,7 +176,7 @@ public class HoaDonService {
 
                 // Trừ số lượng tồn kho cho cả hai loại hóa đơn
                 Integer soLuongTon = sanPham.getSoLuongTon();
-                if (soLuongTon != null) {
+                if (soLuongTon != null && dtOhoaDon.getLoaiHD() == 1) {
                     int soLuongBan = cartItemDto.getSoLuong();
                     sanPham.setSoLuongTon(Math.max(0, soLuongTon - soLuongBan));
                     san_pham_repo.save(sanPham);
@@ -184,7 +184,6 @@ public class HoaDonService {
             }
 
             BigDecimal soTienGiam = BigDecimal.ZERO;
-            LocalDate now = LocalDate.now();
 
             // 4. Tính tổng tiền
             BigDecimal totalHd = donChiTiets.stream()
@@ -430,9 +429,25 @@ public class HoaDonService {
             throw new Exception("Chuyển đổi trạng thái từ " + hoaDon.getTrangThai() + " sang " + trangThai + " không hợp lệ");
         }
 
+        //Tru so luong san pham khi bị don duoc xac nhan
+        if (trangThai.equalsIgnoreCase("Đã xác nhận")
+                && hoaDon.getTrangThai().equalsIgnoreCase("Đang xử lý")) {
+            List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
+
+            for (HoaDonChiTiet chiTiet : chiTietList) {
+                SanPham sp = chiTiet.getSp();
+                int soLuongTru = chiTiet.getSoLuong();
+                if (sp.getSoLuongTon() < soLuongTru){
+                    throw new Exception("Số lượng tồn trong kho không đủ, liên hệ cho user để xác nhận lại");
+                }
+                sp.setSoLuongTon(sp.getSoLuongTon() - soLuongTru);
+                san_pham_repo.save(sp); // Lưu lại số lượng mới
+            }
+        }
+
         //Cập nhật lại số lượng khi bị hủy
         if ((trangThai.equalsIgnoreCase("Đã hủy") || trangThai.equalsIgnoreCase("Thất bại"))
-                && !(hoaDon.getTrangThai().equalsIgnoreCase("Đã hủy") || hoaDon.getTrangThai().equalsIgnoreCase("Thất bại"))) {
+                && !(hoaDon.getTrangThai().equalsIgnoreCase("Đã hủy") || !hoaDon.getTrangThai().equalsIgnoreCase("Thất bại"))) {
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
 
             for (HoaDonChiTiet chiTiet : chiTietList) {
