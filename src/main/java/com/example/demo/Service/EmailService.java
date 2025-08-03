@@ -82,7 +82,7 @@ public class EmailService {
                 <p><strong>Địa chỉ giao hàng:</strong> %s</p>
 
                 <h3>Tổng cộng: <span style="color:green;">%s ₫</span></h3>
-                <p style="margin-top:30px;">Tra cứu thông tin hóa đơn, Tra cứu hành trình đơn hàng vui lòng truy cập hotro.sieutoc.com</p>
+                <p style="margin-top:30px;">Tra cứu thông tin hóa đơn, Tra cứu hành trình đơn hàng vui lòng truy cập hotro.sieutoc.com/%d</p>
                 <p style="margin-top:30px;">Trân trọng,<br/>Cửa hàng Lego My Kingdom !</p>
             </div>
         """.formatted(
@@ -93,7 +93,8 @@ public class EmailService {
                 req.getPttt(),
                 req.getPtvc(),
                 req.getDiaChi(),
-                req.getTotalAmount()
+                req.getTotalAmount(),
+                req.getIdHD()
         );
     }
 } 

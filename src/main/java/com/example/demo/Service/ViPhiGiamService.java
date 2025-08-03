@@ -39,6 +39,7 @@ public class ViPhiGiamService {
         vi.setNgayNhan(LocalDateTime.now());
         return repository.save(vi);
     }
+
     public List<PhieuGiamGiaResponse> getPhieuTrongTuiTheoTrangThai(Integer userId, String trangThai) {
         List<ViPhieuGiamGia> danhSach = repository.findByUser_Id(userId);
         LocalDateTime now = LocalDateTime.now();

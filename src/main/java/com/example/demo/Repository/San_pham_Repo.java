@@ -1,6 +1,8 @@
 package com.example.demo.Repository;
 
+import com.example.demo.DTOs.SearchRequestDTO;
 import com.example.demo.Entity.SanPham;
+import com.example.demo.Responses.SanPhamResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecificationExecutor<SanPham> {
@@ -175,4 +178,33 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             @Param("tuoiMin") Integer tuoiMin,
             @Param("tuoiMax") Integer tuoiMax
     );
+
+    @Query("""
+    SELECT sp
+    FROM SanPham sp
+    JOIN sp.xuatXu xx
+    JOIN sp.thuongHieu th
+    JOIN sp.boSuuTap bst
+    WHERE (:#{#req.doTuoi} IS NULL OR sp.doTuoi <= :#{#req.doTuoi})
+       AND (:#{#req.ten} IS NULL OR sp.tenSanPham like :#{#req.ten})
+       AND (:#{#req.gia} IS NULL OR sp.gia >= :#{#req.gia})
+      AND (:#{#req.xuatXu} IS NULL OR xx.ten LIKE %:#{#req.xuatXu}%)
+      AND (:#{#req.thuongHieu} IS NULL OR th.ten LIKE %:#{#req.thuongHieu}%)
+      AND (:#{#req.boSuuTap} IS NULL OR bst.tenBoSuuTap LIKE %:#{#req.boSuuTap}%)
+      AND (:#{#req.soLuongManhGhepMin} IS NULL OR sp.soLuongManhGhep >= :#{#req.soLuongManhGhepMin})
+      AND (:#{#req.danhGiaToiThieu} IS NULL OR sp.danhGiaTrungBinh >= :#{#req.danhGiaToiThieu})
+""")
+    List<SanPham> timKiemTheoDieuKien(@Param("req") SearchRequestDTO request);
+
+    @Query(value = """
+    SELECT sp 
+    FROM san_pham sp
+    JOIN chi_tiet_hoa_don cthd ON sp.id = cthd.san_pham_id
+    JOIN hoa_don hd ON cthd.hoa_don_id = hd.id
+    WHERE hd.trang_thai = N'Hoàn tất'
+    GROUP BY sp.id, sp.ten, sp.gia
+    ORDER BY da_ban DESC
+    LIMIT 3
+""", nativeQuery = true)
+    List<SanPham> findTopDaBan();
 }
