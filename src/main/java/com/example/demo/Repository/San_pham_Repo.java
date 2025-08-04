@@ -40,7 +40,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
                 sp.danh_muc_id,
                 sp.bo_suu_tap_id,
                 sp.trang_thai,
-                kmsp.gia_khuyen_mai,
+                sp.gia_km,
                 km.phan_tram_khuyen_mai,
                 sp.thuong_hieu_id,
                 sp.xuat_xu_id,
@@ -76,7 +76,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             danh_muc_id,
             bo_suu_tap_id,
             trang_thai,
-            gia_khuyen_mai,
+            gia_km,
             phan_tram_khuyen_mai,
             thuong_hieu_id,
             xuat_xu_id,
@@ -118,7 +118,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
                 sp.danh_muc_id,
                 sp.bo_suu_tap_id,
                 sp.trang_thai,
-                kmsp.gia_khuyen_mai,
+                sp.gia_km,
                 km.phan_tram_khuyen_mai,
                 sp.thuong_hieu_id,
                 sp.xuat_xu_id,
@@ -154,7 +154,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
             danh_muc_id,
             bo_suu_tap_id,
             trang_thai,
-            gia_khuyen_mai,
+            gia_km,
             phan_tram_khuyen_mai,
             thuong_hieu_id,
             xuat_xu_id,
@@ -186,13 +186,13 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
     JOIN sp.thuongHieu th
     JOIN sp.boSuuTap bst
     WHERE (:#{#req.doTuoi} IS NULL OR sp.doTuoi <= :#{#req.doTuoi})
-       AND (:#{#req.ten} IS NULL OR sp.tenSanPham like :#{#req.ten})
-       AND (:#{#req.gia} IS NULL OR sp.gia >= :#{#req.gia})
-      AND (:#{#req.xuatXu} IS NULL OR xx.ten LIKE %:#{#req.xuatXu}%)
-      AND (:#{#req.thuongHieu} IS NULL OR th.ten LIKE %:#{#req.thuongHieu}%)
-      AND (:#{#req.boSuuTap} IS NULL OR bst.tenBoSuuTap LIKE %:#{#req.boSuuTap}%)
-      AND (:#{#req.soLuongManhGhepMin} IS NULL OR sp.soLuongManhGhep >= :#{#req.soLuongManhGhepMin})
-      AND (:#{#req.danhGiaToiThieu} IS NULL OR sp.danhGiaTrungBinh >= :#{#req.danhGiaToiThieu})
+       AND (:#{#req.ten} IS NULL OR LOWER(sp.tenSanPham) LIKE LOWER(CONCAT('%', :#{#req.ten}, '%')))
+       AND (:#{#req.gia} IS NULL OR sp.gia <= :#{#req.gia})
+       AND (:#{#req.xuatXu} IS NULL OR LOWER(xx.ten) LIKE LOWER(CONCAT('%', :#{#req.xuatXu}, '%')))
+       AND (:#{#req.thuongHieu} IS NULL OR LOWER(th.ten) LIKE LOWER(CONCAT('%', :#{#req.thuongHieu}, '%')))
+       AND (:#{#req.boSuuTap} IS NULL OR LOWER(bst.tenBoSuuTap) LIKE LOWER(CONCAT('%', :#{#req.boSuuTap}, '%')))
+       AND (:#{#req.soLuongManhGhepMin} IS NULL OR sp.soLuongManhGhep >= :#{#req.soLuongManhGhepMin})
+       AND (:#{#req.danhGiaToiThieu} IS NULL OR sp.danhGiaTrungBinh >= :#{#req.danhGiaToiThieu})
 """)
     List<SanPham> timKiemTheoDieuKien(@Param("req") SearchRequestDTO request);
 

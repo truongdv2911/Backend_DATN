@@ -1,6 +1,7 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Entity.SanPham;
+import com.example.demo.Responses.ChatResponse;
 import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +23,13 @@ public class ChatController {
     @PostMapping
     public ResponseEntity<?> chat(@RequestBody String userInput) throws Exception{
         try {
-            List<SanPham> result = chatService.handleUserInput(userInput);
-            return ResponseEntity.ok(result);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(500, e.getMessage()));
+            ChatResponse response = chatService.handleUserInput(userInput);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            ChatResponse errorResponse = new ChatResponse("ERROR",
+                    "Đã có lỗi xảy ra. Vui lòng thử lại sau.",null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
         }
     }
 }

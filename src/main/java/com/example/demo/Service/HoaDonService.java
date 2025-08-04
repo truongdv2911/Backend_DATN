@@ -162,9 +162,8 @@ public class HoaDonService {
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: "
                                 + cartItemDto.getIdSanPham()));
 
-                BigDecimal giaBan = khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId()) == null
-                        ? sanPham.getGia()
-                        : khuyenMaiSanPhamRepository.getGiaKM(sanPham.getId());
+                // Lấy giá khuyến mãi nếu có, ngược lại dùng giá gốc
+                BigDecimal giaBan = sanPham.getGiaKM() != null ? sanPham.getGiaKM() : sanPham.getGia();
 
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
                 hoaDonChiTiet.setHd(hoaDon);
