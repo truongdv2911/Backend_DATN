@@ -9,17 +9,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "San_pham_yeu_thich")
-public class SanPhamYeuThich{
+@Table(name = "Wish_list")
+public class WishList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    private String ten;
 
     @ManyToOne
-    @JoinColumn(name = "wlist_id", referencedColumnName = "id")
-    private WishList wishList;
-
-    @ManyToOne
-    @JoinColumn(name = "sp_id", referencedColumnName = "id")
-    private SanPham sanPham;
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 }

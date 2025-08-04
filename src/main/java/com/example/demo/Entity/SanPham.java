@@ -28,30 +28,40 @@ public class SanPham {
 
     @Column(name = "ma_san_pham", nullable = false, length = 200)
      String maSanPham;
+
     @Column(name = "do_tuoi")
      Integer doTuoi;
 
     @Column(name = "mo_ta", columnDefinition = "TEXT")
      String moTa;
+
     @Column(name = "gia")
      BigDecimal gia;
 
+    @Column(name = "gia_km")
+    BigDecimal giaKM;
+
     @Column(name = "so_luong_manh_ghep")
      Integer soLuongManhGhep;
+
     @Column(name = "so_luong_ton")
      Integer soLuongTon;
 
     @Column(name = "anh_dai_dien", length = 255)
      String anhDaiDien;
+
     @Column(name = "so_luong_vote")
      Integer soLuongVote;
+
     @Column(name = "danh_gia_trung_binh")
      Double danhGiaTrungBinh;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "ngay_tao")
+
      Date ngayTao = new Date();
     @Column(name = "ngay_sua")
+
     @Temporal(TemporalType.TIMESTAMP)
      Date ngaySua = new Date();
 
@@ -74,8 +84,10 @@ public class SanPham {
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("sanPham")
     List<AnhSp> anhSps;
+
     @Column(name = "trang_thai")
      String trangThai;
+
     @Column(name = "is_noi_bat")
     Integer noiBat;
 
