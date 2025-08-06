@@ -44,6 +44,11 @@ public class SpYeuThichController {
         }
     }
 
+    @GetMapping("/get-wishlist")
+    public ResponseEntity<?> getWLs(){
+        return ResponseEntity.ok(wishListRepository.findAll());
+    }
+
     @PutMapping("/update-wishlist/{idWL}")
     public ResponseEntity<?> updateWL(@PathVariable Integer idWL, @RequestBody WishListDTO wishListDTO) {
         try {
