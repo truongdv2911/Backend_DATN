@@ -93,9 +93,9 @@ public class DanhGiaController {
     }
 
     @PutMapping("/update/{idDg}/{idNv}")
-    public ResponseEntity<?> updateDanhGia(@PathVariable Integer idDg,@PathVariable Integer idNv, @RequestParam("phanHoi") String phanHoi){
+    public ResponseEntity<?> updateDanhGia(@PathVariable Integer idDg,@PathVariable Integer idNv, @ModelAttribute DTOdanhGia dto){
         try {
-            return ResponseEntity.ok(danhGiaService.updateDanhGia(idDg,phanHoi,idNv));
+            return ResponseEntity.ok(danhGiaService.updateDanhGia(idDg,dto,idNv));
         }catch (RuntimeException e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         } catch (Exception e){

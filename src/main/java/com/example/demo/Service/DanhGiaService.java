@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -108,6 +109,57 @@ public class DanhGiaService {
         return Math.round((tongSoSao / danhGias.size()) * 10.0) / 10.0;
     }
 
+    public DanhGiaResponse updateDanhGia(Integer idDanhGia, DTOdanhGia dto, Integer idNv) throws Exception {
+        try {
+            User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
+            DanhGia dg = danhGiaRepository.findById(idDanhGia).orElseThrow(() ->
+                    new RuntimeException("Khong tim thay id danh gia"));
+
+            Integer sanPhamId = dg.getSp().getId();
+            if (user.getRole().getId() == 3) {
+                // Kiểm tra thời gian đánh giá (không được sửa sau 3 ngày)
+                LocalDateTime ngayDanhGia = dg.getNgayDanhGia();
+                LocalDateTime now = LocalDateTime.now();
+                long daysBetween = ChronoUnit.DAYS.between(ngayDanhGia, now);
+
+                if (daysBetween > 3) {
+                    throw new RuntimeException("Không thể sửa đánh giá sau 3 ngày kể từ ngày đánh giá");
+                }
+                if (dto.getSoSao() == null){
+                    throw new RuntimeException("Không để trống số sao");
+                }
+                dg.setSoSao(dto.getSoSao());
+                dg.setTextDanhGia(dto.getTextDanhGia());
+                dg.setTieuDe(dto.getTieuDe());
+
+                // Cập nhật điểm sao trung bình cho sản phẩm khi khách hàng sửa đánh giá
+                updateSanPhamRating(sanPhamId);
+            }else {
+                dg.setSoSao(dto.getSoSao());
+                dg.setTextDanhGia(dto.getTextDanhGia());
+                dg.setTieuDe(dto.getTieuDe());
+                dg.setTextPhanHoi(dto.getTextPhanHoi());
+                dg.setNv(user);
+                dg.setNgayPhanHoi(LocalDateTime.now());
+            }
+            DanhGia danhGia = danhGiaRepository.save(dg);
+            DanhGiaResponse response = convertToResponseDTO(danhGia);
+            return response;
+        }catch (Exception e){
+            throw new Exception("Loi khi sua danh gia", e);
+        }
+    }
+
+    private void updateSanPhamRating(Integer sanPhamId) {
+        SanPham sanPham = san_pham_repo.findById(sanPhamId).orElseThrow(() ->
+                new RuntimeException("Khong tim thay id san pham"));
+
+        List<DanhGia> danhGias = danhGiaRepository.findAllBySpId(sanPham.getId());
+        sanPham.setSoLuongVote(danhGias.size());
+        sanPham.setDanhGiaTrungBinh(setDanhGiaTrungBinh(danhGias));
+        san_pham_repo.save(sanPham); // Đừng quên save sản phẩm
+    }
+
     private List<Integer> findHdctForRating(Integer userId, Integer spId) {
         List<Integer> allHdct = hoaDonChiTietRepository.findByUserAndSanPhamOrderByDateDesc(userId, spId);
         return allHdct.isEmpty() ? null : allHdct;
@@ -115,25 +167,6 @@ public class DanhGiaService {
 
     public List<DanhGia> getDanhGiaByIdSp(Integer idSp){
         return danhGiaRepository.findBySpId(idSp);
-    }
-
-    public DanhGiaResponse updateDanhGia(Integer idDanhGia, String phanHoi, Integer idNv) throws Exception {
-        try {
-            User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
-            if (user.getRole().getId() == 2) {
-                throw new Exception("Bạn không có quyền xóa đánh giá này.");
-            }
-            DanhGia dg = danhGiaRepository.findById(idDanhGia).orElseThrow(() ->
-                    new RuntimeException("Khong tim thay id danh gia"));
-            dg.setTextPhanHoi(phanHoi);
-            dg.setNv(user);
-            dg.setNgayPhanHoi(LocalDateTime.now());
-            DanhGia danhGia = danhGiaRepository.save(dg);
-            DanhGiaResponse response = convertToResponseDTO(danhGia);
-            return response;
-        }catch (Exception e){
-            throw new Exception("Loi khi sua danh gia", e);
-        }
     }
 
     public String deleteDanhGia(Integer id){
