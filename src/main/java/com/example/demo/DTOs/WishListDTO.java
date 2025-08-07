@@ -1,0 +1,17 @@
+package com.example.demo.DTOs;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class WishListDTO {
+    @NotBlank
+    private String ten;
+    @NotNull
+    private Integer userId;
+}

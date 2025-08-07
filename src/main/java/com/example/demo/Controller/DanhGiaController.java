@@ -96,9 +96,18 @@ public class DanhGiaController {
     }
 
     @PutMapping("/update/{idDg}/{idNv}")
-    public ResponseEntity<?> updateDanhGia(@PathVariable Integer idDg,@PathVariable Integer idNv, @RequestParam("phanHoi") String phanHoi){
+    public ResponseEntity<?> updateDanhGia(@PathVariable Integer idDg,@PathVariable Integer idNv,
+                                           @ModelAttribute DTOdanhGia dto,
+                                           @RequestParam("fileAnh") List<MultipartFile> fileAnh,
+                                           @RequestParam("fileVid") MultipartFile fileVid){
         try {
-            return ResponseEntity.ok(danhGiaService.updateDanhGia(idDg,phanHoi,idNv));
+            if (fileAnh != null && !fileAnh.isEmpty() && fileAnh.get(0).getSize() > 0) {
+                danhGiaService.uploadAnh(idDg, fileAnh);
+            }
+            if (fileVid != null && !fileVid.isEmpty() && fileVid.getSize() > 0) {
+                danhGiaService.uploadVideo(idDg, fileVid);
+            }
+            return ResponseEntity.ok(danhGiaService.updateDanhGia(idDg,dto,idNv));
         }catch (RuntimeException e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         } catch (Exception e){
@@ -125,9 +134,17 @@ public class DanhGiaController {
 
     @DeleteMapping("/delete-vid/{idVid}/{idNv}")
     public ResponseEntity<?> deleteVideo(@PathVariable Integer idVid, @PathVariable Integer idNv) {
-        User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
-        danhGiaService.deleteVideoDG(idVid);
-        return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa video danh gia"));
+        try {
+            User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
+
+            danhGiaService.deleteVideoDG(idVid);
+            return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa video danh gia"));
+        }catch (RuntimeException e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
+        }
+
     }
 
     @PostMapping(value = "/anh/{danhGiaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

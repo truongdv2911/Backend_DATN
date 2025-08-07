@@ -59,7 +59,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }catch (Exception e){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            String body = "{\"status\":401,\"message\":\"Bạn chưa đăng nhập hoặc token không hợp lệ\"}";
+            String body = "{\"status\":401,\"message\":\"Bạn chưa đăng nhập hoặc token không hợp lệ\"}" + e.getMessage();
             response.getWriter().write(body);
         }
 

@@ -6,6 +6,7 @@ import java.util.List;
 
 @Data
 public class HoaDonEmailDTO {
+    private Integer idHD;
     private String toEmail;
     private String tenKH;
     private String maHD;

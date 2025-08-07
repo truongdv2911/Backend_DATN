@@ -25,5 +25,6 @@ public class ViPhieuGiamGia {
     @JoinColumn(name = "id_phieu_giam_gia")
     private PhieuGiamGia phieuGiamGia;
 
+    @Column(name = "ngay_nhan")
     private LocalDateTime ngayNhan;
 }

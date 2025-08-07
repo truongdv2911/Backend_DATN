@@ -16,8 +16,8 @@ public class SanPhamUpdateDTO {
     String tenSanPham;
 
     @NotNull(message = "Độ tuổi không được để trống")
-    @Min(value = 6, message = "Độ tuổi phải lớn hơn hoặc bằng 6")
-    @Max(value = 50, message = "Độ tuổi phải bé hơn hoặc bằng 50")
+    @Min(value = 2, message = "Độ tuổi phải lớn hơn hoặc bằng 2")
+    @Max(value = 18, message = "Độ tuổi phải bé hơn hoặc bằng 18")
     Integer doTuoi;
 
     @NotBlank(message = "không được để trống mô tả")

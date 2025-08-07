@@ -64,6 +64,7 @@ public class San_pham_Service {
         sanPham.setDoTuoi(sanPhamDTO.getDoTuoi());
         sanPham.setMoTa(sanPhamDTO.getMoTa());
         sanPham.setGia(sanPhamDTO.getGia());
+        sanPham.setGiaKM(sanPhamDTO.getGia());
         sanPham.setNoiBat(sanPhamDTO.getNoiBat());
         sanPham.setSoLuongManhGhep(sanPhamDTO.getSoLuongManhGhep());
         sanPham.setSoLuongTon(sanPhamDTO.getSoLuongTon());
@@ -100,41 +101,6 @@ public class San_pham_Service {
         
         SanPham savedSanPham = sanPhamRepository.save(sanPham);
         return convertToResponseDTO(savedSanPham);
-    }
-
-    public SanPhamResponseDTO createSanPhamWithImages(@Valid SanPhamWithImagesDTO sanPhamWithImagesDTO) {
-        // Kiểm tra chỉ có 1 ảnh chính
-        long soAnhChinh = sanPhamWithImagesDTO.getDanhSachAnh().stream()
-                .filter(anh -> anh.getAnhChinh())
-                .count();
-        
-        if (soAnhChinh != 1) {
-            throw new RuntimeException("Phải có đúng 1 ảnh chính trong danh sách ảnh!");
-        }
-        
-        // Tạo sản phẩm trước
-        SanPhamResponseDTO sanPhamResponse = createSanPham(sanPhamWithImagesDTO.getSanPham());
-        
-        // Lấy sản phẩm vừa tạo
-        SanPham sanPham = getSanPhamById(sanPhamResponse.getId());
-        
-        // Tạo danh sách ảnh cho sản phẩm
-        List<AnhSp> danhSachAnh = sanPhamWithImagesDTO.getDanhSachAnh().stream()
-                .map(anhDTO -> {
-                    AnhSp anhSp = new AnhSp();
-                    anhSp.setUrl(anhDTO.getUrl());
-                    anhSp.setMoTa(anhDTO.getMoTa());
-                    anhSp.setAnhChinh(anhDTO.getAnhChinh());
-                    anhSp.setSanPham(sanPham);
-                    return anhSp;
-                })
-                .collect(Collectors.toList());
-        
-        // Lưu tất cả ảnh
-        anhSpRepo.saveAll(danhSachAnh);
-        
-        // Trả về response với ảnh đã được thêm
-        return convertToResponseDTO(sanPham);
     }
 
     public List<SanPhamKMResponse> getSanPhamWithKhuyenMai() {

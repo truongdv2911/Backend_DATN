@@ -9,4 +9,5 @@ public interface DanhGiaRepository extends JpaRepository<DanhGia, Integer> {
     boolean existsByUserAndSpAndDhct(User idUser, SanPham idSp, HoaDonChiTiet idHDCT);
     List<DanhGia> findBySpId(Integer idSp);
     List<DanhGia> findAllBySpId(Integer spId);
+    DanhGia findByVideoFeedbackId(Integer id);
 }
