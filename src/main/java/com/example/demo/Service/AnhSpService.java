@@ -15,12 +15,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,11 +33,13 @@ public class AnhSpService {
     // Giả định repository
     private final Anh_sp_Repo anhSpRepository;
     private final San_pham_Repo sanPhamRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
-    public AnhSpService(Anh_sp_Repo anhSpRepository, San_pham_Repo sanPhamRepository) {
+    public AnhSpService(Anh_sp_Repo anhSpRepository, San_pham_Repo sanPhamRepository, CloudinaryService cloudinaryService) {
         this.anhSpRepository = anhSpRepository;
         this.sanPhamRepository = sanPhamRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
 
@@ -74,11 +73,11 @@ public void deleteAnhSp(Integer id) {
     SanPham sanPham = anh.getSanPham();
     boolean isAnhChinh = Boolean.TRUE.equals(anh.getAnhChinh());
 
-    Path path = uploadDir.resolve(anh.getUrl());
+    String publicId = anh.getMoTa();
     try {
-        Files.deleteIfExists(path);
-    } catch (IOException e) {
-        System.out.println("Không thể xóa file vật lý: " + e.getMessage());
+        cloudinaryService.delete(publicId, "image");
+    }catch (Exception e){
+        throw new RuntimeException("Loi khi xoa anh");
     }
     anhSpRepository.deleteById(id);
     // Nếu ảnh bị xoá là ảnh chính, cần cập nhật lại ảnh chính mới
@@ -200,21 +199,14 @@ public void deleteAnhSp(Integer id) {
                     throw new IllegalArgumentException("Định dạng file ảnh không hợp lệ: ." + extension);
                 }
 
-                String randomString = generateRandomString(10);
-                String uniqueFilename = "anh_" + randomString + "_" + originalFilename;
-                Path destination = uploadDir.resolve(uniqueFilename);
+                cloudinaryService.upload(file);
 
-                if (Files.exists(destination)) {
-                    throw new RuntimeException("File đã tồn tại: " + uniqueFilename);
-                }
-
-                Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-
-                String url = uniqueFilename;
+                String url = cloudinaryService.upload(file).get("url").toString();
+                String publicId = cloudinaryService.upload(file).get("public_id").toString();
 
                 AnhSp anhSp = new AnhSp();
                 anhSp.setUrl(url);
-                anhSp.setMoTa(moTa);
+                anhSp.setMoTa(publicId);
                 // --- XỬ LÝ ẢNH CHÍNH ---
                 if (!daCoAnhChinh && !daGanAnhChinh) {
                     // Nếu chưa có ảnh chính trước đó, gán ảnh đầu tiên là ảnh chính
