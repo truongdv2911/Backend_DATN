@@ -119,9 +119,6 @@ public class DanhGiaController {
     @DeleteMapping("/delete-anh/{idAnh}/{idNv}")
     public ResponseEntity<?> deleteAnh(@PathVariable Integer idAnh, @PathVariable Integer idNv) {
         User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
-        if (user.getRole().getId() == 2) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403,"Bạn không có quyền xóa đánh giá này."));
-        }
         danhGiaService.deleteAnhDG(idAnh);
         return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa anh đánh giá"));
     }
@@ -129,9 +126,6 @@ public class DanhGiaController {
     @DeleteMapping("/delete-vid/{idVid}/{idNv}")
     public ResponseEntity<?> deleteVideo(@PathVariable Integer idVid, @PathVariable Integer idNv) {
         User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
-        if (user.getRole().getId() == 2) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403,"Bạn không có quyền xóa đánh giá này."));
-        }
         danhGiaService.deleteVideoDG(idVid);
         return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa video danh gia"));
     }
