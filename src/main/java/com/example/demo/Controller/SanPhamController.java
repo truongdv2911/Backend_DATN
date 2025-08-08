@@ -145,12 +145,12 @@ public class SanPhamController {
             String moTa = "Cập nhật sản phẩm ID: " + id + ". Thay đổi: " + logThayDoi;
             lichSuLogService.saveLog("CẬP NHẬT", "SanPham", moTa, lichSuLogService.getCurrentUserId());
 
-            sanPhamService.updateSanPhamInfo(id, sanPhamDTO);
+            SanPhamResponseDTO sanPham1 = sanPhamService.updateSanPhamInfo(id, sanPhamDTO);
 
             if (files != null && files.length > 0 && files[0] != null && !files[0].isEmpty()) {
                 anhSpService.uploadAndCreateAnhSp(files, null, null, id);
             }
-            return ResponseEntity.ok(sanPhamService.updateSanPhamInfo(id, sanPhamDTO));
+            return ResponseEntity.ok(sanPham1);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }

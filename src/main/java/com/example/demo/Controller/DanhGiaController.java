@@ -136,7 +136,6 @@ public class DanhGiaController {
     public ResponseEntity<?> deleteVideo(@PathVariable Integer idVid, @PathVariable Integer idNv) {
         try {
             User user = userRepository.findById(idNv).orElseThrow(() -> new RuntimeException("khong tim thay id nhan vien"));
-
             danhGiaService.deleteVideoDG(idVid);
             return ResponseEntity.ok(new ErrorResponse(200,"Đã xóa video danh gia"));
         }catch (RuntimeException e){
