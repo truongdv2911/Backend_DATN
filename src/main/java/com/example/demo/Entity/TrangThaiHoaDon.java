@@ -9,4 +9,6 @@ public class TrangThaiHoaDon {
     public static final String COMPLETED = "Hoàn tất";// Khách đã nhận hàng và không có khiếu nại
     public static final String CANCELLED = "Đã hủy";// Đơn hàng đã bị hủy (do khách hoặc hệ thống)
     public static final String FAILED = "Thất bại";// Xử lý đơn hàng bị lỗi (ví dụ: thanh toán không thành công)
+
+    public static final String RETURN = "Hoàn hàng";     // Khách gửi yêu cầu hoàn
 }
