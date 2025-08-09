@@ -32,7 +32,7 @@ public class ThongTinNguoiNhanService {
                 ));
             }else {
                 if (dtOthongTinNguoiNhan.getIsMacDinh() == 1){
-                    ThongTinNguoiNhan nguoiNhan= thongTinNguoiNhanRepository.findByIsMacDinh(1);
+                    ThongTinNguoiNhan nguoiNhan= thongTinNguoiNhanRepository.findByIsMacDinhAndUserId(1, dtOthongTinNguoiNhan.getIdUser());
                     nguoiNhan.setIsMacDinh(0);
 
                     thongTinNguoiNhanRepository.save(nguoiNhan);
@@ -77,7 +77,7 @@ public class ThongTinNguoiNhanService {
                 ));
             } else if (thongTinNguoiNhan.size() > 1) {
                 if (dtOthongTinNguoiNhan.getIsMacDinh() == 1) {
-                    ThongTinNguoiNhan nguoiNhan = thongTinNguoiNhanRepository.findByIsMacDinh(1);
+                    ThongTinNguoiNhan nguoiNhan = thongTinNguoiNhanRepository.findByIsMacDinhAndUserId(1, dtOthongTinNguoiNhan.getIdUser());
                     nguoiNhan.setIsMacDinh(0);
                     thongTinNguoiNhanRepository.save(nguoiNhan);
                     return thongTinNguoiNhanRepository.save(new ThongTinNguoiNhan(id,

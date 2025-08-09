@@ -52,40 +52,56 @@ public class EmailService {
         }
 
         return """
-            <div style="font-family:sans-serif; font-size:14px; color:#333;">
-                <p>Xin chào <strong>%s</strong>,</p>
-                <p>Cảm ơn Anh/Chị đã đặt hàng tại <strong>Lego My Kingdom</strong>!</p>
-                <p>Đơn hàng của Anh/Chị đã được tiếp nhận, chúng tôi sẽ nhanh chóng liên hệ.</p>
-
-                <h3>Thông tin đơn hàng</h3>
-                <p><strong>Mã đơn hàng:</strong> %s</p>
-                <p><strong>Ngày đặt hàng:</strong> %s</p>
-
-                <h3>Sản phẩm</h3>
-                <table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;'>
-                    <thead>
-                        <tr>
-                            <th>Mã sản phẩm</th>
-                            <th>Tên sản phẩm</th>
-                            <th>Giá</th>
-                            <th>Số lượng</th>
-                            <th>Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        %s
-                    </tbody>
-                </table>
-
-                <p><strong>Phương thức thanh toán:</strong> %s</p>
-                <p><strong>Phương thức vận chuyển:</strong> %s</p>
-                <p><strong>Địa chỉ giao hàng:</strong> %s</p>
-
-                <h3>Tổng cộng: <span style="color:green;">%s ₫</span></h3>
-                <p style="margin-top:30px;">Tra cứu thông tin hóa đơn, Tra cứu hành trình đơn hàng vui lòng truy cập hotro.sieutoc.com/%d</p>
-                <p style="margin-top:30px;">Trân trọng,<br/>Cửa hàng Lego My Kingdom !</p>
-            </div>
-        """.formatted(
+                    <div style="font-family:sans-serif; font-size:14px; color:#333;">
+                                      <!-- Header -->
+                                      <div style="background: linear-gradient(90deg, #ff4b2b, #ff416c);
+                                                  color: #fff;
+                                                  padding: 15px 20px;
+                                                  border-radius: 5px 5px 0 0;
+                                                  text-align: center;
+                                                  font-size: 20px;
+                                                  font-weight: bold;
+                                                  letter-spacing: 1px;">
+                                          ✅ ĐẶT HÀNG THÀNH CÔNG
+                                      </div>
+                                  
+                                      <div style="padding: 15px; background-color: #fafafa; border: 1px solid #ddd; border-top: none; border-radius: 0 0 5px 5px;">
+                                          <p>Xin chào <strong>%s</strong>,</p>
+                                          <p>Cảm ơn Anh/Chị đã đặt hàng tại <strong>Lego My Kingdom</strong>!</p>
+                                          <p>Đơn hàng của Anh/Chị đã được tiếp nhận, chúng tôi sẽ nhanh chóng liên hệ.</p>
+                                  
+                                          <h3>Thông tin đơn hàng</h3>
+                                          <p><strong>Mã đơn hàng:</strong> %s</p>
+                                          <p><strong>Ngày đặt hàng:</strong> %s</p>
+                                  
+                                          <h3>Sản phẩm</h3>
+                                          <table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse; width:100%%; text-align:center;'>
+                                              <thead style="background-color:#f2f2f2;">
+                                                  <tr>
+                                                      <th>Mã sản phẩm</th>
+                                                      <th>Tên sản phẩm</th>
+                                                      <th>Giá</th>
+                                                      <th>Số lượng</th>
+                                                      <th>Thành tiền</th>
+                                                  </tr>
+                                              </thead>
+                                              <tbody>
+                                                  %s
+                                              </tbody>
+                                          </table>
+                                  
+                                          <p><strong>Phương thức thanh toán:</strong> %s</p>
+                                          <p><strong>Phương thức vận chuyển:</strong> %s</p>
+                                          <p><strong>Địa chỉ giao hàng:</strong> %s</p>
+                                  
+                                          <h3>Tổng cộng: <span style="color:green;">%s ₫</span></h3>
+                                          <p style="margin-top:30px;">Tra cứu thông tin hóa đơn, Tra cứu hành trình đơn hàng vui lòng truy cập\s
+                                              <a href="http://localhost:3000/hoaDon/%d" style="color:#ff4b2b;">tại đây</a>
+                                          </p>
+                                          <p style="margin-top:30px;">Trân trọng,<br/>Cửa hàng Lego My Kingdom !</p>
+                                      </div>
+                                  </div>
+                """.formatted(
                 req.getTenKH(),
                 req.getMaHD(),
                 req.getNgayTao(),
