@@ -11,7 +11,7 @@ public interface ThongTinNguoiNhanRepository extends JpaRepository<ThongTinNguoi
     @Query("select t from ThongTinNguoiNhan t where t.user.id = :id")
     List<ThongTinNguoiNhan> GetListById(Integer id);
 
-    ThongTinNguoiNhan findByIsMacDinh(Integer isMacDinh);
+    ThongTinNguoiNhan findByIsMacDinhAndUserId(Integer isMacDinh, Integer user_id);
 
     List<ThongTinNguoiNhan> findByUser(User user);
 }
