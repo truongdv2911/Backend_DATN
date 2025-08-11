@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -76,4 +77,24 @@ GROUP BY
             "WHERE \n" +
             "    ksp.khuyenMai.id = :idKhuyenMai")
     List<Object> getSpInKM(Integer idKhuyenMai);
+
+    @Query(value = """
+SELECT
+    km.id AS id_khuyen_mai,
+    km.ten_khuyen_mai,
+    COUNT(DISTINCT hd.id) AS so_don_ap_dung,
+    SUM(ct.so_luong * sp.gia) AS tong_doanh_thu_goc,
+    SUM(ct.so_luong * ct.gia) AS tong_doanh_thu_sau_giam,
+    SUM(ct.so_luong * (sp.gia - ct.gia)) AS tong_tien_giam
+FROM khuyen_mai km
+JOIN khuyenmai_sanpham ksp ON ksp.id_khuyen_mai = km.id
+JOIN [dbo].[Hoa_don_chi_tiet] ct ON ct.san_pham_id = ksp.id_san_pham
+JOIN san_pham sp ON sp.id = ct.san_pham_id
+JOIN hoa_don hd ON hd.id = ct.hoa_don_id
+WHERE hd.trang_thai = N'Hoàn tất'
+  AND hd.ngay_lap BETWEEN :startDate AND :endDate
+GROUP BY km.id, km.ten_khuyen_mai
+ORDER BY tong_tien_giam DESC
+""", nativeQuery = true)
+    List<Object[]> listKmHieuQua(LocalDate startDate, LocalDate endDate);
 }
