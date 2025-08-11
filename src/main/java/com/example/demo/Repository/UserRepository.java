@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,14 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     List<User> findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(String hoTen, String email);
 
+    @Query(value = """
+SELECT TOP 10 kh.id, kh.ten, COUNT(hd.id) AS so_don, SUM(hd.tong_tien) AS tong_tien
+FROM Users kh
+JOIN hoa_don hd ON hd.user_id = kh.id
+WHERE hd.trang_thai = N'Hoàn tất'
+  AND hd.ngay_lap BETWEEN :startDate AND :endDate
+GROUP BY kh.id, kh.ten
+ORDER BY tong_tien DESC;
+""", nativeQuery = true)
+    List<Object[]> topKhachHang(LocalDate startDate, LocalDate endDate);
 }

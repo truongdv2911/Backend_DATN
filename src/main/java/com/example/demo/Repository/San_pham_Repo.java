@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -197,14 +198,18 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
     List<SanPham> timKiemTheoDieuKien(@Param("req") SearchRequestDTO request);
 
     @Query(value = """
-    SELECT sp 
-    FROM san_pham sp
-    JOIN chi_tiet_hoa_don cthd ON sp.id = cthd.san_pham_id
-    JOIN hoa_don hd ON cthd.hoa_don_id = hd.id
+    SELECT TOP 10 sp.id, sp.ten_san_pham, SUM(ct.so_luong) AS so_luong_ban, SUM(ct.so_luong * ct.gia) AS doanh_thu
+    		FROM Hoa_don_chi_tiet ct
+    JOIN san_pham sp ON sp.id = ct.san_pham_id
+    JOIN hoa_don hd ON hd.id = ct.hoa_don_id
     WHERE hd.trang_thai = N'Hoàn tất'
-    GROUP BY sp.id, sp.ten, sp.gia
-    ORDER BY da_ban DESC
-    LIMIT 3
+      AND hd.ngay_lap BETWEEN :startDate AND :endDate
+    GROUP BY sp.id, sp.ten_san_pham
+    ORDER BY so_luong_ban DESC
 """, nativeQuery = true)
-    List<SanPham> findTopDaBan();
+    List<Object[]> findTopDaBan(LocalDate startDate, LocalDate endDate);
+
+    @Query("select sp from SanPham sp where sp.soLuongTon < :soLuongCanhBao")
+    List<SanPham> spSapHetHang(Integer soLuongCanhBao);
+
 }

@@ -49,7 +49,7 @@ public class ChatService {
                 case "SEARCH":
                     return handleProductSearch(userInput);
                 case "ADVICE":
-                    return handleAdviceRequest(userInput);
+//                    return handleAdviceRequest(userInput);
                 case "SHIPPING":
                     return handleShippingQuery(userInput);
                 case "FAQ":
@@ -119,30 +119,30 @@ public class ChatService {
         }
     }
 
-    private ChatResponse handleAdviceRequest(String userInput) {
-        try {
-            // Bước 1: Phân tích yêu cầu tư vấn để tạo tiêu chí tìm kiếm
-            SearchRequestDTO searchCriteria = extractAdviceSearchCriteria(userInput);
-
-            // Bước 2: Tìm sản phẩm phù hợp từ database
-            List<SanPham> recommendedProducts = sanPhamRepo.timKiemTheoDieuKien(searchCriteria);
-
-            // Bước 3: Nếu không tìm thấy, thử tiêu chí rộng hơn
-            if (recommendedProducts.isEmpty()) {
-                recommendedProducts = findAlternativeProducts(searchCriteria);
-            }
-
-            // Bước 4: Tạo lời tư vấn kèm sản phẩm
-            String adviceMessage = generateAdviceWithProducts(userInput, recommendedProducts);
-
-            return new ChatResponse("ADVICE", adviceMessage, recommendedProducts);
-
-        } catch (Exception e) {
-            return new ChatResponse("ADVICE",
-                    "Để tư vấn tốt nhất, bạn vui lòng cho biết thêm: độ tuổi, sở thích, ngân sách dự kiến. " +
-                            "Hoặc liên hệ hotline để được tư vấn trực tiếp.", null);
-        }
-    }
+//    private ChatResponse handleAdviceRequest(String userInput) {
+//        try {
+//            // Bước 1: Phân tích yêu cầu tư vấn để tạo tiêu chí tìm kiếm
+//            SearchRequestDTO searchCriteria = extractAdviceSearchCriteria(userInput);
+//
+//            // Bước 2: Tìm sản phẩm phù hợp từ database
+//            List<SanPham> recommendedProducts = sanPhamRepo.timKiemTheoDieuKien(searchCriteria);
+//
+//            // Bước 3: Nếu không tìm thấy, thử tiêu chí rộng hơn
+//            if (recommendedProducts.isEmpty()) {
+//                recommendedProducts = findAlternativeProducts(searchCriteria);
+//            }
+//
+//            // Bước 4: Tạo lời tư vấn kèm sản phẩm
+//            String adviceMessage = generateAdviceWithProducts(userInput, recommendedProducts);
+//
+//            return new ChatResponse("ADVICE", adviceMessage, recommendedProducts);
+//
+//        } catch (Exception e) {
+//            return new ChatResponse("ADVICE",
+//                    "Để tư vấn tốt nhất, bạn vui lòng cho biết thêm: độ tuổi, sở thích, ngân sách dự kiến. " +
+//                            "Hoặc liên hệ hotline để được tư vấn trực tiếp.", null);
+//        }
+//    }
 
     private SearchRequestDTO extractAdviceSearchCriteria(String userInput) {
         String extractPrompt = """
@@ -212,52 +212,52 @@ public class ChatService {
         }
     }
 
-    private List<SanPham> findAlternativeProducts(SearchRequestDTO originalCriteria) {
-        try {
-            // Thử tìm với tiêu chí rộng hơn (bỏ bớt điều kiện)
-            SearchRequestDTO relaxedCriteria = new SearchRequestDTO();
-
-            // Giữ lại những tiêu chí cơ bản nhất
-            if (originalCriteria.getDoTuoi() != null) {
-                relaxedCriteria.setDoTuoi(originalCriteria.getDoTuoi());
-            }
-            if (originalCriteria.getGia() != null) {
-                relaxedCriteria.setGia(originalCriteria.getGia());
-            }
-
-            List<SanPham> products = sanPhamRepo.timKiemTheoDieuKien(relaxedCriteria);
-
-            // Nếu vẫn không có, ưu tiên sản phẩm bán chạy (dữ liệu thực tế)
-            if (products.isEmpty()) {
-                List<SanPham> bestSellers = sanPhamRepo.findTopDaBan();
-
-                // Lọc sản phẩm bán chạy theo tiêu chí cơ bản nếu có
-                if (originalCriteria.getDoTuoi() != null || originalCriteria.getGia() != null) {
-                    products = filterBestSellersByCriteria(bestSellers, originalCriteria);
-                } else {
-                    products = bestSellers;
-                }
-
-                // Nếu sau khi lọc vẫn trống, lấy tất cả sản phẩm bán chạy
-                if (products.isEmpty()) {
-                    products = bestSellers;
-                }
-            }
-
-            // Bổ sung thêm sản phẩm bán chạy nếu kết quả ít
-            if (products.size() < 5) {
-                List<SanPham> additionalBestSellers = sanPhamRepo.findTopDaBan();
-                products = combineAndDeduplicateProducts(products, additionalBestSellers);
-            }
-
-            // Giới hạn 8 sản phẩm để không quá dài
-            return products.stream().limit(8).collect(Collectors.toList());
-
-        } catch (Exception e) {
-            // Fallback cuối: chỉ lấy sản phẩm bán chạy
-            return sanPhamRepo.findTopDaBan();
-        }
-    }
+//    private List<SanPham> findAlternativeProducts(SearchRequestDTO originalCriteria) {
+//        try {
+//            // Thử tìm với tiêu chí rộng hơn (bỏ bớt điều kiện)
+//            SearchRequestDTO relaxedCriteria = new SearchRequestDTO();
+//
+//            // Giữ lại những tiêu chí cơ bản nhất
+//            if (originalCriteria.getDoTuoi() != null) {
+//                relaxedCriteria.setDoTuoi(originalCriteria.getDoTuoi());
+//            }
+//            if (originalCriteria.getGia() != null) {
+//                relaxedCriteria.setGia(originalCriteria.getGia());
+//            }
+//
+//            List<SanPham> products = sanPhamRepo.timKiemTheoDieuKien(relaxedCriteria);
+//
+//            // Nếu vẫn không có, ưu tiên sản phẩm bán chạy (dữ liệu thực tế)
+//            if (products.isEmpty()) {
+//                List<SanPham> bestSellers = sanPhamRepo.findTopDaBan();
+//
+//                // Lọc sản phẩm bán chạy theo tiêu chí cơ bản nếu có
+//                if (originalCriteria.getDoTuoi() != null || originalCriteria.getGia() != null) {
+//                    products = filterBestSellersByCriteria(bestSellers, originalCriteria);
+//                } else {
+//                    products = bestSellers;
+//                }
+//
+//                // Nếu sau khi lọc vẫn trống, lấy tất cả sản phẩm bán chạy
+//                if (products.isEmpty()) {
+//                    products = bestSellers;
+//                }
+//            }
+//
+//            // Bổ sung thêm sản phẩm bán chạy nếu kết quả ít
+//            if (products.size() < 5) {
+//                List<SanPham> additionalBestSellers = sanPhamRepo.findTopDaBan();
+//                products = combineAndDeduplicateProducts(products, additionalBestSellers);
+//            }
+//
+//            // Giới hạn 8 sản phẩm để không quá dài
+//            return products.stream().limit(8).collect(Collectors.toList());
+//
+//        } catch (Exception e) {
+//            // Fallback cuối: chỉ lấy sản phẩm bán chạy
+//            return sanPhamRepo.findTopDaBan();
+//        }
+//    }
 
     private List<SanPham> filterBestSellersByCriteria(List<SanPham> bestSellers, SearchRequestDTO criteria) {
         return bestSellers.stream()
@@ -305,80 +305,80 @@ public class ChatService {
         return result;
     }
 
-    private String generateAdviceWithProducts(String userInput, List<SanPham> products) {
-        if (products.isEmpty()) {
-            return "Dựa trên yêu cầu của bạn, tôi khuyên bạn nên:\n\n" +
-                    "• Xem xét các bộ LEGO cơ bản phù hợp với độ tuổi\n" +
-                    "• Chọn theo sở thích cá nhân (xe cộ, công chúa, siêu anh hùng...)\n" +
-                    "• Bắt đầu với bộ có ít mảnh ghép để làm quen\n\n" +
-                    "Vui lòng cho biết thêm thông tin để tôi tư vấn cụ thể hơn!";
-        }
-
-        // Kiểm tra xem có sản phẩm bán chạy không
-        List<SanPham> bestSellers = sanPhamRepo.findTopDaBan();
-        boolean hasBestSellers = products.stream()
-                .anyMatch(p -> bestSellers.stream()
-                        .anyMatch(bs -> bs.getId().equals(p.getId())));
-
-        String advicePrompt = """
-            Bạn là chuyên gia tư vấn LEGO với danh sách sản phẩm cụ thể.
-            
-            Yêu cầu tư vấn: "%s"
-            
-            Danh sách sản phẩm gợi ý (đã có sẵn):
-            %s
-            
-            %s
-            
-            Hãy viết lời tư vấn:
-            1. Mở đầu: Phân tích ngắn gọn yêu cầu của khách hàng
-            2. Gợi ý: Giới thiệu 2-3 sản phẩm nổi bật nhất từ danh sách, giải thích tại sao phù hợp
-            3. Ưu điểm: %s
-            4. Lưu ý: Đưa ra lời khuyên bổ sung (độ tuổi, cách chơi, giá trị giáo dục...)
-            
-            Phong cách: Tự nhiên, thân thiện, chuyên nghiệp
-            Độ dài: 150-200 từ
-            Lưu ý: Không liệt kê tất cả sản phẩm, chỉ highlight những cái phù hợp nhất
-            """.formatted(
-                userInput,
-                formatProductsWithBestSellerInfo(products, bestSellers),
-                hasBestSellers ? "LƯU Ý: Một số sản phẩm trong danh sách là TOP BÁN CHẠY (được đánh dấu ⭐)" : "",
-                hasBestSellers ? "Nhấn mạnh những sản phẩm bán chạy vì đây là lựa chọn được nhiều khách hàng tin tưởng" : "Tập trung vào sự phù hợp với yêu cầu"
-        );
-
-        try {
-            Prompt prompt = new Prompt(advicePrompt);
-            String advice = chatClient.call(prompt).getResult().getOutput().getContent();
-
-            // Thêm thông tin về số lượng sản phẩm và điểm nhấn bán chạy
-            String finalAdvice = advice.trim();
-
-            if (hasBestSellers) {
-                finalAdvice += "\n\n🔥 Một số sản phẩm gợi ý là TOP bán chạy - " +
-                        "được nhiều khách hàng lựa chọn và đánh giá tích cực!";
-            }
-
-            if (products.size() > 3) {
-                finalAdvice += String.format("\n\n💡 Tổng cộng có %d sản phẩm phù hợp với yêu cầu của bạn. " +
-                        "Bạn có thể xem chi tiết các sản phẩm khác bên dưới!", products.size());
-            }
-
-            return finalAdvice;
-
-        } catch (Exception e) {
-            // Fallback: tạo lời tư vấn đơn giản với thông tin bán chạy
-            String fallbackMessage = String.format("Dựa trên yêu cầu của bạn, tôi gợi ý %d sản phẩm LEGO phù hợp. " +
-                            "Các sản phẩm này được chọn lọc kỹ càng theo tiêu chí về độ tuổi, giá cả và chất lượng.",
-                    products.size());
-
-            if (hasBestSellers) {
-                fallbackMessage += " Đặc biệt, một số sản phẩm trong danh sách là TOP bán chạy, " +
-                        "được nhiều gia đình tin tưởng lựa chọn!";
-            }
-
-            return fallbackMessage;
-        }
-    }
+//    private String generateAdviceWithProducts(String userInput, List<SanPham> products) {
+//        if (products.isEmpty()) {
+//            return "Dựa trên yêu cầu của bạn, tôi khuyên bạn nên:\n\n" +
+//                    "• Xem xét các bộ LEGO cơ bản phù hợp với độ tuổi\n" +
+//                    "• Chọn theo sở thích cá nhân (xe cộ, công chúa, siêu anh hùng...)\n" +
+//                    "• Bắt đầu với bộ có ít mảnh ghép để làm quen\n\n" +
+//                    "Vui lòng cho biết thêm thông tin để tôi tư vấn cụ thể hơn!";
+//        }
+//
+//        // Kiểm tra xem có sản phẩm bán chạy không
+////        List<SanPham> bestSellers = sanPhamRepo.findTopDaBan();
+//        boolean hasBestSellers = products.stream()
+//                .anyMatch(p -> bestSellers.stream()
+//                        .anyMatch(bs -> bs.getId().equals(p.getId())));
+//
+//        String advicePrompt = """
+//            Bạn là chuyên gia tư vấn LEGO với danh sách sản phẩm cụ thể.
+//
+//            Yêu cầu tư vấn: "%s"
+//
+//            Danh sách sản phẩm gợi ý (đã có sẵn):
+//            %s
+//
+//            %s
+//
+//            Hãy viết lời tư vấn:
+//            1. Mở đầu: Phân tích ngắn gọn yêu cầu của khách hàng
+//            2. Gợi ý: Giới thiệu 2-3 sản phẩm nổi bật nhất từ danh sách, giải thích tại sao phù hợp
+//            3. Ưu điểm: %s
+//            4. Lưu ý: Đưa ra lời khuyên bổ sung (độ tuổi, cách chơi, giá trị giáo dục...)
+//
+//            Phong cách: Tự nhiên, thân thiện, chuyên nghiệp
+//            Độ dài: 150-200 từ
+//            Lưu ý: Không liệt kê tất cả sản phẩm, chỉ highlight những cái phù hợp nhất
+//            """.formatted(
+//                userInput,
+//                formatProductsWithBestSellerInfo(products, bestSellers),
+//                hasBestSellers ? "LƯU Ý: Một số sản phẩm trong danh sách là TOP BÁN CHẠY (được đánh dấu ⭐)" : "",
+//                hasBestSellers ? "Nhấn mạnh những sản phẩm bán chạy vì đây là lựa chọn được nhiều khách hàng tin tưởng" : "Tập trung vào sự phù hợp với yêu cầu"
+//        );
+//
+//        try {
+//            Prompt prompt = new Prompt(advicePrompt);
+//            String advice = chatClient.call(prompt).getResult().getOutput().getContent();
+//
+//            // Thêm thông tin về số lượng sản phẩm và điểm nhấn bán chạy
+//            String finalAdvice = advice.trim();
+//
+//            if (hasBestSellers) {
+//                finalAdvice += "\n\n🔥 Một số sản phẩm gợi ý là TOP bán chạy - " +
+//                        "được nhiều khách hàng lựa chọn và đánh giá tích cực!";
+//            }
+//
+//            if (products.size() > 3) {
+//                finalAdvice += String.format("\n\n💡 Tổng cộng có %d sản phẩm phù hợp với yêu cầu của bạn. " +
+//                        "Bạn có thể xem chi tiết các sản phẩm khác bên dưới!", products.size());
+//            }
+//
+//            return finalAdvice;
+//
+//        } catch (Exception e) {
+//            // Fallback: tạo lời tư vấn đơn giản với thông tin bán chạy
+//            String fallbackMessage = String.format("Dựa trên yêu cầu của bạn, tôi gợi ý %d sản phẩm LEGO phù hợp. " +
+//                            "Các sản phẩm này được chọn lọc kỹ càng theo tiêu chí về độ tuổi, giá cả và chất lượng.",
+//                    products.size());
+//
+//            if (hasBestSellers) {
+//                fallbackMessage += " Đặc biệt, một số sản phẩm trong danh sách là TOP bán chạy, " +
+//                        "được nhiều gia đình tin tưởng lựa chọn!";
+//            }
+//
+//            return fallbackMessage;
+//        }
+//    }
 
     private String formatProductsWithBestSellerInfo(List<SanPham> products, List<SanPham> bestSellers) {
         Set<Integer> bestSellerIds = bestSellers.stream()
