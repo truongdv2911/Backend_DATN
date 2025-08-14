@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,8 @@ public class HoanHangService {
     private final HoaDonRepository hoaDonRepository;
     private final San_pham_Repo sanPhamRepository;
     private final HoaDonChiTietRepository hoaDonChiTietRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Transactional
     public PhieuHoanHang taoPhieuHoanHang(PhieuHoanHangDTO dto) {
@@ -120,7 +123,27 @@ public class HoanHangService {
         phieu.setNgayDuyet(LocalDateTime.now());
         phieuHoanHangRepository.save(phieu);
 
-        phieu.setTrangThai(TrangThaiPhieuHoan.DA_DUYET);
+        User khach = userRepository.findById(phieu.getHoaDon().getUser().getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+
+        String subject = "Phiếu hoàn hàng #" + phieu.getHoaDon().getMaHD() + " đã được duyệt";
+        String html = """
+                    <div style="font-family:sans-serif; font-size:14px; color:#333;">
+                    <div style="background:linear-gradient(90deg, #00c853, #64dd17);
+                        color:#fff; padding:15px 20px; border-radius:5px 5px 0 0;
+                        text-align:center; font-size:20px; font-weight:bold;">
+                        ✅ PHIẾU HOÀN HÀNG ĐÃ ĐƯỢC DUYỆT
+                   </div>
+                   <div style="padding:15px; background:#fafafa; border:1px solid #ddd;">
+                   <p>Xin chào <strong>%s</strong>,</p>
+                  <p>Chúng tôi đã duyệt yêu cầu hoàn hàng cho đơn hàng <strong>%s</strong>.</p>
+                  <p>Số tiền hoàn: <span style="color:green;">%sđ</span></p>
+                  <p>Vui lòng chờ bộ phận kế toán chuyển tiền trong vòng 1-2 ngày làm việc.</p>
+                  <p>Trân trọng,<br/>Cửa hàng Lego My Kingdom</p>
+                  </div>
+                  </div>
+                """.formatted(khach.getTen(), phieu.getHoaDon().getMaHD(), phieu.getTongTienHoan());
+        emailService.sendDuyetPhieuHoanEmail(khach.getEmail(), subject, html);
     }
 
     @Transactional
@@ -134,6 +157,26 @@ public class HoanHangService {
         phieu.setNgayDuyet(LocalDateTime.now());
         phieu.setLyDo(lyDo);
         phieuHoanHangRepository.save(phieu);
+        User khach = userRepository.findById(phieu.getHoaDon().getUser().getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+
+        String subject = "Phiếu hoàn hàng #" + phieu.getHoaDon().getMaHD() + " đã bị từ chối";
+        String html = """
+                    <div style="font-family:sans-serif; font-size:14px; color:#333;">
+                    <div style="background:linear-gradient(90deg, #ff4b2b, #ff416c);
+                        color:#fff; padding:15px 20px; border-radius:5px 5px 0 0;
+                        text-align:center; font-size:20px; font-weight:bold;">
+                        ❌ PHIẾU HOÀN HÀNG BỊ TỪ CHỐI
+                    </div>
+                    <div style="padding:15px; background:#fafafa; border:1px solid #ddd;">
+                       <p>Xin chào <strong>%s</strong>,</p>
+                       <p>Rất tiếc, yêu cầu hoàn hàng cho đơn hàng <strong>%s</strong> đã bị từ chối.</p>
+                       <p>Lý do: <em>%s</em></p>
+                       <p>Trân trọng,<br/>Cửa hàng Lego My Kingdom</p>
+                    </div>
+                </div>
+                """.formatted(khach.getTen(), phieu.getHoaDon().getMaHD(), lyDo);
+        emailService.sendDuyetPhieuHoanEmail(khach.getEmail(), subject, html);
     }
 
     @Transactional
@@ -148,8 +191,38 @@ public class HoanHangService {
             phieu.setNgayHoanTien(LocalDateTime.now());
         }
         phieuHoanHangRepository.save(phieu);
+        String subject = "Xác nhận hoàn tiền thành công";
+        String body = buildEmailHoanTienThanhCong(phieu); // Hàm tự tạo HTML email
+        emailService.sendDuyetPhieuHoanEmail(phieu.getHoaDon().getUser().getEmail(), subject, body);
     }
 
+    private String buildEmailHoanTienThanhCong(PhieuHoanHang phieu) {
+        return String.format("""
+                        <div style="font-family:sans-serif; font-size:14px; color:#333;">
+                            <div style="background: linear-gradient(90deg, #28a745, #218838);
+                                        color: #fff;
+                                        padding: 15px 20px;
+                                        border-radius: 5px 5px 0 0;
+                                        text-align: center;
+                                        font-size: 20px;
+                                        font-weight: bold;">
+                                ✅ HOÀN TIỀN THÀNH CÔNG
+                            </div>
+                            <div style="padding: 15px; background-color: #fafafa; border: 1px solid #ddd; border-top: none;">
+                                <p>Xin chào <strong>%s</strong>,</p>
+                                <p>Chúng tôi xin thông báo rằng yêu cầu hoàn tiền của bạn cho đơn hàng <strong>%s</strong> đã được xử lý thành công.</p>
+                                <p>Số tiền: <strong style="color:green;">%sđ</strong></p>
+                                <p>Ngày hoàn tiền: %s</p>
+                                <p>Trân trọng,<br/>Cửa hàng Lego My Kingdom</p>
+                            </div>
+                        </div>
+                        """,
+                phieu.getHoaDon().getUser().getTen(),
+                phieu.getHoaDon().getMaHD(),
+                phieu.getTongTienHoan(),
+                phieu.getNgayHoanTien().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        );
+    }
     // Lấy danh sách phiếu hoàn theo trạng thái
     public List<PhieuHoanHang> getPhieuHoanByTrangThai(TrangThaiPhieuHoan trangThai) {
         return phieuHoanHangRepository.findByTrangThai(trangThai);
