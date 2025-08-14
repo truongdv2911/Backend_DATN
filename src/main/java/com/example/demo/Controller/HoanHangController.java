@@ -40,7 +40,7 @@ public class HoanHangController {
     public ResponseEntity<?> duyet(@PathVariable Integer id) {
         try {
             hoanHangService.duyetPhieuHoan(id);
-            return ResponseEntity.ok("Duyệt phiếu hoàn hàng thành công");
+            return ResponseEntity.ok(new ErrorResponse(200,"Duyệt phiếu hoàn hàng thành công"));
         }catch (RuntimeException e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }catch (Exception e){
@@ -52,7 +52,7 @@ public class HoanHangController {
     public ResponseEntity<?> tuChoi(@PathVariable Integer id, @RequestParam String lyDo) {
         try {
             hoanHangService.tuChoiPhieuHoan(id, lyDo);
-            return ResponseEntity.ok("Từ chối phiếu hoàn hàng thành công");
+            return ResponseEntity.ok(new ErrorResponse(200,"Từ chối phiếu hoàn hàng thành công"));
         }catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }catch (Exception e){
@@ -64,7 +64,7 @@ public class HoanHangController {
     public ResponseEntity<?> capNhatThanhToan(@PathVariable Integer id, @RequestParam TrangThaiThanhToan trangThai) {
         try {
             hoanHangService.capNhatThanhToan(id, trangThai);
-            return ResponseEntity.ok("Cập nhật trạng thái thanh toán thành công");
+            return ResponseEntity.ok(new ErrorResponse(200,"Cập nhật trạng thái thanh toán thành công"));
         }catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }catch (Exception e){

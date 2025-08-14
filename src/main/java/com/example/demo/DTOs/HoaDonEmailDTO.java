@@ -2,6 +2,7 @@ package com.example.demo.DTOs;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -15,5 +16,7 @@ public class HoaDonEmailDTO {
     private String pttt;
     private String ptvc;
     private List<SanPhamHoaDonEmail> listSp;
-    private String totalAmount;
+    private BigDecimal totalAmount;
+    private BigDecimal phiShip;
+    private BigDecimal tienGiam;
 }

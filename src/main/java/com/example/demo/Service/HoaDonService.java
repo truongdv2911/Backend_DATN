@@ -81,7 +81,7 @@ public class HoaDonService {
                 }
                 hoaDon.setTrangThai(TrangThaiHoaDon.COMPLETED);
                 hoaDon.setMaVanChuyen(null);
-                hoaDon.setNgayGiao(null);
+                hoaDon.setNgayGiao(LocalDateTime.now());
                 hoaDon.setDiaChiGiaoHang("Tại quầy");
                 hoaDon.setPhiShip(new BigDecimal(0));
                 if (dtOhoaDon.getNvId() != null) {
