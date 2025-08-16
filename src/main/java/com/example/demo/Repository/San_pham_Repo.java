@@ -21,6 +21,7 @@ import java.util.Optional;
 public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecificationExecutor<SanPham> {
     boolean existsByMaSanPham(@Param("maSanPham") String maSanPham);
     boolean existsByTenSanPham(@Param("tenSanPham") String tenSanPham);
+    SanPham findByTenSanPham(String ten);
 
     @Query(value = "select * from San_pham", nativeQuery = true)
     List<SanPham> findAll();

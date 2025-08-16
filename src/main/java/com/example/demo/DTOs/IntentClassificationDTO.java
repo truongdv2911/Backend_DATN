@@ -1,8 +1,12 @@
 package com.example.demo.DTOs;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class IntentClassificationDTO {
     private String intent; // SEARCH, ADVICE, SHIPPING, FAQ, GENERAL
     private String confidence;
