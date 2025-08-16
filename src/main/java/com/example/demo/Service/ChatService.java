@@ -2,9 +2,14 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.IntentClassificationDTO;
 import com.example.demo.DTOs.SearchRequestDTO;
+import com.example.demo.Entity.AnhSp;
+import com.example.demo.Entity.ChatMemory;
 import com.example.demo.Entity.SanPham;
+import com.example.demo.Repository.Anh_sp_Repo;
 import com.example.demo.Repository.San_pham_Repo;
+import com.example.demo.Responses.AnhResponse;
 import com.example.demo.Responses.ChatResponse;
+import com.example.demo.Responses.SanPhamResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,10 +20,13 @@ import org.springframework.ai.ollama.OllamaChatClient;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,425 +37,341 @@ public class ChatService {
     private final OllamaChatClient chatClient;
     private final San_pham_Repo sanPhamRepo;
     private final ObjectMapper objectMapper;
+    private final Anh_sp_Repo anhSpRepo;
 
-    // FAQ knowledge base
+    // Chat memory storage - sử dụng ConcurrentHashMap để thread-safe
+    private final Map<String, List<ChatMemory>> userChatMemory = new ConcurrentHashMap<>();
+    private static final int MAX_MEMORY_SIZE = 10; // Giới hạn 10 tin nhắn gần nhất
+
+    // FAQ knowledge base - cải thiện với thông tin chi tiết hơn
     private final Map<String, String> faqDatabase = Map.of(
-            "SHIPPING", "Thời gian giao hàng: Nội thành 1-2 ngày, ngoại thành 3-5 ngày. Miễn phí ship từ 500k.",
-            "WARRANTY", "Bảo hành sản phẩm LEGO: 12 tháng lỗi sản xuất, đổi trả trong 7 ngày.",
-            "PAYMENT", "Thanh toán: COD, chuyển khoản, thẻ tín dụng, ví điện tử.",
-            "RETURN", "Đổi trả: 7 ngày không lý do, sản phẩm nguyên vẹn, có hóa đơn.",
-            "CONTACT", "Liên hệ: Hotline 1900-xxxx, Email: support@legoshop.vn"
+            "SHIPPING", "🚚 **Thông tin giao hàng:**\n• Nội thành Hà Nội, TP.HCM: 1-2 ngày làm việc\n• Ngoại thành: 3-5 ngày làm việc\n• Miễn phí ship cho đơn hàng từ 500,000đ\n• Phí ship: 30,000đ cho đơn dưới 500,000đ",
+            "WARRANTY", "🛡️ **Chính sách bảo hành:**\n• Bảo hành 12 tháng lỗi sản xuất\n• Đổi trả miễn phí trong 7 ngày đầu\n• Sản phẩm phải còn nguyên vẹn, đầy đủ phụ kiện\n• Hỗ trợ bảo hành tại tất cả chi nhánh",
+            "PAYMENT", "💳 **Phương thức thanh toán:**\n• Thanh toán khi nhận hàng (COD)\n• Chuyển khoản ngân hàng\n• Thẻ tín dụng/ghi nợ\n• Ví điện tử (MoMo, ZaloPay, VNPay)\n• Trả góp 0% lãi suất (3-12 tháng)",
+            "RETURN", "🔄 **Chính sách đổi trả:**\n• Đổi trả không lý do trong 7 ngày\n• Sản phẩm phải nguyên vẹn, chưa sử dụng\n• Có hóa đơn mua hàng\n• Miễn phí đổi trả nếu lỗi từ cửa hàng",
+            "CONTACT", "📞 **Thông tin liên hệ:**\n• Hotline: 1900-xxxx (8:00-22:00)\n• Email: support@legoshop.vn\n• Fanpage: facebook.com/legoshopvn\n• Zalo: zalo.me/legoshop\n• Chi nhánh: 123 ABC Street, Hà Nội"
     );
 
-    public ChatResponse handleUserInput(String userInput) {
-        try {
-            // Bước 1: Phân loại intent
-            IntentClassificationDTO intent = classifyIntent(userInput);
+    // Product categories for better advice
+    private final Map<String, List<String>> productCategories = Map.of(
+            "TECHNIC", List.of("LEGO TECHNIC", "MECHANICAL", "ENGINEERING"),
+            "CITY", List.of("LEGO CITY", "POLICE", "FIRE", "CONSTRUCTION"),
+            "CREATOR", List.of("LEGO CREATOR", "EXPERT", "ADVANCED"),
+            "STAR_WARS", List.of("LEGO STAR WARS", "STAR WARS"),
+            "FRIENDS", List.of("LEGO FRIENDS", "FRIENDS"),
+            "DUPLO", List.of("LEGO DUPLO", "DUPLO"),
+            "JUNIORS", List.of("LEGO JUNIORS", "JUNIORS")
+    );
 
-            // Bước 2: Xử lý theo intent
-            switch (intent.getIntent().toUpperCase()) {
-                case "SEARCH":
-                    return handleProductSearch(userInput);
-                case "ADVICE":
-//                    return handleAdviceRequest(userInput);
-                case "SHIPPING":
-                    return handleShippingQuery(userInput);
-                case "FAQ":
-                    return handleFAQQuery(userInput, intent.getExtractedInfo());
-                case "GENERAL":
-                default:
-                    return handleGeneralChat(userInput);
-            }
+    /**
+     * Main method xử lý input từ user với memory context
+     */
+    public ChatResponse handleUserInput(String userInput, String sessionId) {
+        try {
+            // Lấy chat history để có context
+            List<ChatMemory> chatHistory = getChatHistory(sessionId);
+
+            // Phân loại intent với context cải thiện
+            IntentClassificationDTO intent = classifyIntentWithContext(userInput, chatHistory);
+
+            // Xử lý theo intent
+            ChatResponse response = processIntentRequest(intent, userInput, chatHistory);
+
+            // Lưu vào memory
+            saveChatMemory(sessionId, userInput, response.getMessage(), intent.getIntent());
+
+            return response;
 
         } catch (Exception e) {
-            return new ChatResponse("ERROR",
-                    "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.", null);
+            ChatResponse errorResponse = new ChatResponse("ERROR",
+                    "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau hoặc liên hệ hotline để được hỗ trợ.", null);
+            saveChatMemory(sessionId, userInput, errorResponse.getMessage(), "ERROR");
+            return errorResponse;
         }
     }
 
-    private IntentClassificationDTO classifyIntent(String userInput) {
-        String intentPrompt = """
-            Bạn là trợ lý phân tích ý định khách hàng cho cửa hàng đồ chơi LEGO.
+    /**
+     * Phân loại intent với context từ chat history - CẢI THIỆN
+     */
+    private IntentClassificationDTO classifyIntentWithContext(String userInput, List<ChatMemory> chatHistory) {
+        String contextInfo = buildContextFromHistory(chatHistory);
+
+        String intentPrompt = String.format("""
+            Bạn là AI chuyên phân tích ý định khách hàng cho cửa hàng LEGO.
             
-            Phân tích câu sau và trả về JSON:
+            **NGỮ CẢNH CUỘC TRÒ CHUYỆN:**
+            %s
+            
+            **PHÂN TÍCH CÂU:** "%s"
+            
+            **QUY TẮC PHÂN LOẠI (CHỌN 1 INTENT DUY NHẤT):**
+            1. SEARCH: Tìm kiếm sản phẩm cụ thể (tên, loại, giá, thương hiệu)
+            2. ADVICE: Tư vấn, gợi ý, hỏi ý kiến về sản phẩm (ưu tiên cho "tư vấn", "bán chạy", "phổ biến")
+            3. SHIPPING: Giao hàng, vận chuyển, thời gian ship
+            4. FAQ: Bảo hành, thanh toán, đổi trả, liên hệ
+            5. FOLLOW_UP: Câu hỏi tiếp theo về cuộc trò chuyện trước
+            6. GENERAL: Chào hỏi, cảm ơn, câu hỏi chung
+            
+            **LƯU Ý:** Chỉ trả về 1 intent duy nhất, không dùng dấu |
+            
+            **TRẢ VỀ JSON:**
             {
-              "intent": "SEARCH|ADVICE|SHIPPING|FAQ|GENERAL",
+              "intent": "SEARCH|ADVICE|SHIPPING|FAQ|FOLLOW_UP|GENERAL",
               "confidence": "HIGH|MEDIUM|LOW",
-              "extractedInfo": "thông tin bổ sung nếu có"
+              "extractedInfo": "thông tin quan trọng từ câu"
             }
-            
-            Quy tắc phân loại:
-            - SEARCH: tìm kiếm, mua sản phẩm cụ thể ("tìm lego xe hơi", "có lego nào dưới 500k")
-            - ADVICE: tư vấn, gợi ý ("nên mua gì", "lego nào phù hợp", "giữa A và B chọn gì")
-            - SHIPPING: giao hàng, vận chuyển ("giao hàng bao lâu", "ship có miễn phí không")
-            - FAQ: câu hỏi thường gặp (bảo hành, thanh toán, đổi trả, liên hệ)
-            - GENERAL: chào hỏi, cảm ơn, câu hỏi chung
-            
-            Câu: "%s"
-            """.formatted(userInput);
+            """, contextInfo, userInput);
 
-        try {
-            Prompt prompt = new Prompt(intentPrompt);
-            String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
-            String cleanJson = cleanJsonResponse(jsonResponse);
-            return objectMapper.readValue(cleanJson, IntentClassificationDTO.class);
-        } catch (Exception e) {
-            // Fallback: coi như GENERAL nếu không phân loại được
-            IntentClassificationDTO fallback = new IntentClassificationDTO();
-            fallback.setIntent("GENERAL");
-            fallback.setConfidence("LOW");
-            return fallback;
-        }
+        return executeIntentClassification(intentPrompt);
     }
 
-    private ChatResponse handleProductSearch(String userInput) {
+    /**
+     * Xử lý request theo intent - CẢI THIỆN
+     */
+    private ChatResponse processIntentRequest(IntentClassificationDTO intent, String userInput, List<ChatMemory> chatHistory) {
+        System.out.println("DEBUG: Processing intent: " + intent.getIntent() + " for input: " + userInput);
+        
+        return switch (intent.getIntent().toUpperCase()) {
+            case "SEARCH" -> {
+                System.out.println("DEBUG: Routing to SEARCH handler");
+                yield handleProductSearch(userInput, chatHistory);
+            }
+            case "ADVICE" -> {
+                System.out.println("DEBUG: Routing to ADVICE handler");
+                yield handleAdviceRequest(userInput, chatHistory);
+            }
+            case "SHIPPING" -> {
+                System.out.println("DEBUG: Routing to SHIPPING handler");
+                yield handleShippingQuery(userInput);
+            }
+            case "FAQ" -> {
+                System.out.println("DEBUG: Routing to FAQ handler");
+                yield handleFAQQuery(userInput, intent.getExtractedInfo());
+            }
+            case "FOLLOW_UP" -> {
+                System.out.println("DEBUG: Routing to FOLLOW_UP handler");
+                yield handleFollowUpQuestion(userInput, chatHistory);
+            }
+            case "GENERAL" -> {
+                System.out.println("DEBUG: Routing to GENERAL handler");
+                yield handleGeneralChat(userInput, chatHistory);
+            }
+            default -> {
+                System.out.println("DEBUG: Routing to default GENERAL handler");
+                yield handleGeneralChat(userInput, chatHistory);
+            }
+        };
+    }
+
+    /**
+     * Xử lý tìm kiếm sản phẩm - CẢI THIỆN
+     */
+    private ChatResponse handleProductSearch(String userInput, List<ChatMemory> chatHistory) {
         try {
-            List<SanPham> products = searchProducts(userInput);
+            // Tìm kiếm với context
+            List<SanPham> products = searchProductsWithContext(userInput, chatHistory);
 
             if (products.isEmpty()) {
-                return new ChatResponse("SEARCH",
-                        "Không tìm thấy sản phẩm phù hợp. Bạn có thể thử tìm kiếm với từ khóa khác hoặc liên hệ tư vấn.", null);
+                // Fallback: tìm kiếm rộng hơn
+                products = searchProductsFallback(userInput);
+                
+                if (products.isEmpty()) {
+                    return new ChatResponse("SEARCH",
+                            "Không tìm thấy sản phẩm phù hợp với yêu cầu của bạn. " +
+                            "Bạn có thể:\n• Thử tìm kiếm với từ khóa khác\n• Cho tôi biết thêm thông tin (độ tuổi, ngân sách, sở thích)\n• Liên hệ hotline để được tư vấn trực tiếp", null);
+                }
             }
 
-            String message = String.format("Tìm thấy %d sản phẩm phù hợp với yêu cầu của bạn:",
-                    products.size());
-            return new ChatResponse("SEARCH", message, products);
+            // Convert to DTO
+            List<SanPhamResponseDTO> productDTOs = products.stream()
+                    .map(this::convertToResponseDTO)
+                    .collect(Collectors.toList());
+
+            String message = generateSearchResponse(userInput, products, chatHistory);
+            return new ChatResponse("SEARCH", message, productDTOs);
 
         } catch (Exception e) {
-            return new ChatResponse("ERROR",
-                    "Lỗi tìm kiếm sản phẩm. Vui lòng thử lại.", null);
+            return new ChatResponse("ERROR", "Lỗi tìm kiếm sản phẩm. Vui lòng thử lại hoặc liên hệ hỗ trợ.", null);
         }
     }
 
-//    private ChatResponse handleAdviceRequest(String userInput) {
-//        try {
-//            // Bước 1: Phân tích yêu cầu tư vấn để tạo tiêu chí tìm kiếm
-//            SearchRequestDTO searchCriteria = extractAdviceSearchCriteria(userInput);
-//
-//            // Bước 2: Tìm sản phẩm phù hợp từ database
-//            List<SanPham> recommendedProducts = sanPhamRepo.timKiemTheoDieuKien(searchCriteria);
-//
-//            // Bước 3: Nếu không tìm thấy, thử tiêu chí rộng hơn
-//            if (recommendedProducts.isEmpty()) {
-//                recommendedProducts = findAlternativeProducts(searchCriteria);
-//            }
-//
-//            // Bước 4: Tạo lời tư vấn kèm sản phẩm
-//            String adviceMessage = generateAdviceWithProducts(userInput, recommendedProducts);
-//
-//            return new ChatResponse("ADVICE", adviceMessage, recommendedProducts);
-//
-//        } catch (Exception e) {
-//            return new ChatResponse("ADVICE",
-//                    "Để tư vấn tốt nhất, bạn vui lòng cho biết thêm: độ tuổi, sở thích, ngân sách dự kiến. " +
-//                            "Hoặc liên hệ hotline để được tư vấn trực tiếp.", null);
-//        }
-//    }
-
-    private SearchRequestDTO extractAdviceSearchCriteria(String userInput) {
-        String extractPrompt = """
-                Bạn là chuyên gia phân tích yêu cầu tư vấn LEGO.
-                            
-                Từ câu tư vấn sau,Câu tư vấn: "%s" hãy trích xuất tiêu chí tìm kiếm và trả về JSON:
-                {
-                  "ten": null,
-                  "gia": null,
-                  "doTuoi": "6",
-                  "xuatXu": null,
-                  "thuongHieu": null,
-                  "boSuuTap": null,
-                  "soLuongManhGhepMin": null,
-                  "danhGiaToiThieu": null
-                }
-                            
-                Quy tắc trích xuất:
-                - doTuoi: nếu có độ tuổi cụ thể ("bé 6 tuổi", "trẻ 8-12 tuổi")
-                - gia: nếu có ngân sách ("dưới 500k", "từ 1-2 triệu")
-                - ten/thuongHieu/boSuuTap: nếu có sở thích cụ thể ("thích xe hơi" → "xe", "thích công chúa" → "princess")
-                - soLuongManhGhepMin: nếu có yêu cầu độ phức tạp ("đơn giản" → null, "phức tạp" → 500)
-                            
-                Ví dụ:
-                - "Tư vấn lego cho bé 6 tuổi thích xe hơi ngân sách 500k" 
-                  → {"doTuoi": "6", "gia": 500000, "ten": "xe"}
-                - "Lego gì phù hợp trẻ 8-10 tuổi mới chơi"
-                  → {"doTuoi": "8", "soLuongManhGhepMin": null}
-                  
-                    - "Tìm LEGO tặng sinh nhật bé gái 5 tuổi, thích công chúa" \s
-                    → \s
-                    {
-                      "ten": "công chúa",
-                      "gia": null,
-                      "doTuoi": "5",
-                      "xuatXu": null,
-                      "thuongHieu": null,
-                      "boSuuTap": "princess",
-                      "soLuongManhGhepMin": null,
-                      "danhGiaToiThieu": null
-                    }
-                                
-                    - "Mình cần quà tặng cho bé trai 10 tuổi mê siêu xe, tầm giá khoảng 1 triệu" \s
-                    → \s
-                    {
-                      "ten": "siêu xe",
-                      "gia": 1000000,
-                      "doTuoi": "10",
-                      "xuatXu": null,
-                      "thuongHieu": null,
-                      "boSuuTap": null,
-                      "soLuongManhGhepMin": null,
-                      "danhGiaToiThieu": null
-                    }
-             
-                """.formatted(userInput);
-
+    /**
+     * Xử lý tư vấn với context - CẢI THIỆN MẠNH MẼ
+     */
+    private ChatResponse handleAdviceRequest(String userInput, List<ChatMemory> chatHistory) {
         try {
-            Prompt prompt = new Prompt(extractPrompt);
-            String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
-            String cleanJson = cleanJsonResponse(jsonResponse);
-            String processedJson = preprocessJsonNumbers(cleanJson);
-            return objectMapper.readValue(processedJson, SearchRequestDTO.class);
+            System.out.println("DEBUG: Entering handleAdviceRequest with: " + userInput);
+            String lowerInput = userInput.toLowerCase();
+            System.out.println("DEBUG: Lower input: " + lowerInput);
+            
+            // Kiểm tra nếu yêu cầu về sản phẩm bán chạy
+            if (lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") || 
+                lowerInput.contains("nổi tiếng") || lowerInput.contains("hot") ||
+                lowerInput.contains("best") || lowerInput.contains("top") ||
+                lowerInput.contains("nhất")) {
+                
+                System.out.println("DEBUG: Detected best-selling request, processing...");
+                
+                try {
+                    List<SanPham> bestSellingProducts = findBestSellingProducts();
+                    System.out.println("Found " + bestSellingProducts.size() + " best selling products");
+                    
+                    if (bestSellingProducts.isEmpty()) {
+                        // Fallback: lấy tất cả sản phẩm
+                        bestSellingProducts = sanPhamRepo.findAll().stream()
+                                .limit(10)
+                                .collect(Collectors.toList());
+                        System.out.println("Fallback: Found " + bestSellingProducts.size() + " products");
+                    }
+                    
+                    // Convert to DTO
+                    List<SanPhamResponseDTO> bestSellingDTOs = bestSellingProducts.stream()
+                            .map(this::convertToResponseDTO)
+                            .collect(Collectors.toList());
+                    
+                    String adviceMessage = generateBestSellingAdvice(userInput, bestSellingProducts);
+                    return new ChatResponse("ADVICE", adviceMessage, bestSellingDTOs);
+                    
+                } catch (Exception e) {
+                    System.err.println("Error finding best selling products: " + e.getMessage());
+                    // Fallback: lấy tất cả sản phẩm
+                    List<SanPham> allProducts = sanPhamRepo.findAll().stream()
+                            .limit(10)
+                            .collect(Collectors.toList());
+                    
+                    // Convert to DTO
+                    List<SanPhamResponseDTO> allProductDTOs = allProducts.stream()
+                            .map(this::convertToResponseDTO)
+                            .collect(Collectors.toList());
+                    
+                    String fallbackMessage = "🔥 **TOP SẢN PHẨM LEGO PHỔ BIẾN** 🔥\n\n" +
+                            "Dựa trên yêu cầu của bạn, đây là những sản phẩm LEGO được nhiều khách hàng yêu thích:\n\n" +
+                            formatProductsForAdvice(allProducts) + "\n\n" +
+                            "💡 **Lời khuyên:** Những sản phẩm này đều có chất lượng cao và phù hợp với nhiều độ tuổi. " +
+                            "Bạn có thể chọn theo sở thích hoặc liên hệ tôi để được tư vấn chi tiết hơn!";
+                    
+                    return new ChatResponse("ADVICE", fallbackMessage, allProductDTOs);
+                }
+            }
+            
+            // Phân tích nhu cầu người dùng cho các trường hợp khác
+            UserNeeds userNeeds = analyzeUserNeeds(userInput, chatHistory);
+            
+            // Tìm sản phẩm phù hợp
+            List<SanPham> recommendedProducts = findProductsByNeeds(userNeeds);
+            
+            // Convert to DTO
+            List<SanPhamResponseDTO> recommendedDTOs = recommendedProducts.stream()
+                    .map(this::convertToResponseDTO)
+                    .collect(Collectors.toList());
+            
+            // Tạo lời tư vấn thông minh
+            String adviceMessage = generateIntelligentAdvice(userInput, recommendedProducts, userNeeds, chatHistory);
+            
+            return new ChatResponse("ADVICE", adviceMessage, recommendedDTOs);
+
         } catch (Exception e) {
-            // Fallback: trả về criteria rỗng
-            return new SearchRequestDTO();
+            System.err.println("Error in handleAdviceRequest: " + e.getMessage());
+            e.printStackTrace();
+            return new ChatResponse("ADVICE",
+                    "Để tư vấn tốt nhất, bạn vui lòng cho biết:\n" +
+                    "• Độ tuổi người chơi\n" +
+                    "• Sở thích (xe hơi, robot, thành phố, v.v.)\n" +
+                    "• Ngân sách dự kiến\n" +
+                    "• Kinh nghiệm chơi LEGO\n\n" +
+                    "Hoặc liên hệ hotline để được tư vấn trực tiếp!", null);
         }
     }
 
-//    private List<SanPham> findAlternativeProducts(SearchRequestDTO originalCriteria) {
-//        try {
-//            // Thử tìm với tiêu chí rộng hơn (bỏ bớt điều kiện)
-//            SearchRequestDTO relaxedCriteria = new SearchRequestDTO();
-//
-//            // Giữ lại những tiêu chí cơ bản nhất
-//            if (originalCriteria.getDoTuoi() != null) {
-//                relaxedCriteria.setDoTuoi(originalCriteria.getDoTuoi());
-//            }
-//            if (originalCriteria.getGia() != null) {
-//                relaxedCriteria.setGia(originalCriteria.getGia());
-//            }
-//
-//            List<SanPham> products = sanPhamRepo.timKiemTheoDieuKien(relaxedCriteria);
-//
-//            // Nếu vẫn không có, ưu tiên sản phẩm bán chạy (dữ liệu thực tế)
-//            if (products.isEmpty()) {
-//                List<SanPham> bestSellers = sanPhamRepo.findTopDaBan();
-//
-//                // Lọc sản phẩm bán chạy theo tiêu chí cơ bản nếu có
-//                if (originalCriteria.getDoTuoi() != null || originalCriteria.getGia() != null) {
-//                    products = filterBestSellersByCriteria(bestSellers, originalCriteria);
-//                } else {
-//                    products = bestSellers;
-//                }
-//
-//                // Nếu sau khi lọc vẫn trống, lấy tất cả sản phẩm bán chạy
-//                if (products.isEmpty()) {
-//                    products = bestSellers;
-//                }
-//            }
-//
-//            // Bổ sung thêm sản phẩm bán chạy nếu kết quả ít
-//            if (products.size() < 5) {
-//                List<SanPham> additionalBestSellers = sanPhamRepo.findTopDaBan();
-//                products = combineAndDeduplicateProducts(products, additionalBestSellers);
-//            }
-//
-//            // Giới hạn 8 sản phẩm để không quá dài
-//            return products.stream().limit(8).collect(Collectors.toList());
-//
-//        } catch (Exception e) {
-//            // Fallback cuối: chỉ lấy sản phẩm bán chạy
-//            return sanPhamRepo.findTopDaBan();
-//        }
-//    }
+    /**
+     * Xử lý câu hỏi follow-up - CẢI THIỆN
+     */
+    private ChatResponse handleFollowUpQuestion(String userInput, List<ChatMemory> chatHistory) {
+        try {
+            // Lấy context từ câu hỏi trước đó
+            String contextInfo = buildContextFromHistory(chatHistory);
+            
+            // Phân tích follow-up question
+            FollowUpAnalysis analysis = analyzeFollowUpQuestion(userInput, chatHistory);
 
-    private List<SanPham> filterBestSellersByCriteria(List<SanPham> bestSellers, SearchRequestDTO criteria) {
-        return bestSellers.stream()
-                .filter(product -> {
-                    // Lọc theo độ tuổi nếu có
-                    if (criteria.getDoTuoi() != null && product.getDoTuoi() != null) {
-                        try {
-                            int requiredAge = Integer.parseInt(criteria.getDoTuoi());
-                            // Lấy tuổi nhỏ nhất trong mô tả sản phẩm
-                            Matcher matcher = Pattern.compile("\\d+").matcher(product.getDoTuoi().toString());
-                            int productAge = matcher.find() ? Integer.parseInt(matcher.group()) : 0;
-                            // Cho phép sai lệch 2 tuổi
-                            if (Math.abs(requiredAge - productAge) > 2) {
-                                return false;
-                            }
-                        } catch (NumberFormatException e) {
-                            // Nếu không parse được thì bỏ qua điều kiện này
-                        }
-                    }
+            String followUpPrompt = String.format("""
+                Bạn là chuyên gia tư vấn LEGO thân thiện và chuyên nghiệp.
+                
+                **NGỮ CẢNH CUỘC TRÒ CHUYỆN:**
+                %s
+                
+                **CÂU HỎI FOLLOW-UP:** "%s"
+                
+                **PHÂN TÍCH:** %s
+                
+                Hãy trả lời một cách tự nhiên, thân thiện và hữu ích.
+                Nếu cần tìm kiếm sản phẩm, hãy đề xuất cụ thể.
+                Trả lời ngắn gọn nhưng đầy đủ thông tin.
+                """, contextInfo, userInput, analysis.getAnalysis());
 
-                    // Lọc theo giá nếu có
-                    if (criteria.getGia() != null && product.getGia() != null) {
-                        // Cho phép giá cao hơn 20% so với yêu cầu
-                        if (product.getGia().compareTo(criteria.getGia().multiply(new BigDecimal(1.2))) > 0) {
-                            return false;
-                        }
-                    }
+            Prompt prompt = new Prompt(followUpPrompt);
+            String response = chatClient.call(prompt).getResult().getOutput().getContent();
 
-                    return true;
-                })
-                .collect(Collectors.toList());
+            // Convert products to DTO
+            List<SanPhamResponseDTO> productDTOs = analysis.getProducts().stream()
+                    .map(this::convertToResponseDTO)
+                    .collect(Collectors.toList());
+
+            return new ChatResponse("FOLLOW_UP", response.trim(), productDTOs);
+
+        } catch (Exception e) {
+            return new ChatResponse("FOLLOW_UP",
+                    "Tôi hiểu bạn đang hỏi thêm về cuộc trò chuyện trước. " +
+                    "Bạn có thể nói rõ hơn để tôi hỗ trợ tốt hơn không?", null);
+        }
     }
 
-    private List<SanPham> combineAndDeduplicateProducts(List<SanPham> existing, List<SanPham> additional) {
-        Set<Integer> existingIds = existing.stream()
-                .map(SanPham::getId)
-                .collect(Collectors.toSet());
-
-        List<SanPham> result = new ArrayList<>(existing);
-
-        additional.stream()
-                .filter(product -> !existingIds.contains(product.getId()))
-                .forEach(result::add);
-
-        return result;
-    }
-
-//    private String generateAdviceWithProducts(String userInput, List<SanPham> products) {
-//        if (products.isEmpty()) {
-//            return "Dựa trên yêu cầu của bạn, tôi khuyên bạn nên:\n\n" +
-//                    "• Xem xét các bộ LEGO cơ bản phù hợp với độ tuổi\n" +
-//                    "• Chọn theo sở thích cá nhân (xe cộ, công chúa, siêu anh hùng...)\n" +
-//                    "• Bắt đầu với bộ có ít mảnh ghép để làm quen\n\n" +
-//                    "Vui lòng cho biết thêm thông tin để tôi tư vấn cụ thể hơn!";
-//        }
-//
-//        // Kiểm tra xem có sản phẩm bán chạy không
-////        List<SanPham> bestSellers = sanPhamRepo.findTopDaBan();
-//        boolean hasBestSellers = products.stream()
-//                .anyMatch(p -> bestSellers.stream()
-//                        .anyMatch(bs -> bs.getId().equals(p.getId())));
-//
-//        String advicePrompt = """
-//            Bạn là chuyên gia tư vấn LEGO với danh sách sản phẩm cụ thể.
-//
-//            Yêu cầu tư vấn: "%s"
-//
-//            Danh sách sản phẩm gợi ý (đã có sẵn):
-//            %s
-//
-//            %s
-//
-//            Hãy viết lời tư vấn:
-//            1. Mở đầu: Phân tích ngắn gọn yêu cầu của khách hàng
-//            2. Gợi ý: Giới thiệu 2-3 sản phẩm nổi bật nhất từ danh sách, giải thích tại sao phù hợp
-//            3. Ưu điểm: %s
-//            4. Lưu ý: Đưa ra lời khuyên bổ sung (độ tuổi, cách chơi, giá trị giáo dục...)
-//
-//            Phong cách: Tự nhiên, thân thiện, chuyên nghiệp
-//            Độ dài: 150-200 từ
-//            Lưu ý: Không liệt kê tất cả sản phẩm, chỉ highlight những cái phù hợp nhất
-//            """.formatted(
-//                userInput,
-//                formatProductsWithBestSellerInfo(products, bestSellers),
-//                hasBestSellers ? "LƯU Ý: Một số sản phẩm trong danh sách là TOP BÁN CHẠY (được đánh dấu ⭐)" : "",
-//                hasBestSellers ? "Nhấn mạnh những sản phẩm bán chạy vì đây là lựa chọn được nhiều khách hàng tin tưởng" : "Tập trung vào sự phù hợp với yêu cầu"
-//        );
-//
-//        try {
-//            Prompt prompt = new Prompt(advicePrompt);
-//            String advice = chatClient.call(prompt).getResult().getOutput().getContent();
-//
-//            // Thêm thông tin về số lượng sản phẩm và điểm nhấn bán chạy
-//            String finalAdvice = advice.trim();
-//
-//            if (hasBestSellers) {
-//                finalAdvice += "\n\n🔥 Một số sản phẩm gợi ý là TOP bán chạy - " +
-//                        "được nhiều khách hàng lựa chọn và đánh giá tích cực!";
-//            }
-//
-//            if (products.size() > 3) {
-//                finalAdvice += String.format("\n\n💡 Tổng cộng có %d sản phẩm phù hợp với yêu cầu của bạn. " +
-//                        "Bạn có thể xem chi tiết các sản phẩm khác bên dưới!", products.size());
-//            }
-//
-//            return finalAdvice;
-//
-//        } catch (Exception e) {
-//            // Fallback: tạo lời tư vấn đơn giản với thông tin bán chạy
-//            String fallbackMessage = String.format("Dựa trên yêu cầu của bạn, tôi gợi ý %d sản phẩm LEGO phù hợp. " +
-//                            "Các sản phẩm này được chọn lọc kỹ càng theo tiêu chí về độ tuổi, giá cả và chất lượng.",
-//                    products.size());
-//
-//            if (hasBestSellers) {
-//                fallbackMessage += " Đặc biệt, một số sản phẩm trong danh sách là TOP bán chạy, " +
-//                        "được nhiều gia đình tin tưởng lựa chọn!";
-//            }
-//
-//            return fallbackMessage;
-//        }
-//    }
-
-    private String formatProductsWithBestSellerInfo(List<SanPham> products, List<SanPham> bestSellers) {
-        Set<Integer> bestSellerIds = bestSellers.stream()
-                .map(SanPham::getId)
-                .collect(Collectors.toSet());
-
-        return products.stream()
-                .limit(5) // Chỉ lấy 5 sản phẩm đầu để prompt không quá dài
-                .map(p -> {
-                    String bestSellerMark = bestSellerIds.contains(p.getId()) ? " ⭐ TOP BÁN CHẠY" : "";
-                    return String.format("- %s%s | Giá: %s | Độ tuổi: %s | Mảnh ghép: %d",
-                            p.getTenSanPham() != null ? p.getTenSanPham() : "N/A",
-                            bestSellerMark,
-                            p.getGia() != null ? String.format("%,d đ", p.getGia()) : "N/A",
-                            p.getDoTuoi() != null ? p.getDoTuoi() : "N/A",
-                            p.getSoLuongManhGhep() != null ? p.getSoLuongManhGhep() : 0);
-                })
-                .collect(Collectors.joining("\n"));
-    }
-
+    /**
+     * Xử lý shipping query - CẢI THIỆN
+     */
     private ChatResponse handleShippingQuery(String userInput) {
         String shippingInfo = faqDatabase.get("SHIPPING");
+        String lowerInput = userInput.toLowerCase();
 
-        // Có thể tùy chỉnh thêm dựa trên câu hỏi cụ thể
-        if (userInput.toLowerCase().contains("miễn phí")) {
-            shippingInfo += "\n\nLưu ý: Áp dụng miễn phí ship cho đơn hàng từ 500,000đ trở lên.";
+        if (lowerInput.contains("miễn phí") || lowerInput.contains("free")) {
+            shippingInfo += "\n\n💡 **Lưu ý:** Áp dụng miễn phí ship cho đơn hàng từ 500,000đ trở lên!";
+        }
+        
+        if (lowerInput.contains("thời gian") || lowerInput.contains("bao lâu")) {
+            shippingInfo += "\n\n⏰ **Thời gian giao hàng:**\n• Giao trong ngày: Đặt trước 14:00\n• Giao nhanh: +50,000đ (giao trong 2-4 giờ)";
         }
 
         return new ChatResponse("SHIPPING", shippingInfo, null);
     }
 
+    /**
+     * Xử lý FAQ query - CẢI THIỆN
+     */
     private ChatResponse handleFAQQuery(String userInput, String extractedInfo) {
         String lowerInput = userInput.toLowerCase();
 
-        String response;
-        if (lowerInput.contains("bảo hành")) {
-            response = faqDatabase.get("WARRANTY");
-        } else if (lowerInput.contains("thanh toán")) {
-            response = faqDatabase.get("PAYMENT");
-        } else if (lowerInput.contains("đổi") || lowerInput.contains("trả")) {
-            response = faqDatabase.get("RETURN");
-        } else if (lowerInput.contains("liên hệ")) {
-            response = faqDatabase.get("CONTACT");
-        } else {
-            response = "Câu hỏi thường gặp:\n\n" +
-                    "🚚 " + faqDatabase.get("SHIPPING") + "\n\n" +
-                    "🛡️ " + faqDatabase.get("WARRANTY") + "\n\n" +
-                    "💳 " + faqDatabase.get("PAYMENT") + "\n\n" +
-                    "🔄 " + faqDatabase.get("RETURN") + "\n\n" +
-                    "📞 " + faqDatabase.get("CONTACT");
-        }
-
+        String response = determineFAQResponse(lowerInput);
         return new ChatResponse("FAQ", response, null);
     }
 
-    private ChatResponse handleGeneralChat(String userInput) {
-        String generalPrompt = """
-            Bạn là nhân viên tư vấn thân thiện của cửa hàng đồ chơi LEGO.
+    /**
+     * Xử lý chat chung với context - CẢI THIỆN
+     */
+    private ChatResponse handleGeneralChat(String userInput, List<ChatMemory> chatHistory) {
+        String contextInfo = buildContextFromHistory(chatHistory);
+
+        String generalPrompt = String.format("""
+            Bạn là nhân viên tư vấn thân thiện và chuyên nghiệp của cửa hàng LEGO.
             
-            Trả lời khách hàng một cách tự nhiên, thân thiện cho câu: "%s"
+            **NGỮ CẢNH:** %s
             
-            Nếu có thể, hãy hướng dẫn khách hàng đến các dịch vụ:
-            - Tìm kiếm sản phẩm
-            - Tư vấn mua hàng
-            - Thông tin giao hàng
-            - Chính sách bảo hành/đổi trả
+            **CÂU KHÁCH HÀNG:** "%s"
             
-            Trả lời ngắn gọn (không quá 100 từ).
-            """.formatted(userInput);
+            Hãy trả lời một cách tự nhiên, thân thiện và hữu ích.
+            Nếu có thể, hãy hướng dẫn khách hàng đến các dịch vụ phù hợp.
+            Trả lời ngắn gọn (50-100 từ) nhưng đầy đủ thông tin.
+            Sử dụng emoji để tạo cảm giác thân thiện.
+            """, contextInfo, userInput);
 
         try {
             Prompt prompt = new Prompt(generalPrompt);
@@ -455,81 +379,169 @@ public class ChatService {
             return new ChatResponse("GENERAL", response.trim(), null);
         } catch (Exception e) {
             return new ChatResponse("GENERAL",
-                    "Xin chào! Tôi có thể giúp bạn tìm kiếm sản phẩm LEGO, tư vấn mua hàng, " +
-                            "hoặc trả lời các câu hỏi về giao hàng, bảo hành. Bạn cần hỗ trợ gì ạ?", null);
+                    "👋 Xin chào! Tôi có thể giúp bạn:\n" +
+                    "🔍 Tìm kiếm sản phẩm LEGO\n" +
+                    "💡 Tư vấn mua hàng\n" +
+                    "🚚 Thông tin giao hàng\n" +
+                    "🛡️ Chính sách bảo hành\n\n" +
+                    "Bạn cần hỗ trợ gì ạ?", null);
         }
     }
 
-    // Phương thức tìm kiếm sản phẩm gốc (đã có)
-    private List<SanPham> searchProducts(String userInput) {
-        String userPrompt = """
-                Bạn là trợ lý thông minh chuyên giúp khách hàng tìm đồ chơi LEGO.
-                            
-                Hãy phân tích câu sau và trả về JSON như sau:
-                {
-                  "ten": "lego sieu xe",
-                  "gia": 1000000,
-                  "doTuoi": "6",
-                  "xuatXu": "Đan Mạch",
-                  "thuongHieu": "LEGO SPEED CHAMPIONS",
-                  "boSuuTap": "LEGO SPEED CHAMPIONS ALL",
-                  "soLuongManhGhepMin": 500,
-                  "danhGiaToiThieu": "5 sao"
+    /**
+     * Memory Management Methods
+     */
+    private List<ChatMemory> getChatHistory(String sessionId) {
+        return userChatMemory.getOrDefault(sessionId, new ArrayList<>());
+    }
+
+    private void saveChatMemory(String sessionId, String userInput, String botResponse, String intent) {
+        List<ChatMemory> history = userChatMemory.computeIfAbsent(sessionId, k -> new ArrayList<>());
+
+        history.add(new ChatMemory(userInput, botResponse, intent));
+
+        // Giới hạn kích thước memory
+        if (history.size() > MAX_MEMORY_SIZE) {
+            history.remove(0); // Xóa tin nhắn cũ nhất
+        }
+    }
+
+    private String buildContextFromHistory(List<ChatMemory> chatHistory) {
+        if (chatHistory.isEmpty()) {
+            return "Đây là đầu cuộc trò chuyện.";
+        }
+
+        return chatHistory.stream()
+                .limit(5) // Chỉ lấy 5 tin nhắn gần nhất
+                .map(memory -> String.format("User: %s | Bot: %s",
+                        memory.getUserInput(),
+                        memory.getBotResponse().substring(0, Math.min(100, memory.getBotResponse().length()))))
+                .collect(Collectors.joining("\n"));
+    }
+
+    public void clearChatMemory(String sessionId) {
+        userChatMemory.remove(sessionId);
+    }
+
+    public int getChatMemorySize(String sessionId) {
+        return userChatMemory.getOrDefault(sessionId, new ArrayList<>()).size();
+    }
+
+    /**
+     * Helper Methods - CẢI THIỆN
+     */
+    private IntentClassificationDTO executeIntentClassification(String intentPrompt) {
+        try {
+            Prompt prompt = new Prompt(intentPrompt);
+            String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
+            String cleanJson = cleanJsonResponse(jsonResponse);
+            
+            System.out.println("DEBUG: AI Response: " + jsonResponse);
+            System.out.println("DEBUG: Cleaned JSON: " + cleanJson);
+            
+            IntentClassificationDTO result = objectMapper.readValue(cleanJson, IntentClassificationDTO.class);
+            System.out.println("DEBUG: Parsed Intent: " + result.getIntent() + ", Confidence: " + result.getConfidence());
+            
+            // Fix: Handle multiple intents separated by |
+            String intent = result.getIntent();
+            if (intent != null && intent.contains("|")) {
+                String[] intents = intent.split("\\|");
+                // Prioritize ADVICE over SEARCH
+                if (intents.length > 0) {
+                    for (String singleIntent : intents) {
+                        if ("ADVICE".equalsIgnoreCase(singleIntent.trim())) {
+                            intent = "ADVICE";
+                            break;
+                        }
+                    }
+                    // If no ADVICE found, take the first one
+                    if (intent.contains("|")) {
+                        intent = intents[0].trim();
+                    }
                 }
-                            
-                QUAN TRỌNG:
-                - soLuongManhGhepMin phải là số nguyên (ví dụ: 500, 1000), KHÔNG được là string như ">1000"
-                - gia phải là số nguyên
-                - Nếu có điều kiện như "trên 1000 mảnh", hãy đặt soLuongManhGhepMin = 1000
-                - Nếu có điều kiện như "dưới 500 mảnh", hãy đặt soLuongManhGhepMin = null
-                - Các trường không có thông tin thì để null
-                - Chỉ trả lại đúng JSON, không giải thích thêm
-                            
-                    ### Một số ví dụ:
-                                
-                    Câu: "Tìm LEGO siêu xe cho bé 6 tuổi, khoảng 1 triệu, từ Đan Mạch"
-                    →
-                    {
-                      "ten": "LEGO siêu xe",
-                      "gia": 1000000,
-                      "doTuoi": "6",
-                      "xuatXu": "Đan Mạch",
-                      "thuongHieu": null,
-                      "boSuuTap": null,
-                      "soLuongManhGhepMin": null,
-                      "danhGiaToiThieu": null
-                    }
-                                
-                    Câu: "Mình muốn bộ LEGO từ thương hiệu LEGO Technic, hơn 1000 mảnh, giá dưới 2 triệu"
-                    →
-                    {
-                      "ten": null,
-                      "gia": 2000000,
-                      "doTuoi": null,
-                      "xuatXu": null,
-                      "thuongHieu": "LEGO Technic",
-                      "boSuuTap": null,
-                      "soLuongManhGhepMin": 1000,
-                      "danhGiaToiThieu": null
-                    }
-                                
-                    Câu: "Cho mình LEGO chủ đề Star Wars khoảng 800k, đánh giá 5 sao, trên 500 mảnh"
-                    →
-                    {
-                      "ten": "LEGO chủ đề Star Wars",
-                      "gia": 800000,
-                      "doTuoi": null,
-                      "xuatXu": null,
-                      "thuongHieu": null,
-                      "boSuuTap": "Star Wars",
-                      "soLuongManhGhepMin": 500,
-                      "danhGiaToiThieu": "5 sao"
-                    }
-                Câu: "%s"
-                """.formatted(userInput);
+                result.setIntent(intent);
+                System.out.println("DEBUG: Fixed Intent: " + intent);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            System.err.println("DEBUG: Error in AI classification: " + e.getMessage());
+            // Fallback logic cải thiện
+            IntentClassificationDTO fallback = new IntentClassificationDTO();
+            fallback.setIntent(determineIntentFallback(intentPrompt));
+            fallback.setConfidence("LOW");
+            System.out.println("DEBUG: Using fallback intent: " + fallback.getIntent());
+            return fallback;
+        }
+    }
+
+    private String determineIntentFallback(String userInput) {
+        String lowerInput = userInput.toLowerCase();
+        
+        System.out.println("DEBUG: Analyzing intent for: " + userInput);
+        System.out.println("DEBUG: Lower input: " + lowerInput);
+        
+        // ADVICE - ưu tiên cao nhất cho tư vấn
+        if (lowerInput.contains("tư vấn") || lowerInput.contains("gợi ý") || lowerInput.contains("khuyên") ||
+            lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") || lowerInput.contains("nổi tiếng") ||
+            lowerInput.contains("đề xuất") || lowerInput.contains("giới thiệu") || lowerInput.contains("cho tôi") ||
+            lowerInput.contains("nhất")) {
+            System.out.println("DEBUG: Detected ADVICE intent");
+            return "ADVICE";
+        }
+        
+        // SEARCH - tìm kiếm sản phẩm cụ thể
+        if (lowerInput.contains("tìm") || lowerInput.contains("mua") || lowerInput.contains("có") || 
+            lowerInput.contains("lego") || lowerInput.contains("xe") || lowerInput.contains("robot") ||
+            lowerInput.contains("sản phẩm") || lowerInput.contains("đồ chơi")) {
+            System.out.println("DEBUG: Detected SEARCH intent");
+            return "SEARCH";
+        }
+        
+        // SHIPPING - giao hàng
+        if (lowerInput.contains("giao") || lowerInput.contains("ship") || lowerInput.contains("vận chuyển") ||
+            lowerInput.contains("thời gian") || lowerInput.contains("bao lâu") || lowerInput.contains("miễn phí")) {
+            System.out.println("DEBUG: Detected SHIPPING intent");
+            return "SHIPPING";
+        }
+        
+        // FAQ - câu hỏi thường gặp
+        if (lowerInput.contains("bảo hành") || lowerInput.contains("thanh toán") || lowerInput.contains("đổi trả") ||
+            lowerInput.contains("liên hệ") || lowerInput.contains("hotline") || lowerInput.contains("chính sách")) {
+            System.out.println("DEBUG: Detected FAQ intent");
+            return "FAQ";
+        }
+        
+        System.out.println("DEBUG: Defaulting to GENERAL intent");
+        return "GENERAL";
+    }
+
+    private List<SanPham> searchProductsWithContext(String userInput, List<ChatMemory> chatHistory) {
+        String contextInfo = buildContextFromHistory(chatHistory);
+        
+        String searchPrompt = String.format("""
+            Bạn là chuyên gia phân tích tìm kiếm LEGO.
+            
+            **NGỮ CẢNH:** %s
+            **CÂU TÌM KIẾM:** "%s"
+            
+            Trả về JSON với thông tin tìm kiếm:
+            {
+              "ten": "tên sản phẩm cụ thể",
+              "gia": null,
+              "doTuoi": "độ tuổi",
+              "xuatXu": null,
+              "thuongHieu": "thương hiệu LEGO",
+              "boSuuTap": "bộ sưu tập",
+              "soLuongManhGhepMin": null,
+              "danhGiaToiThieu": null
+            }
+            
+            Chỉ điền thông tin chắc chắn, để null nếu không rõ.
+            """, contextInfo, userInput);
 
         try {
-            Prompt prompt = new Prompt(userPrompt);
+            Prompt prompt = new Prompt(searchPrompt);
             String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
             String cleanJson = cleanJsonResponse(jsonResponse);
             String processedJson = preprocessJsonNumbers(cleanJson);
@@ -540,7 +552,419 @@ public class ChatService {
         }
     }
 
-    // Các phương thức utility gốc
+    private List<SanPham> searchProductsFallback(String userInput) {
+        // Fallback: tìm kiếm theo từ khóa đơn giản
+        try {
+            String[] keywords = userInput.toLowerCase().split("\\s+");
+            List<SanPham> allProducts = sanPhamRepo.findAll();
+            
+            return allProducts.stream()
+                    .filter(product -> {
+                        String productName = product.getTenSanPham() != null ? 
+                            product.getTenSanPham().toLowerCase() : "";
+                        return keywords.length > 0 && 
+                               keywords[0].length() > 2 && 
+                               productName.contains(keywords[0]);
+                    })
+                    .limit(10)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private String generateSearchResponse(String userInput, List<SanPham> products, List<ChatMemory> chatHistory) {
+        if (products.size() == 1) {
+            SanPham product = products.get(0);
+            return String.format("🎯 Tìm thấy sản phẩm phù hợp:\n\n" +
+                    "**%s**\n" +
+                    "💰 Giá: %s\n" +
+                    "👶 Độ tuổi: %s\n" +
+                    "🏷️ Thương hiệu: %s\n\n" +
+                    "Bạn có muốn tôi tư vấn thêm về sản phẩm này không?",
+                    product.getTenSanPham(),
+                    product.getGia() != null ? String.format("%,.0f đ", product.getGia()) : "N/A",
+                    product.getDoTuoi(),
+                    product.getThuongHieu());
+        } else {
+            return String.format("🔍 Tìm thấy %d sản phẩm phù hợp với yêu cầu của bạn:\n\n" +
+                    "Bạn có thể cho tôi biết thêm thông tin để tôi tư vấn cụ thể hơn không?", products.size());
+        }
+    }
+
+    // Inner classes for better organization
+    private static class UserNeeds {
+        private String ageGroup;
+        private String interests;
+        private BigDecimal budget;
+        private String experience;
+        private String category;
+        
+        // Getters and setters
+        public String getAgeGroup() { return ageGroup; }
+        public void setAgeGroup(String ageGroup) { this.ageGroup = ageGroup; }
+        public String getInterests() { return interests; }
+        public void setInterests(String interests) { this.interests = interests; }
+        public BigDecimal getBudget() { return budget; }
+        public void setBudget(BigDecimal budget) { this.budget = budget; }
+        public String getExperience() { return experience; }
+        public void setExperience(String experience) { this.experience = experience; }
+        public String getCategory() { return category; }
+        public void setCategory(String category) { this.category = category; }
+    }
+
+    private static class FollowUpAnalysis {
+        private String analysis;
+        private List<SanPham> products;
+        
+        public FollowUpAnalysis(String analysis, List<SanPham> products) {
+            this.analysis = analysis;
+            this.products = products;
+        }
+        
+        public String getAnalysis() { return analysis; }
+        public List<SanPham> getProducts() { return products; }
+    }
+
+    private UserNeeds analyzeUserNeeds(String userInput, List<ChatMemory> chatHistory) {
+        String contextInfo = buildContextFromHistory(chatHistory);
+        
+        String analysisPrompt = String.format("""
+            Phân tích nhu cầu người dùng từ câu tư vấn và ngữ cảnh.
+            
+            **NGỮ CẢNH:** %s
+            **CÂU TƯ VẤN:** "%s"
+            
+            Trả về JSON:
+            {
+              "ageGroup": "độ tuổi (trẻ em/thanh thiếu niên/người lớn)",
+              "interests": "sở thích (xe hơi/robot/thành phố/v.v.)",
+              "budget": null,
+              "experience": "kinh nghiệm (mới bắt đầu/trung bình/nâng cao)",
+              "category": "danh mục LEGO phù hợp"
+            }
+            """, contextInfo, userInput);
+
+        try {
+            Prompt prompt = new Prompt(analysisPrompt);
+            String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
+            String cleanJson = cleanJsonResponse(jsonResponse);
+            return objectMapper.readValue(cleanJson, UserNeeds.class);
+        } catch (Exception e) {
+            UserNeeds needs = new UserNeeds();
+            needs.setAgeGroup("trẻ em");
+            needs.setExperience("mới bắt đầu");
+            return needs;
+        }
+    }
+
+    private List<SanPham> findProductsByNeeds(UserNeeds needs) {
+        try {
+            SearchRequestDTO criteria = new SearchRequestDTO();
+            
+            // Set criteria based on needs
+            if (needs.getAgeGroup() != null) {
+                criteria.setDoTuoi(extractAgeFromGroup(needs.getAgeGroup()));
+            }
+            if (needs.getCategory() != null) {
+                criteria.setThuongHieu(needs.getCategory());
+            }
+            
+            List<SanPham> products = sanPhamRepo.timKiemTheoDieuKien(criteria);
+            
+            // If no products found, try alternative search
+            if (products.isEmpty()) {
+                products = findAlternativeProducts(criteria);
+            }
+            
+            return products.stream().limit(6).collect(Collectors.toList());
+            
+        } catch (Exception e) {
+            return findAlternativeProducts(new SearchRequestDTO());
+        }
+    }
+
+    /**
+     * Tìm sản phẩm bán chạy nhất
+     */
+    private List<SanPham> findBestSellingProducts() {
+        try {
+            // Thử lấy dữ liệu bán chạy từ 6 tháng gần nhất (rộng hơn)
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusMonths(6);
+            
+            System.out.println("Searching for best selling products from " + startDate + " to " + endDate);
+            
+            List<Object[]> results = sanPhamRepo.findTopDaBan(startDate, endDate);
+            System.out.println("Found " + results.size() + " results from database");
+            
+            if (results.isEmpty()) {
+                System.out.println("No best selling data found, using fallback");
+                return getFallbackProducts();
+            }
+            
+            List<String> tenSP = results.stream()
+                    .map(r -> (String) r[1])
+                    .limit(10) // Lấy top 10 sản phẩm bán chạy
+                    .toList();
+            
+            System.out.println("Product names: " + tenSP);
+            
+            List<SanPham> products = tenSP.stream()
+                    .map(sanPhamRepo::findByTenSanPham)
+                    .filter(product -> product != null)
+                    .collect(Collectors.toList());
+            
+            System.out.println("Found " + products.size() + " valid products");
+            
+            // Nếu không tìm thấy sản phẩm nào, dùng fallback
+            if (products.isEmpty()) {
+                System.out.println("No valid products found, using fallback");
+                return getFallbackProducts();
+            }
+            
+            return products;
+                    
+        } catch (Exception e) {
+            System.err.println("Error in findBestSellingProducts: " + e.getMessage());
+            e.printStackTrace();
+            return getFallbackProducts();
+        }
+    }
+    
+    /**
+     * Fallback: lấy sản phẩm phổ biến
+     */
+    private List<SanPham> getFallbackProducts() {
+        try {
+            // Lấy tất cả sản phẩm và sắp xếp theo giá trị phổ biến
+            List<SanPham> allProducts = sanPhamRepo.findAll();
+            
+            // Sắp xếp theo đánh giá trung bình và số lượng vote
+            List<SanPham> sortedProducts = allProducts.stream()
+                    .filter(p -> p.getDanhGiaTrungBinh() != null && p.getDanhGiaTrungBinh() > 0)
+                    .sorted((p1, p2) -> {
+                        // Ưu tiên đánh giá cao và nhiều vote
+                        double score1 = p1.getDanhGiaTrungBinh() * (p1.getSoLuongVote() != null ? p1.getSoLuongVote() : 1);
+                        double score2 = p2.getDanhGiaTrungBinh() * (p2.getSoLuongVote() != null ? p2.getSoLuongVote() : 1);
+                        return Double.compare(score2, score1); // Giảm dần
+                    })
+                    .limit(10)
+                    .collect(Collectors.toList());
+            
+            // Nếu không có sản phẩm có đánh giá, lấy 10 sản phẩm đầu tiên
+            if (sortedProducts.isEmpty()) {
+                sortedProducts = allProducts.stream()
+                        .limit(10)
+                        .collect(Collectors.toList());
+            }
+            
+            System.out.println("Fallback: Found " + sortedProducts.size() + " products");
+            return sortedProducts;
+            
+        } catch (Exception e) {
+            System.err.println("Error in getFallbackProducts: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private String extractAgeFromGroup(String ageGroup) {
+        if (ageGroup.contains("trẻ em") || ageGroup.contains("nhỏ")) {
+            return "4-6";
+        } else if (ageGroup.contains("thiếu niên")) {
+            return "7-12";
+        } else if (ageGroup.contains("người lớn")) {
+            return "18+";
+        }
+        return "6+";
+    }
+
+    private String generateIntelligentAdvice(String userInput, List<SanPham> products, UserNeeds needs, List<ChatMemory> chatHistory) {
+        if (products.isEmpty()) {
+            return "Dựa trên yêu cầu của bạn, tôi khuyên bạn nên xem xét các bộ LEGO cơ bản phù hợp với độ tuổi. " +
+                    "Vui lòng cho biết thêm thông tin để tôi tư vấn cụ thể hơn!";
+        }
+
+        String contextInfo = buildContextFromHistory(chatHistory);
+
+        String advicePrompt = String.format("""
+            Bạn là chuyên gia tư vấn LEGO chuyên nghiệp.
+            
+            **NGỮ CẢNH:** %s
+            **YÊU CẦU:** "%s"
+            **PHÂN TÍCH NHU CẦU:** %s
+            **SẢN PHẨM GỢI Ý:** %s
+            
+            Hãy viết lời tư vấn chuyên nghiệp, thân thiện (150-200 từ):
+            - Giải thích tại sao chọn những sản phẩm này
+            - Đưa ra lời khuyên cụ thể
+            - Hướng dẫn cách chọn sản phẩm phù hợp
+            - Sử dụng emoji để tạo cảm giác thân thiện
+            """, contextInfo, userInput, formatUserNeeds(needs), formatProductsForAdvice(products));
+
+        try {
+            Prompt prompt = new Prompt(advicePrompt);
+            return chatClient.call(prompt).getResult().getOutput().getContent().trim();
+        } catch (Exception e) {
+            return String.format("💡 Dựa trên yêu cầu của bạn, tôi gợi ý %d sản phẩm LEGO phù hợp được chọn lọc kỹ càng. " +
+                    "Những sản phẩm này phù hợp với độ tuổi và sở thích của bạn.", products.size());
+        }
+    }
+
+    private String generateBestSellingAdvice(String userInput, List<SanPham> products) {
+        if (products.isEmpty()) {
+            return "🔥 Hiện tại chưa có dữ liệu về sản phẩm bán chạy. Tôi sẽ tư vấn cho bạn một số sản phẩm LEGO phổ biến!";
+        }
+
+        try {
+            String advicePrompt = String.format("""
+                Bạn là chuyên gia tư vấn LEGO chuyên nghiệp.
+                
+                **YÊU CẦU KHÁCH HÀNG:** "%s"
+                **SẢN PHẨM BÁN CHẠY:** %s
+                
+                Hãy viết lời tư vấn về sản phẩm bán chạy (150-200 từ):
+                - Giải thích tại sao những sản phẩm này bán chạy
+                - Đưa ra lời khuyên cụ thể cho từng sản phẩm
+                - Nhấn mạnh ưu điểm và phù hợp với đối tượng nào
+                - Sử dụng emoji để tạo cảm giác thân thiện
+                - Kết thúc bằng lời khuyên chung
+                """, userInput, formatProductsForAdvice(products));
+
+            Prompt prompt = new Prompt(advicePrompt);
+            return chatClient.call(prompt).getResult().getOutput().getContent().trim();
+        } catch (Exception e) {
+            System.err.println("Error in generateBestSellingAdvice: " + e.getMessage());
+            return String.format("🔥 **TOP %d SẢN PHẨM BÁN CHẠY NHẤT** 🔥\n\n" +
+                    "Dựa trên dữ liệu bán hàng 3 tháng gần nhất, đây là những sản phẩm LEGO được khách hàng yêu thích nhất:\n\n" +
+                    "%s\n\n" +
+                    "💡 **Lời khuyên:** Những sản phẩm này đều có chất lượng cao, phù hợp với nhiều độ tuổi và được đánh giá tốt từ khách hàng. " +
+                    "Bạn có thể chọn theo sở thích hoặc liên hệ tôi để được tư vấn chi tiết hơn!",
+                    products.size(), formatProductsForAdvice(products));
+        }
+    }
+
+    private String formatUserNeeds(UserNeeds needs) {
+        return String.format("Độ tuổi: %s, Sở thích: %s, Kinh nghiệm: %s, Danh mục: %s",
+                needs.getAgeGroup() != null ? needs.getAgeGroup() : "N/A",
+                needs.getInterests() != null ? needs.getInterests() : "N/A",
+                needs.getExperience() != null ? needs.getExperience() : "N/A",
+                needs.getCategory() != null ? needs.getCategory() : "N/A");
+    }
+
+    private FollowUpAnalysis analyzeFollowUpQuestion(String userInput, List<ChatMemory> chatHistory) {
+        String contextInfo = buildContextFromHistory(chatHistory);
+        
+        String analysisPrompt = String.format("""
+            Phân tích câu hỏi follow-up và xác định cần tìm kiếm sản phẩm không.
+            
+            **NGỮ CẢNH:** %s
+            **CÂU HỎI:** "%s"
+            
+            Trả về JSON:
+            {
+              "analysis": "phân tích ngắn gọn về câu hỏi",
+              "needProducts": true/false,
+              "searchCriteria": "tiêu chí tìm kiếm nếu cần"
+            }
+            """, contextInfo, userInput);
+
+        try {
+            Prompt prompt = new Prompt(analysisPrompt);
+            String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
+            String cleanJson = cleanJsonResponse(jsonResponse);
+            JsonNode node = objectMapper.readTree(cleanJson);
+            
+            String analysis = node.get("analysis").asText();
+            boolean needProducts = node.get("needProducts").asBoolean();
+            
+            List<SanPham> products = new ArrayList<>();
+            if (needProducts && node.has("searchCriteria")) {
+                String criteria = node.get("searchCriteria").asText();
+                products = searchProductsWithContext(criteria, chatHistory);
+            }
+            
+            return new FollowUpAnalysis(analysis, products);
+            
+        } catch (Exception e) {
+            return new FollowUpAnalysis("Câu hỏi follow-up về cuộc trò chuyện trước", new ArrayList<>());
+        }
+    }
+
+    private List<SanPham> findAlternativeProducts(SearchRequestDTO originalCriteria) {
+        try {
+            // Tạo tiêu chí rộng hơn
+            SearchRequestDTO relaxedCriteria = new SearchRequestDTO();
+
+            if (originalCriteria.getDoTuoi() != null) {
+                relaxedCriteria.setDoTuoi(originalCriteria.getDoTuoi());
+            }
+            if (originalCriteria.getGia() != null) {
+                relaxedCriteria.setGia(originalCriteria.getGia());
+            }
+
+            List<SanPham> products = sanPhamRepo.timKiemTheoDieuKien(relaxedCriteria);
+
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusMonths(1);
+            // Nếu vẫn trống, lấy sản phẩm bán chạy
+            if (products.isEmpty()) {
+                List<Object[]> results = sanPhamRepo.findTopDaBan(startDate, endDate);
+                List<String> tenSP = results.stream()
+                        .map(r -> (String) r[1])
+                        .toList();
+                products = tenSP.stream()
+                        .map(sanPhamRepo::findByTenSanPham)
+                        .toList();
+            }
+
+            return products.stream().limit(8).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusMonths(1);
+            List<Object[]> results = sanPhamRepo.findTopDaBan(startDate, endDate);
+            List<String> tenSP = results.stream()
+                    .map(r -> (String) r[1])
+                    .toList();
+            return tenSP.stream()
+                    .map(sanPhamRepo::findByTenSanPham)
+                    .toList();
+        }
+    }
+
+    private String determineFAQResponse(String lowerInput) {
+        if (lowerInput.contains("bảo hành")) {
+            return faqDatabase.get("WARRANTY");
+        } else if (lowerInput.contains("thanh toán")) {
+            return faqDatabase.get("PAYMENT");
+        } else if (lowerInput.contains("đổi") || lowerInput.contains("trả")) {
+            return faqDatabase.get("RETURN");
+        } else if (lowerInput.contains("liên hệ")) {
+            return faqDatabase.get("CONTACT");
+        } else {
+            return "📋 **Câu hỏi thường gặp:**\n\n" +
+                    "🚚 " + faqDatabase.get("SHIPPING") + "\n\n" +
+                    "🛡️ " + faqDatabase.get("WARRANTY") + "\n\n" +
+                    "💳 " + faqDatabase.get("PAYMENT") + "\n\n" +
+                    "🔄 " + faqDatabase.get("RETURN") + "\n\n" +
+                    "📞 " + faqDatabase.get("CONTACT");
+        }
+    }
+
+    private String formatProductsForAdvice(List<SanPham> products) {
+        return products.stream()
+                .limit(5)
+                .map(p -> String.format("- %s | Giá: %s | Độ tuổi: %s",
+                        p.getTenSanPham() != null ? p.getTenSanPham() : "N/A",
+                        p.getGia() != null ? String.format("%,.0f đ", p.getGia()) : "N/A",
+                        p.getDoTuoi() != null ? p.getDoTuoi() : "N/A"))
+                .collect(Collectors.joining("\n"));
+    }
+
+    /**
+     * Utility Methods
+     */
     private String cleanJsonResponse(String jsonResponse) {
         String cleaned = jsonResponse.trim();
         if (cleaned.startsWith("```json")) {
@@ -586,4 +1010,37 @@ public class ChatService {
         }
         return null;
     }
+    public SanPhamResponseDTO convertToResponseDTO(SanPham sanPham) {
+        List<AnhSp> listAnh = anhSpRepo.findBySanPhamId(sanPham.getId());
+        List<AnhResponse> anhUrls = listAnh.stream()
+                .map(anh -> {
+                    AnhResponse response = new AnhResponse();
+                    response.setId(anh.getId());
+                    response.setUrl(anh.getUrl());
+                    response.setAnhChinh(anh.getAnhChinh());
+                    return response;
+                })
+                .toList();
+
+        SanPhamResponseDTO dto = new SanPhamResponseDTO();
+        dto.setId(sanPham.getId());
+        dto.setTenSanPham(sanPham.getTenSanPham());
+        dto.setMaSanPham(sanPham.getMaSanPham());
+        dto.setDoTuoi(sanPham.getDoTuoi());
+        dto.setMoTa(sanPham.getMoTa());
+        dto.setGia(sanPham.getGia());
+        dto.setSoLuongManhGhep(sanPham.getSoLuongManhGhep());
+        dto.setSoLuongTon(sanPham.getSoLuongTon());
+        dto.setSoLuongVote(sanPham.getSoLuongVote());
+        dto.setDanhGiaTrungBinh(sanPham.getDanhGiaTrungBinh());
+        dto.setDanhMucId(sanPham.getDanhMuc() != null ? sanPham.getDanhMuc().getId() : null);
+        dto.setBoSuuTapId(sanPham.getBoSuuTap() != null ? sanPham.getBoSuuTap().getId() : null);
+        dto.setXuatXuId(sanPham.getXuatXu() != null ? sanPham.getXuatXu().getId() : null);
+        dto.setTrangThai(sanPham.getTrangThai());
+        dto.setThuongHieuId(sanPham.getThuongHieu() != null ? sanPham.getThuongHieu().getId() : null);
+        dto.setNoiBat(sanPham.getNoiBat() != null ? sanPham.getNoiBat() : null);
+        dto.setAnhUrls(anhUrls);
+        return dto;
+    }
 }
+
