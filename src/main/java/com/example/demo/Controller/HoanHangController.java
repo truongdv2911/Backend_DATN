@@ -5,6 +5,7 @@ import com.example.demo.Entity.PhieuHoanHang;
 import com.example.demo.Enum.TrangThaiPhieuHoan;
 import com.example.demo.Enum.TrangThaiThanhToan;
 import com.example.demo.Responses.ErrorResponse;
+import com.example.demo.Responses.PhieuHoanHangResponse;
 import com.example.demo.Service.HoanHangService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +76,12 @@ public class HoanHangController {
     public ResponseEntity<?> getByTrangThai(@PathVariable TrangThaiPhieuHoan trangThai) {
         try {
             List<PhieuHoanHang> phieus = hoanHangService.getPhieuHoanByTrangThai(trangThai);
-            return ResponseEntity.ok(phieus);
+            List<PhieuHoanHangResponse> phieuHoanHangResponses = phieus.stream()
+                    .map(phieuHoanHang -> {
+                        PhieuHoanHangResponse phieuHoanHangResponse = hoanHangService.convertPHH(phieuHoanHang);
+                        return phieuHoanHangResponse;
+                    }).toList();
+            return ResponseEntity.ok(phieuHoanHangResponses);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new ErrorResponse(500, "Lỗi hệ thống: " + e.getMessage()));
         }
@@ -85,7 +91,12 @@ public class HoanHangController {
     public ResponseEntity<?> getByHoaDon(@PathVariable Integer idHoaDon) {
         try {
             List<PhieuHoanHang> phieus = hoanHangService.getPhieuHoanByHoaDon(idHoaDon);
-            return ResponseEntity.ok(phieus);
+            List<PhieuHoanHangResponse> phieuHoanHangResponses = phieus.stream()
+                    .map(phieuHoanHang -> {
+                        PhieuHoanHangResponse phieuHoanHangResponse = hoanHangService.convertPHH(phieuHoanHang);
+                        return phieuHoanHangResponse;
+                    }).toList();
+            return ResponseEntity.ok(phieuHoanHangResponses);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         } catch (Exception e) {
