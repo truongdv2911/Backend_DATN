@@ -228,7 +228,7 @@ public class HoaDonService {
 
             hoaDon.setTamTinh(totalHd);
             hoaDon.setSoTienGiam(soTienGiam);
-            hoaDon.setTongTien((totalHd.subtract(soTienGiam)).add(phiShip));
+            hoaDon.setTongTien((totalHd.subtract(soTienGiam)).add(hoaDon.getPhiShip()));
 
             // 5. Lưu vào database (transaction sẽ commit tại đây nếu không có lỗi)
             HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);

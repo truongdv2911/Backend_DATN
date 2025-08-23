@@ -6,6 +6,8 @@ import com.example.demo.Entity.*;
 import com.example.demo.Enum.TrangThaiPhieuHoan;
 import com.example.demo.Enum.TrangThaiThanhToan;
 import com.example.demo.Repository.*;
+import com.example.demo.Responses.ChiTietHoanResponse;
+import com.example.demo.Responses.PhieuHoanHangResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -272,5 +275,34 @@ public class HoanHangService {
                 .mapToInt(ChiTietHoanHang::getSoLuongHoan)
                 .sum();
         return tongSoLuongHoaDon == tongSoLuongHoan;
+    }
+
+    public PhieuHoanHangResponse convertPHH(PhieuHoanHang phieus) {
+        PhieuHoanHangResponse phieuHoanHangResponses = new PhieuHoanHangResponse();
+        List<ChiTietHoanResponse> chiTietHoanResponses = phieus.getChiTietHoanHangs().stream()
+                .map(chiTiet -> {
+                    ChiTietHoanResponse chiTietHoanResponse = new ChiTietHoanResponse();
+                    chiTietHoanResponse.setSoLuongHoan(chiTiet.getSoLuongHoan());
+                    chiTietHoanResponse.setTongGiaHoan(chiTiet.getTongGiaHoan());
+                    chiTietHoanResponse.setIdSanPham(chiTiet.getSanPham().getId());
+                    return chiTietHoanResponse;
+                }).toList();
+
+        phieuHoanHangResponses.setId(phieus.getId());
+        phieuHoanHangResponses.setNgayHoan(phieus.getNgayHoan());
+        phieuHoanHangResponses.setTongTienHoan(phieus.getTongTienHoan());
+        phieuHoanHangResponses.setLoaiHoan(phieus.getLoaiHoan());
+        phieuHoanHangResponses.setLyDo(phieus.getLyDo());
+        phieuHoanHangResponses.setNgayDuyet(phieus.getNgayDuyet());
+        phieuHoanHangResponses.setTrangThai(phieus.getTrangThai());
+        phieuHoanHangResponses.setTrangThaiThanhToan(phieus.getTrangThaiThanhToan());
+        phieuHoanHangResponses.setPhuongThucHoan(phieus.getPhuongThucHoan());
+        phieuHoanHangResponses.setNgayHoanTien(phieus.getNgayHoanTien());
+        phieuHoanHangResponses.setTenNganHang(phieus.getTenNganHang());
+        phieuHoanHangResponses.setSoTaiKhoan(phieus.getSoTaiKhoan());
+        phieuHoanHangResponses.setChuTaiKhoan(phieus.getChuTaiKhoan());
+        phieuHoanHangResponses.setIdHD(phieus.getHoaDon().getId());
+        phieuHoanHangResponses.setChiTietHoanHangs(chiTietHoanResponses);
+        return phieuHoanHangResponses;
     }
 }
