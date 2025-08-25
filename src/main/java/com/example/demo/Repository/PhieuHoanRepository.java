@@ -31,7 +31,8 @@ SELECT
     CAST(COUNT(DISTINCT ph.id_hoa_don) AS FLOAT) /\s
     (SELECT COUNT(*) FROM hoa_don WHERE ngay_lap BETWEEN :startDate AND :endDate) * 100 AS ti_le_hoan
 FROM phieu_hoan_hang ph
-WHERE ph.ngay_hoan BETWEEN :startDate AND :endDate
+WHERE ph.ngay_hoan >= :startDate
+    AND ph.ngay_hoan < DATEADD(DAY, 1, :endDate)
 """, nativeQuery = true)
     BigDecimal tyLeHoan(LocalDate startDate, LocalDate endDate);
 }

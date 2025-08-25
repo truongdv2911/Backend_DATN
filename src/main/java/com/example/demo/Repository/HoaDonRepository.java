@@ -24,17 +24,19 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
 
     @Query(value = """
         SELECT SUM(tong_tien)
-        FROM hoa_don
+        FROM hoa_don hd
         WHERE trang_thai = N'Hoàn tất'
-        AND ngay_lap BETWEEN :startDate AND :endDate
+        AND hd.ngay_lap >= :startDate
+    AND hd.ngay_lap < DATEADD(DAY, 1, :endDate)
         """, nativeQuery = true)
     BigDecimal doanhThuTheoNgay(LocalDate startDate, LocalDate endDate);
 
     @Query(value = """
         SELECT phuong_thuc_thanh_toan, SUM(tong_tien)
-        FROM hoa_don
+        FROM hoa_don hd
         WHERE trang_thai = N'Hoàn tất'
-        AND ngay_lap BETWEEN :startDate AND :endDate
+        AND hd.ngay_lap >= :startDate
+    AND hd.ngay_lap < DATEADD(DAY, 1, :endDate)
         GROUP BY phuong_thuc_thanh_toan
         """, nativeQuery = true)
     List<Object[]> doanhThuTheoPhuongThucTT(LocalDate startDate, LocalDate endDate);

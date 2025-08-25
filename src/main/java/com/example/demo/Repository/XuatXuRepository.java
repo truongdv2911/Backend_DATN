@@ -15,10 +15,11 @@ public interface XuatXuRepository extends JpaRepository<XuatXu, Integer> {
 SELECT th.ten_xuat_xu, SUM(ct.so_luong * ct.gia) AS doanh_thu
 FROM [dbo].[Hoa_don_chi_tiet] ct
 JOIN san_pham sp ON sp.id = ct.san_pham_id
-JOIN Xuat_xu th ON th.id = sp.thuong_hieu_id
+JOIN Xuat_xu th ON th.id = sp.xuat_xu_id
 JOIN hoa_don hd ON hd.id = ct.hoa_don_id
 WHERE hd.trang_thai = N'Hoàn tất'
-  AND hd.ngay_lap BETWEEN :startDate AND :endDate
+  AND hd.ngay_lap >= :startDate
+    AND hd.ngay_lap < DATEADD(DAY, 1, :endDate)
 GROUP BY th.ten_xuat_xu;
 """, nativeQuery = true)
     List<Object[]> doanhThuTheoXuatXu(LocalDate startDate, LocalDate endDate);

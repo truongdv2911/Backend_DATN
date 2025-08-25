@@ -57,6 +57,7 @@ LEFT JOIN san_pham sp ON sp.id = kmsp.id_san_pham
 LEFT JOIN hoa_don_chi_tiet hdct ON hdct.san_pham_id = sp.id
 LEFT JOIN hoa_don hd ON hd.id = hdct.hoa_don_id
     WHERE km.id = :idKM
+    and hd.trang_thai = N'Hoàn tất'
       AND hd.ngay_lap BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
 GROUP BY
     km.id, km.ten_khuyen_mai, km.phan_tram_khuyen_mai,
@@ -92,7 +93,9 @@ JOIN [dbo].[Hoa_don_chi_tiet] ct ON ct.san_pham_id = ksp.id_san_pham
 JOIN san_pham sp ON sp.id = ct.san_pham_id
 JOIN hoa_don hd ON hd.id = ct.hoa_don_id
 WHERE hd.trang_thai = N'Hoàn tất'
-  AND hd.ngay_lap BETWEEN :startDate AND :endDate
+  AND hd.ngay_lap >= :startDate
+    AND hd.ngay_lap < DATEADD(DAY, 1, :endDate)
+    AND ct.gia < sp.gia
 GROUP BY km.id, km.ten_khuyen_mai
 ORDER BY tong_tien_giam DESC
 """, nativeQuery = true)
