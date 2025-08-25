@@ -27,7 +27,8 @@ SELECT TOP 10 kh.id, kh.ten, COUNT(hd.id) AS so_don, SUM(hd.tong_tien) AS tong_t
 FROM Users kh
 JOIN hoa_don hd ON hd.user_id = kh.id
 WHERE hd.trang_thai = N'Hoàn tất'
-  AND hd.ngay_lap BETWEEN :startDate AND :endDate
+  AND hd.ngay_lap >= :startDate
+    AND hd.ngay_lap < DATEADD(DAY, 1, :endDate)
 GROUP BY kh.id, kh.ten
 ORDER BY tong_tien DESC;
 """, nativeQuery = true)
