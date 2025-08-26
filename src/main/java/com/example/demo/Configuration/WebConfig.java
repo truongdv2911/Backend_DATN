@@ -73,6 +73,7 @@ public class WebConfig {
                                 "/api/lego-store/user/reset-password",
                                 "/api/**"
                         ).permitAll()
+                                .requestMatchers("/ws-game/**").permitAll()
 //                        .requestMatchers(HttpMethod.GET, ("/api/sanpham/**")).permitAll()
 //                        .requestMatchers(HttpMethod.POST, ("/api/sanpham/**")).hasAnyRole(admin, staff)
 //                        .requestMatchers(HttpMethod.PUT, ("/api/sanpham/**")).hasAnyRole(admin, staff)
@@ -129,6 +130,7 @@ public class WebConfig {
 //                        .requestMatchers(HttpMethod.DELETE, ("api/lego-store/user/**")).hasRole(admin)
                         .anyRequest().authenticated()
                 )
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
         .exceptionHandling(exception -> exception
             .accessDeniedHandler(accessDeniedHandler())
         );
