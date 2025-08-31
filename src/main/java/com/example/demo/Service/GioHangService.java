@@ -3,6 +3,8 @@ package com.example.demo.Service;
 import com.example.demo.DTOs.GioHangDTO;
 import com.example.demo.Entity.*;
 import com.example.demo.Repository.*;
+import com.example.demo.Responses.GioHangChiTietResponse;
+import com.example.demo.Responses.GioHangResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class GioHangService {
     private final UserRepository userRepository;
     private final San_pham_Repo san_pham_repo;
     private final Phieu_giam_gia_Repo phieuGiamGiaRepository;
+    private final San_pham_Service sanPhamService;
 
     @Transactional
     public GioHang getOrCreateCart(Integer userId) {
@@ -55,8 +59,9 @@ public class GioHangService {
             gioHangChiTiet.setGioHang(gioHang);
             gioHangChiTiet.setSanPham(sanPham);
             gioHangChiTiet.setSoLuong(soLuong);
-//            gioHangChiTiet.setGia(sanPham.getGiaKhuyenMai()); // Giả định SanPham có trường gia
-            gioHangChiTiet.setTongTien(sanPham.getGia().multiply(BigDecimal.valueOf(soLuong)));
+            BigDecimal giaSanPham = sanPham.getGiaKM() != null ? sanPham.getGiaKM() : sanPham.getGia();
+            gioHangChiTiet.setGia(giaSanPham);
+            gioHangChiTiet.setTongTien(giaSanPham.multiply(BigDecimal.valueOf(soLuong)));
         } else {
             gioHangChiTiet.setSoLuong(gioHangChiTiet.getSoLuong() + soLuong);
             gioHangChiTiet.setTongTien(gioHangChiTiet.getGia().multiply(BigDecimal.valueOf(gioHangChiTiet.getSoLuong())));
@@ -100,7 +105,7 @@ public class GioHangService {
         PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId)
                 .orElseThrow(() -> new RuntimeException("Phiếu giảm giá không tồn tại"));
 
-        if (!"Đang hoạt động".equals(phieuGiamGia.getTrangThai())) {
+        if (!"active".equals(phieuGiamGia.getTrangThai())) {
             throw new RuntimeException("Phiếu giảm giá không khả dụng");
         }
 
@@ -126,14 +131,14 @@ public class GioHangService {
 
         // Tính số tiền giảm dựa trên loại phiếu
         BigDecimal soTienGiam;
-        if ("Theo %".equals(phieuGiamGia.getLoaiPhieuGiam())) {
+        if ("theo_phan_tram".equals(phieuGiamGia.getLoaiPhieuGiam())) {
             // Giảm theo phần trăm
             soTienGiam = tongTienTruocGiam.multiply(phieuGiamGia.getGiaTriGiam().divide(BigDecimal.valueOf(100)));
             // Kiểm tra giới hạn giảm tối đa
             if (phieuGiamGia.getGiamToiDa() != null && soTienGiam.compareTo(phieuGiamGia.getGiamToiDa()) > 0) {
                 soTienGiam = phieuGiamGia.getGiamToiDa();
             }
-        } else if ("Theo số tiền".equals(phieuGiamGia.getLoaiPhieuGiam())) {
+        } else if ("theo_so_tien".equals(phieuGiamGia.getLoaiPhieuGiam())) {
             // Giảm số tiền cố định
             soTienGiam = phieuGiamGia.getGiaTriGiam();
             // Kiểm tra giới hạn giảm tối đa
@@ -175,5 +180,33 @@ public class GioHangService {
     }
     public GioHang getCart(Integer userId) {
         return getOrCreateCart(userId);
+    }
+
+    public GioHangChiTietResponse convertGHCT(GioHangChiTiet item) {
+        GioHangChiTietResponse gioHangChiTietResponse = new GioHangChiTietResponse();
+        gioHangChiTietResponse.setGioHangId(item.getGioHang().getId());
+        gioHangChiTietResponse.setId(item.getId());
+        gioHangChiTietResponse.setGia(item.getGia());
+        gioHangChiTietResponse.setSoLuong(item.getSoLuong());
+        gioHangChiTietResponse.setTongTien(item.getTongTien());
+        gioHangChiTietResponse.setSanPham(sanPhamService.convertToResponseDTO(item.getSanPham()));
+        return gioHangChiTietResponse;
+    }
+
+    public GioHangResponse convertGH(GioHang gioHang) {
+        GioHangResponse gioHangResponse = new GioHangResponse();
+        List<GioHangChiTietResponse> gioHangChiTietResponses = gioHang.getGioHangChiTiets().stream().map(gioHangChiTiet -> {
+            return convertGHCT(gioHangChiTiet);
+        }).toList();
+        gioHangResponse.setId(gioHang.getId());
+        gioHangResponse.setUserId(gioHang.getUser().getId());
+        gioHangResponse.setPhieuGiamGiaId(Optional.ofNullable(gioHang.getPhieuGiamGia())
+                .map(PhieuGiamGia::getId)
+                .orElse(null));
+        gioHangResponse.setTongTien(gioHang.getTongTien());
+        gioHangResponse.setSoTienGiam(gioHang.getSoTienGiam());
+        gioHangResponse.setTrangThai(gioHang.getTrangThai());
+        gioHangResponse.setGioHangChiTiets(gioHangChiTietResponses);
+        return gioHangResponse;
     }
 }

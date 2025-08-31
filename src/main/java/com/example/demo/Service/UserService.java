@@ -42,7 +42,7 @@ public class UserService {
         }
         User user = new User(null, dtoUser.getTen(), dtoUser.getEmail(), dtoUser.getMatKhau(), dtoUser.getSdt()
                 , dtoUser.getNgaySinh(), dtoUser.getDiaChi(), 1, dtoUser.getFacebookId(),
-                dtoUser.getGoogleId(), roleRepository.findById(3).orElseThrow(() -> new RuntimeException("Khong tim thay role")));
+                dtoUser.getGoogleId(), roleRepository.findById(3).orElseThrow(() -> new RuntimeException("Khong tim thay role")), 0);
 
         if (dtoUser.getFacebookId() == null && dtoUser.getGoogleId() == null) {
             String password = user.getMatKhau();
@@ -59,7 +59,7 @@ public class UserService {
         }
         User user = new User(null, dtoUser.getTen(), dtoUser.getEmail(), dtoUser.getMatKhau(), dtoUser.getSdt()
                 , dtoUser.getNgaySinh(), dtoUser.getDiaChi(), 1, dtoUser.getFacebookId(),
-                dtoUser.getGoogleId(), roleRepository.findById(dtoUser.getRole_id()).orElseThrow(() -> new RuntimeException("khong tim thay id role")));
+                dtoUser.getGoogleId(), roleRepository.findById(dtoUser.getRole_id()).orElseThrow(() -> new RuntimeException("khong tim thay id role")), 0);
 
         if (dtoUser.getFacebookId() == null && dtoUser.getGoogleId() == null) {
             String password = user.getMatKhau();

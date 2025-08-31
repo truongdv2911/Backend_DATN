@@ -47,4 +47,7 @@ public class PGGUpdateDTO {
 
     @NotNull(message = "Không để trống nổi bật")
     private Integer noiBat;
+
+    @NotNull(message = "Không để trống diem doi")
+    private Integer diemDoi;
 }

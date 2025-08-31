@@ -47,4 +47,5 @@ public class DTOuser {
     private String facebookId;
     private String googleId;
     private Integer role_id;
+    private Integer diemTichLuy;
 }

@@ -48,4 +48,6 @@ public class PhieuGiamGia {
     @Column(name = "is_noi_bat")
     private Integer noiBat;
 
+    @Column(name = "diem_doi")
+    private Integer diemDoi;
 }

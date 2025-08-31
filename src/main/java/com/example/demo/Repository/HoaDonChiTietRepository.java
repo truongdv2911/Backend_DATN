@@ -43,6 +43,5 @@ public interface HoaDonChiTietRepository extends JpaRepository<HoaDonChiTiet, In
             "WHERE hd.hd.id = :idHoaDon AND hd.sp.id = :idSanPham")
     BigDecimal getGiaSanPhamTrongHoaDon(@Param("idHoaDon") Integer idHoaDon,
                                         @Param("idSanPham") Integer idSanPham);
-
     List<HoaDonChiTiet> findByHd(HoaDon hoaDon);
 }

@@ -19,7 +19,7 @@ public interface PhieuHoanRepository extends JpaRepository<PhieuHoanHang, Intege
     List<PhieuHoanHang> findByHoaDonOrderByNgayHoanDesc(HoaDon hoaDon);
 
     @Query(value = """
-SELECT ly_do, COUNT(*) AS so_lan, SUM(tong_tien_hoan) AS tong_tien
+SELECT TOP 10 ly_do, COUNT(*) AS so_lan, SUM(tong_tien_hoan) AS tong_tien
 FROM phieu_hoan_hang
 WHERE ngay_hoan BETWEEN :startDate AND :endDate
 GROUP BY ly_do;

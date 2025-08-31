@@ -81,6 +81,7 @@ GROUP BY
 
     @Query(value = """
 SELECT
+TOP 10
     km.id AS id_khuyen_mai,
     km.ten_khuyen_mai,
     COUNT(DISTINCT hd.id) AS so_don_ap_dung,

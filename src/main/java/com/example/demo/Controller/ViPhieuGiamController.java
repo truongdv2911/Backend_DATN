@@ -72,4 +72,16 @@ public class ViPhieuGiamController {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
+
+    @PostMapping("/doi-diem-phieu")
+    public ResponseEntity<?> doiPhieu(@RequestBody ViGiamGiaDTO dto) {
+        try {
+            ViPhieuGiamGia vi = service.doiDiem(dto);
+            return ResponseEntity.ok(vi);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, ex.getMessage()));
+        }catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, ex.getMessage()));
+        }
+    }
 }

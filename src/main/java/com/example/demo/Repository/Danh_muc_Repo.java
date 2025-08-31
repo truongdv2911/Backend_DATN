@@ -14,7 +14,7 @@ public interface Danh_muc_Repo extends JpaRepository<DanhMuc, Integer> {
     boolean existsByTenDanhMuc(@Param("tenDM") String tenDM);
 
     @Query(value = """
-SELECT th.ten_danh_muc, SUM(ct.so_luong * ct.gia) AS doanh_thu
+SELECT TOP 5 th.ten_danh_muc, SUM(ct.so_luong * ct.gia) AS doanh_thu
 FROM [dbo].[Hoa_don_chi_tiet] ct
 JOIN san_pham sp ON sp.id = ct.san_pham_id
 JOIN Danh_muc th ON th.id = sp.danh_muc_id
