@@ -69,6 +69,7 @@ public class Phieu_giam_gia_Service {
         }
 
         phieuGiamGia.setMaPhieu(maPhieu);
+        phieuGiamGia.setDiemDoi(phieuGiamGiaDTO.getDiemDoi());
         phieuGiamGia.setTenPhieu(phieuGiamGiaDTO.getTenPhieu());
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
@@ -165,6 +166,7 @@ public class Phieu_giam_gia_Service {
             throw new RuntimeException("Tên phiếu giảm đã tồn tại!");
         }
         phieuGiamGia.setTenPhieu(phieuGiamGiaDTO.getTenPhieu());
+        phieuGiamGia.setDiemDoi(phieuGiamGiaDTO.getDiemDoi());
         phieuGiamGia.setSoLuong(phieuGiamGiaDTO.getSoLuong());
         phieuGiamGia.setLoaiPhieuGiam(phieuGiamGiaDTO.getLoaiPhieuGiam().trim());
         phieuGiamGia.setGiaTriGiam(phieuGiamGiaDTO.getGiaTriGiam());

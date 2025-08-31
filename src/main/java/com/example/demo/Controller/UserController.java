@@ -337,4 +337,18 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }
+
+    @PutMapping("/{id}/cong-diem")
+    public ResponseEntity<?> congDiem(@PathVariable Integer id, @RequestParam("diem") Integer diemCong){
+        try {
+            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+            user.setDiemTichLuy(user.getDiemTichLuy() + diemCong);
+            userRepository.save(user);
+            return ResponseEntity.ok(new ErrorResponse(200, "Tích điểm thành công"));
+        }catch (RuntimeException e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
+        }
+    }
 }

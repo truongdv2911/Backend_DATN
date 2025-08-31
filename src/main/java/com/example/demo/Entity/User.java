@@ -48,13 +48,16 @@ public class User extends BaseEntity implements UserDetails {
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role;
 
+    @Column(name = "diem_tich_luy")
+    private Integer diemTichLuy;
+
     @Column(name = "otp")
     private String otp;
 
     @Column(name = "otp_expiration_time")
     private LocalDateTime otpExpirationTime;
 
-    public User(Integer id, String ten, String email, String matKhau, String sdt, LocalDate ngaySinh, String diaChi, int trangThai, String facebookId, String googleId, Role role) {
+    public User(Integer id, String ten, String email, String matKhau, String sdt, LocalDate ngaySinh, String diaChi, int trangThai, String facebookId, String googleId, Role role, Integer diemTichLuy) {
         this.id = id;
         this.ten = ten;
         this.email = email;
@@ -66,6 +69,7 @@ public class User extends BaseEntity implements UserDetails {
         this.facebookId = facebookId;
         this.googleId = googleId;
         this.role = role;
+        this.diemTichLuy = diemTichLuy;
     }
 
     @Override

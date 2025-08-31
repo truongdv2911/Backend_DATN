@@ -6,11 +6,14 @@ import com.example.demo.Entity.GioHangChiTiet;
 import com.example.demo.Entity.User;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Responses.ErrorResponse;
+import com.example.demo.Responses.GioHangChiTietResponse;
+import com.example.demo.Responses.GioHangResponse;
 import com.example.demo.Service.GioHangService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.http.HttpStatus;
@@ -30,17 +33,14 @@ public class GioHangController {
     @PostMapping("/Create")
     public ResponseEntity<?> createGioHang(@RequestParam("sanPhamId") Integer sanPhamId,
                                            @RequestParam("soLuong") Integer soLuong,
-                                           HttpServletRequest request) {
+                                           @RequestParam("email") String email1) {
         try {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("username") == null) {
-                return ResponseEntity.status(401).body("Vui lòng đăng nhập");
-            }
-            String email = (String) session.getAttribute("username");
+            String email = email1;
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
             GioHangChiTiet item = gioHangService.addToCart(userId, sanPhamId, soLuong);
-            return ResponseEntity.ok(item);
+            GioHangChiTietResponse gioHangChiTietResponse = gioHangService.convertGHCT(item);
+            return ResponseEntity.ok(gioHangChiTietResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -52,18 +52,15 @@ public class GioHangController {
     public ResponseEntity<?> updateCartItem(
             @PathVariable Integer itemId,
             @RequestParam("soLuong") Integer soLuong,
-            HttpServletRequest request
+            @RequestParam("email") String email1
     ) {
         try {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("username") == null) {
-                return ResponseEntity.status(401).body("Vui lòng đăng nhập");
-            }
-            String email = (String) session.getAttribute("username");
+            String email = email1;
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
             GioHangChiTiet item = gioHangService.updateCartItem(userId, itemId, soLuong);
-            return ResponseEntity.ok(item);
+            GioHangChiTietResponse gioHangChiTietResponse = gioHangService.convertGHCT(item);
+            return ResponseEntity.ok(gioHangChiTietResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
@@ -74,18 +71,15 @@ public class GioHangController {
     @PostMapping("/apply-discount")
     public ResponseEntity<?> applyDiscount(
             @RequestParam("phieuGiamGiaId") Integer phieuGiamGiaId,
-            HttpServletRequest request
+            @RequestParam("email") String email1
     ) {
         try {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("username") == null) {
-                return ResponseEntity.status(401).body("Vui lòng đăng nhập");
-            }
-            String email = (String) session.getAttribute("username");
+            String email = email1;
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
             GioHang gioHang = gioHangService.applyDiscount(userId, phieuGiamGiaId);
-            return ResponseEntity.ok(gioHang);
+            GioHangResponse gioHangResponse = gioHangService.convertGH(gioHang);
+            return ResponseEntity.ok(gioHangResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -96,14 +90,10 @@ public class GioHangController {
     @DeleteMapping("/remove/{itemId}")
     public ResponseEntity<?> removeCartItem(
             @PathVariable Integer itemId,
-            HttpServletRequest request
+            @RequestParam("email") String email1
     ) {
         try {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("username") == null) {
-                return ResponseEntity.status(401).body("Vui lòng đăng nhập");
-            }
-            String email = (String) session.getAttribute("username");
+            String email = email1;
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
             gioHangService.removeCartItem(userId, itemId);
@@ -114,18 +104,15 @@ public class GioHangController {
     }
 
     // Xem giỏ hàng
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getCart(@PathVariable Integer id, HttpServletRequest request) {
+    @GetMapping("")
+    public ResponseEntity<?> getCart(@RequestParam("email") String email1) {
         try {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("username") == null) {
-                return ResponseEntity.status(401).body("Vui lòng đăng nhập");
-            }
-            String email = (String) session.getAttribute("username");
+            String email = email1;
             User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Khong tim thay email"));
             Integer userId = user.getId();
-            GioHang gioHang = gioHangService.getCart(id);
-            return ResponseEntity.ok(gioHang);
+            GioHang gioHang = gioHangService.getCart(userId);
+            GioHangResponse gioHangResponse = gioHangService.convertGH(gioHang);
+            return ResponseEntity.ok(gioHangResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

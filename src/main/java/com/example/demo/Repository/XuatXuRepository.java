@@ -12,7 +12,7 @@ public interface XuatXuRepository extends JpaRepository<XuatXu, Integer> {
     boolean existsByTenIgnoreCase(@Param("ten") String ten);
 
     @Query(value = """
-SELECT th.ten_xuat_xu, SUM(ct.so_luong * ct.gia) AS doanh_thu
+SELECT top 5 th.ten_xuat_xu, SUM(ct.so_luong * ct.gia) AS doanh_thu
 FROM [dbo].[Hoa_don_chi_tiet] ct
 JOIN san_pham sp ON sp.id = ct.san_pham_id
 JOIN Xuat_xu th ON th.id = sp.xuat_xu_id

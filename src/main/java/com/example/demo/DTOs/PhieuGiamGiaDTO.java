@@ -55,4 +55,7 @@ public class PhieuGiamGiaDTO {
 
     @NotNull(message = "Không để trống nổi bật")
     private Integer noiBat;
+
+    @NotNull(message = "Không để trống so diem tich luy")
+    private Integer diemDoi;
 }
