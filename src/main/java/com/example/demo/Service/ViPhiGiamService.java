@@ -78,7 +78,7 @@ public class ViPhiGiamService {
                     PhieuGiamGia p = vi.getPhieuGiamGia();
                     PhieuGiamGiaResponse dto = new PhieuGiamGiaResponse();
 
-                    dto.setId(vi.getId());
+                    dto.setId(p.getId());
                     dto.setNgayNhan(vi.getNgayNhan());
 
                     dto.setMaPhieu(p.getMaPhieu());
