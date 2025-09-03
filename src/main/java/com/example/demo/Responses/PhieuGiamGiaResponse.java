@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 @Data
 public class PhieuGiamGiaResponse {
-    private Long id;
+    private Integer id;
     private LocalDateTime ngayNhan;
     private String maPhieu;
     private String tenPhieu;
