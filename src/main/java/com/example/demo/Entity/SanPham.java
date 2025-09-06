@@ -65,19 +65,19 @@ public class SanPham {
     @Temporal(TemporalType.TIMESTAMP)
      Date ngaySua = new Date();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "danh_muc_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_DanhMuc"))
      DanhMuc danhMuc;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bo_suu_tap_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_SanPham_BoSuuTap"))
      BoSuuTap boSuuTap;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "xuat_xu_id", referencedColumnName = "id")
     XuatXu xuatXu;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thuong_hieu_id", referencedColumnName = "id")
     ThuongHieu thuongHieu;
 

@@ -44,6 +44,54 @@ public class ChatController {
         return Map.of("message", "Session cleared successfully");
     }
 
+    @GetMapping("/debug/database")
+    public Map<String, String> debugDatabase() {
+        String result = chatService.debugDatabaseData();
+        return Map.of("debug", result);
+    }
+
+    @GetMapping("/debug/simple")
+    public Map<String, String> testSimpleQuery() {
+        String result = chatService.testSimpleQuery();
+        return Map.of("test", result);
+    }
+
+    @GetMapping("/debug/search-flow")
+    public Map<String, String> debugSearchFlow() {
+        String result = chatService.debugSearchFlow();
+        return Map.of("debug", result);
+    }
+    
+    @GetMapping("/debug/parsing")
+    public Map<String, String> debugParsing() {
+        String result = chatService.testParsing();
+        return Map.of("test", result);
+    }
+    
+    @GetMapping("/debug/simple-api")
+    public Map<String, String> debugSimpleAPI() {
+        String result = chatService.testSimpleAPI();
+        return Map.of("test", result);
+    }
+    
+    @GetMapping("/debug/fix-12tuoi")
+    public Map<String, String> testFix12Tuoi() {
+        String result = chatService.testFix12Tuoi();
+        return Map.of("test", result);
+    }
+    
+    @GetMapping("/debug/fix-thailan")
+    public Map<String, String> testFixThaiLan() {
+        String result = chatService.testFixThaiLan();
+        return Map.of("test", result);
+    }
+    
+    @GetMapping("/debug/comprehensive-parsing")
+    public Map<String, String> testComprehensiveParsing() {
+        String result = chatService.testComprehensiveParsing();
+        return Map.of("test", result);
+    }
+
     @GetMapping("/session/{sessionId}/info")
     public Map<String, Object> getSessionInfo(@PathVariable String sessionId) {
         int memorySize = chatService.getChatMemorySize(sessionId);
