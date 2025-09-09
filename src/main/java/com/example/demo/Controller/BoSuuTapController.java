@@ -8,6 +8,7 @@ import com.example.demo.Service.Bo_suu_tap_Service;
 import com.example.demo.Service.LichSuLogService;
 import com.example.demo.Component.ObjectChangeLogger;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -19,14 +20,11 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/bosuutap")
+@RequiredArgsConstructor
 public class BoSuuTapController {
-
-    @Autowired
-    private Bo_suu_tap_Service boSuuTapService;
-    @Autowired
-    private Bo_suu_tap_Repo bo;
-    @Autowired
-    private LichSuLogService lichSuLogService;
+    private final Bo_suu_tap_Service boSuuTapService;
+    private final Bo_suu_tap_Repo bo;
+    private final LichSuLogService lichSuLogService;
 
     @PostMapping("/Create")
     public ResponseEntity<?> createBoSuuTap(@Valid @RequestBody BoSuuTapDTO boSuuTapDTO, BindingResult bindingResult) {
