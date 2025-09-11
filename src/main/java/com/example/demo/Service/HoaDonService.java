@@ -154,7 +154,11 @@ public class HoaDonService {
                 if (soLuongTon == null || soLuongTon < soLuongBan) {
                     throw new RuntimeException("Sản phẩm '" + sanPham.getTenSanPham() + "' không đủ tồn kho. Hiện còn: " + soLuongTon + ", cần: " + soLuongBan);
                 }
-                if (soLuongTon != null && dtOhoaDon.getLoaiHD() == 1) {
+                // 🔥 Trừ kho ngay nếu là tại quầy hoặc online chuyển khoản
+                boolean truKhoNgay = (dtOhoaDon.getLoaiHD() == 1) ||
+                        ("Chuyển khoản".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan()));
+
+                if (truKhoNgay) {
                     Integer soLuongTonConLai = soLuongTon - soLuongBan;
                     sanPham.setTrangThai(soLuongTonConLai > 0 ? "Đang kinh doanh" : "Hết hàng");
                     sanPham.setSoLuongTon(Math.max(0, soLuongTonConLai));

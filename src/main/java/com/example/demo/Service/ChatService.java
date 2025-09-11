@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import java.util.stream.Collectors;
-import java.util.Map;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatClient;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,15 +40,15 @@ public class ChatService {
     // Chat memory storage - sử dụng ConcurrentHashMap để thread-safe
     private final Map<String, List<ChatMemory>> userChatMemory = new ConcurrentHashMap<>();
     private static final int MAX_MEMORY_SIZE = 10; // Giới hạn 10 tin nhắn gần nhất
-    
+
     // Thread pool cho async operations
     private final Executor asyncExecutor = Executors.newFixedThreadPool(4);
-    
+
     // Cache cho các kết quả tìm kiếm phổ biến
     private final Map<String, List<SanPham>> searchCache = new ConcurrentHashMap<>();
     private final Map<String, IntentClassificationDTO> intentCache = new ConcurrentHashMap<>();
     private final Map<String, List<SanPham>> bestSellingCache = new ConcurrentHashMap<>();
-    
+
     // Cache TTL (Time To Live) - 5 phút
     private final Map<String, Long> cacheTimestamps = new ConcurrentHashMap<>();
     private static final long CACHE_TTL = 5 * 60 * 1000; // 5 phút
@@ -64,16 +62,7 @@ public class ChatService {
             "CONTACT", "📞 **Thông tin liên hệ:**\n• Hotline: 1900-xxxx (8:00-22:00)\n• Email: support@legoshop.vn\n• Fanpage: facebook.com/legoshopvn\n• Zalo: zalo.me/legoshop\n• Chi nhánh: 123 ABC Street, Hà Nội"
     );
 
-    // Product categories for better advice
-    private final Map<String, List<String>> productCategories = Map.of(
-            "TECHNIC", List.of("LEGO TECHNIC", "MECHANICAL", "ENGINEERING"),
-            "CITY", List.of("LEGO CITY", "POLICE", "FIRE", "CONSTRUCTION"),
-            "CREATOR", List.of("LEGO CREATOR", "EXPERT", "ADVANCED"),
-            "STAR_WARS", List.of("LEGO STAR WARS", "STAR WARS"),
-            "FRIENDS", List.of("LEGO FRIENDS", "FRIENDS"),
-            "DUPLO", List.of("LEGO DUPLO", "DUPLO"),
-            "JUNIORS", List.of("LEGO JUNIORS", "JUNIORS")
-    );
+    // Product categories for better advice (unused currently)
 
     /**
      * Main method xử lý input từ user với memory context - OPTIMIZED
@@ -90,18 +79,18 @@ public class ChatService {
             ChatResponse response = processIntentRequest(intent, userInput, chatHistory);
 
             // Lưu vào memory async để không block response
-            CompletableFuture.runAsync(() -> 
-                saveChatMemory(sessionId, userInput, response.getMessage(), intent.getIntent()), 
-                asyncExecutor);
+            CompletableFuture.runAsync(() ->
+                            saveChatMemory(sessionId, userInput, response.getMessage(), intent.getIntent()),
+                    asyncExecutor);
 
             return response;
 
         } catch (Exception e) {
             ChatResponse errorResponse = new ChatResponse("ERROR",
                     "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau hoặc liên hệ hotline để được hỗ trợ.", null);
-            CompletableFuture.runAsync(() -> 
-                saveChatMemory(sessionId, userInput, errorResponse.getMessage(), "ERROR"), 
-                asyncExecutor);
+            CompletableFuture.runAsync(() ->
+                            saveChatMemory(sessionId, userInput, errorResponse.getMessage(), "ERROR"),
+                    asyncExecutor);
             return errorResponse;
         }
     }
@@ -112,7 +101,7 @@ public class ChatService {
     private IntentClassificationDTO classifyIntentWithCaching(String userInput, List<ChatMemory> chatHistory) {
         // Tạo cache key từ user input (normalize để cache hiệu quả hơn)
         String cacheKey = normalizeInputForCache(userInput);
-        
+
         // Kiểm tra cache trước
         if (isCacheValid(cacheKey)) {
             IntentClassificationDTO cached = intentCache.get(cacheKey);
@@ -121,14 +110,17 @@ public class ChatService {
                 return cached;
             }
         }
-        
+
         // Nếu không có cache, thực hiện phân loại
         IntentClassificationDTO result = classifyIntentWithContext(userInput, chatHistory);
-        
+
+        // Post-correct AI/fallback result based on robust keyword guards
+        result = postCorrectIntent(userInput, result);
+
         // Lưu vào cache
         intentCache.put(cacheKey, result);
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
-        
+
         return result;
     }
     /**
@@ -137,22 +129,23 @@ public class ChatService {
     private IntentClassificationDTO classifyIntentWithContext(String userInput, List<ChatMemory> chatHistory) {
         // Sử dụng fallback logic trước khi gọi AI để tăng tốc
         String fallbackIntent = determineIntentFallback(userInput);
-        
+
         // Ưu tiên fallback cho các câu tìm kiếm rõ ràng
         if (isClearSearchIntent(userInput)) {
             System.out.println("DEBUG: Using fallback for clear search intent: " + fallbackIntent);
             IntentClassificationDTO result = new IntentClassificationDTO();
-            result.setIntent(fallbackIntent);
+            // Force SEARCH for clear search phrases
+            result.setIntent("SEARCH");
             result.setConfidence("HIGH");
             result.setExtractedInfo(userInput);
             return result;
         }
-        
+
         // Chỉ gọi AI cho các trường hợp phức tạp và không rõ ràng
         if (isComplexIntent(userInput)) {
-        String contextInfo = buildContextFromHistory(chatHistory);
+            String contextInfo = buildContextFromHistory(chatHistory);
 
-        String intentPrompt = String.format("""
+            String intentPrompt = String.format("""
             Bạn là AI chuyên phân tích ý định khách hàng cho cửa hàng LEGO.
             
             **NGỮ CẢNH CUỘC TRÒ CHUYỆN:**
@@ -181,14 +174,16 @@ public class ChatService {
             }
             """, contextInfo, userInput);
 
-        return executeIntentClassification(intentPrompt);
+            IntentClassificationDTO aiResult = executeIntentClassification(intentPrompt);
+            // Post-correct AI result before returning
+            return postCorrectIntent(userInput, aiResult);
         } else {
             // Sử dụng fallback cho các trường hợp đơn giản
             IntentClassificationDTO result = new IntentClassificationDTO();
             result.setIntent(fallbackIntent);
             result.setConfidence("HIGH");
             result.setExtractedInfo(userInput);
-            return result;
+            return postCorrectIntent(userInput, result);
         }
     }
 
@@ -197,7 +192,7 @@ public class ChatService {
      */
     private ChatResponse processIntentRequest(IntentClassificationDTO intent, String userInput, List<ChatMemory> chatHistory) {
         System.out.println("DEBUG: Processing intent: " + intent.getIntent() + " for input: " + userInput);
-        
+
         return switch (intent.getIntent().toUpperCase()) {
             case "SEARCH" -> {
                 System.out.println("DEBUG: Routing to SEARCH handler");
@@ -236,67 +231,67 @@ public class ChatService {
     private ChatResponse handleProductSearch(String userInput, List<ChatMemory> chatHistory) {
         try {
             System.out.println("DEBUG: Starting product search for: " + userInput);
-            
+
             // Kiểm tra cache trước (có thể disable cache để debug)
             String cacheKey = "search_" + normalizeInputForCache(userInput);
             List<SanPham> products = getCachedProducts(cacheKey);
-            
+
             // Debug: Force fresh search if needed
-            boolean forceFreshSearch = userInput.toLowerCase().contains("debug") || 
-                                     userInput.toLowerCase().contains("fresh");
-            
+            boolean forceFreshSearch = userInput.toLowerCase().contains("debug") ||
+                    userInput.toLowerCase().contains("fresh");
+
             if (products == null || forceFreshSearch) {
                 if (forceFreshSearch) {
                     System.out.println("DEBUG: Force fresh search requested");
                 }
                 System.out.println("DEBUG: No cached products, searching...");
-                
-            // Tìm kiếm với context
+
+                // Tìm kiếm với context
                 products = searchProductsWithContext(userInput, chatHistory);
                 System.out.println("DEBUG: Context search found " + products.size() + " products");
 
-            if (products.isEmpty()) {
-                    System.out.println("DEBUG: Context search empty, trying fallback...");
-                // Fallback: tìm kiếm rộng hơn
-                products = searchProductsFallback(userInput);
-                    System.out.println("DEBUG: Fallback search found " + products.size() + " products");
-                
-                    // Nếu vẫn không tìm thấy, thử tìm kiếm chỉ theo xuất xứ
                 if (products.isEmpty()) {
+                    System.out.println("DEBUG: Context search empty, trying fallback...");
+                    // Fallback: tìm kiếm rộng hơn
+                    products = searchProductsFallback(userInput);
+                    System.out.println("DEBUG: Fallback search found " + products.size() + " products");
+
+                    // Nếu vẫn không tìm thấy, thử tìm kiếm chỉ theo xuất xứ
+                    if (products.isEmpty()) {
                         System.out.println("DEBUG: Fallback empty, trying origin-only search...");
                         SearchRequestDTO originRequest = new SearchRequestDTO();
                         originRequest.setXuatXu("Trung Quốc");
                         products = searchWithRepository(originRequest);
                         System.out.println("DEBUG: Origin-only search found " + products.size() + " products");
                     }
-                    
+
                     // Nếu vẫn không tìm thấy, thử tìm kiếm chỉ theo độ tuổi
                     if (products.isEmpty()) {
                         System.out.println("DEBUG: Origin search empty, trying age-only search...");
                         SearchRequestDTO ageRequest = new SearchRequestDTO();
-                        ageRequest.setDoTuoi(7);
+                        ageRequest.setDoTuoi(18);
                         products = searchWithRepository(ageRequest);
                         System.out.println("DEBUG: Age-only search found " + products.size() + " products");
                     }
-                    
+
                     if (products.isEmpty()) {
                         System.out.println("DEBUG: No products found, returning empty result");
-                    return new ChatResponse("SEARCH",
-                            "Không tìm thấy sản phẩm phù hợp với yêu cầu của bạn. " +
-                            "Bạn có thể:\n• Thử tìm kiếm với từ khóa khác\n• Cho tôi biết thêm thông tin (độ tuổi, ngân sách, sở thích)\n• Liên hệ hotline để được tư vấn trực tiếp", null);
+                        return new ChatResponse("SEARCH",
+                                "Không tìm thấy sản phẩm phù hợp với yêu cầu của bạn. " +
+                                        "Bạn có thể:\n• Thử tìm kiếm với từ khóa khác\n• Cho tôi biết thêm thông tin (độ tuổi, ngân sách, sở thích)\n• Liên hệ hotline để được tư vấn trực tiếp", null);
+                    }
                 }
-            }
 
                 // Filter products before caching - chỉ filter theo trạng thái
                 List<SanPham> activeProducts = products.stream()
-                        .filter(p -> p.getTrangThai() != null && 
-                                   !p.getTrangThai().equals("Ngừng kinh doanh") &&
-                                   !p.getTrangThai().equals("Hết hàng"))
-                    .collect(Collectors.toList());
-                
-                System.out.println("DEBUG: Filtered products: " + products.size() + 
-                                 " -> " + activeProducts.size() + " active products");
-                
+                        .filter(p -> p.getTrangThai() != null &&
+                                !p.getTrangThai().equals("Ngừng kinh doanh") &&
+                                !p.getTrangThai().equals("Hết hàng"))
+                        .collect(Collectors.toList());
+
+                System.out.println("DEBUG: Filtered products: " + products.size() +
+                        " -> " + activeProducts.size() + " active products");
+
                 // Debug: Count products with null origin
                 long nullOriginCount = products.stream()
                         .filter(p -> p.getXuatXu() == null)
@@ -304,7 +299,7 @@ public class ChatService {
                 if (nullOriginCount > 0) {
                     System.out.println("DEBUG: Found " + nullOriginCount + " products with null origin (filtered out)");
                 }
-                
+
                 // Cache kết quả (chỉ cache sản phẩm active)
                 cacheProducts(cacheKey, activeProducts);
                 products = activeProducts;
@@ -334,17 +329,17 @@ public class ChatService {
             System.out.println("DEBUG: Entering handleAdviceRequest with: " + userInput);
             String lowerInput = userInput.toLowerCase();
             System.out.println("DEBUG: Lower input: " + lowerInput);
-            
+
             // Kiểm tra nếu yêu cầu về sản phẩm bán chạy
-            if (lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") || 
-                lowerInput.contains("nổi tiếng") || lowerInput.contains("hot") ||
-                lowerInput.contains("best") || lowerInput.contains("top") ||
-                lowerInput.contains("nhất")) {
-                
+            if (lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") ||
+                    lowerInput.contains("nổi tiếng") || lowerInput.contains("hot") ||
+                    lowerInput.contains("best") || lowerInput.contains("top") ||
+                    lowerInput.contains("nhất")) {
+
                 try {
                     List<SanPham> bestSellingProducts = findBestSellingProducts();
                     System.out.println("Found " + bestSellingProducts.size() + " best selling products");
-                    
+
                     if (bestSellingProducts.isEmpty()) {
                         // Fallback: lấy tất cả sản phẩm
                         bestSellingProducts = sanPhamRepo.findAll().stream()
@@ -352,45 +347,45 @@ public class ChatService {
                                 .collect(Collectors.toList());
                         System.out.println("Fallback: Found " + bestSellingProducts.size() + " products");
                     }
-                    
+
                     // Convert to DTO - OPTIMIZED batch conversion
                     List<SanPhamResponseDTO> bestSellingDTOs = convertToResponseDTOs(bestSellingProducts);
-                    
+
                     String adviceMessage = generateBestSellingAdvice(userInput, bestSellingProducts);
                     return new ChatResponse("ADVICE", adviceMessage, bestSellingDTOs);
-                    
+
                 } catch (Exception e) {
                     System.err.println("Error finding best selling products: " + e.getMessage());
                     // Fallback: lấy tất cả sản phẩm
                     List<SanPham> allProducts = sanPhamRepo.findAll().stream()
                             .limit(3)
                             .collect(Collectors.toList());
-                    
+
                     // Convert to DTO - OPTIMIZED batch conversion
                     List<SanPhamResponseDTO> allProductDTOs = convertToResponseDTOs(allProducts);
-                    
+
                     String fallbackMessage = "🔥 **TOP SẢN PHẨM LEGO PHỔ BIẾN** 🔥\n\n" +
                             "Dựa trên yêu cầu của bạn, đây là những sản phẩm LEGO được nhiều khách hàng yêu thích:\n\n" +
                             formatProductsForAdvice(allProducts) + "\n\n" +
                             "💡 **Lời khuyên:** Những sản phẩm này đều có chất lượng cao và phù hợp với nhiều độ tuổi. " +
                             "Bạn có thể chọn theo sở thích hoặc liên hệ tôi để được tư vấn chi tiết hơn!";
-                    
+
                     return new ChatResponse("ADVICE", fallbackMessage, allProductDTOs);
                 }
             }
-            
+
             // Phân tích nhu cầu người dùng cho các trường hợp khác
             UserNeeds userNeeds = analyzeUserNeeds(userInput, chatHistory);
-            
+
             // Tìm sản phẩm phù hợp
             List<SanPham> recommendedProducts = findProductsByNeeds(userNeeds);
-            
+
             // Convert to DTO - OPTIMIZED batch conversion
             List<SanPhamResponseDTO> recommendedDTOs = convertToResponseDTOs(recommendedProducts);
-            
+
             // Tạo lời tư vấn thông minh
             String adviceMessage = generateIntelligentAdvice(userInput, recommendedProducts, userNeeds, chatHistory);
-            
+
             return new ChatResponse("ADVICE", adviceMessage, recommendedDTOs);
 
         } catch (Exception e) {
@@ -398,11 +393,11 @@ public class ChatService {
             e.printStackTrace();
             return new ChatResponse("ADVICE",
                     "Để tư vấn tốt nhất, bạn vui lòng cho biết:\n" +
-                    "• Độ tuổi người chơi\n" +
-                    "• Sở thích (xe hơi, robot, thành phố, v.v.)\n" +
-                    "• Ngân sách dự kiến\n" +
-                    "• Kinh nghiệm chơi LEGO\n\n" +
-                    "Hoặc liên hệ hotline để được tư vấn trực tiếp!", null);
+                            "• Độ tuổi người chơi\n" +
+                            "• Sở thích (xe hơi, robot, thành phố, v.v.)\n" +
+                            "• Ngân sách dự kiến\n" +
+                            "• Kinh nghiệm chơi LEGO\n\n" +
+                            "Hoặc liên hệ hotline để được tư vấn trực tiếp!", null);
         }
     }
 
@@ -413,7 +408,7 @@ public class ChatService {
         try {
             // Lấy context từ câu hỏi trước đó
             String contextInfo = buildContextFromHistory(chatHistory);
-            
+
             // Phân tích follow-up question
             FollowUpAnalysis analysis = analyzeFollowUpQuestion(userInput, chatHistory);
 
@@ -443,7 +438,7 @@ public class ChatService {
         } catch (Exception e) {
             return new ChatResponse("FOLLOW_UP",
                     "Tôi hiểu bạn đang hỏi thêm về cuộc trò chuyện trước. " +
-                    "Bạn có thể nói rõ hơn để tôi hỗ trợ tốt hơn không?", null);
+                            "Bạn có thể nói rõ hơn để tôi hỗ trợ tốt hơn không?", null);
         }
     }
 
@@ -462,22 +457,22 @@ public class ChatService {
             response += "• Sản phẩm phải nguyên vẹn, chưa sử dụng\n";
             response += "• Có hóa đơn mua hàng hợp lệ\n";
             response += "• Đầy đủ phụ kiện, bao bì gốc\n\n";
-            
+
             response += "⏰ **Thời gian xử lý:**\n";
             response += "• Xác nhận yêu cầu: 1-2 ngày làm việc\n";
             response += "• Hoàn tiền: 3-7 ngày làm việc\n";
             response += "• Đổi sản phẩm mới: 5-10 ngày làm việc\n\n";
-            
+
             response += "💰 **Phí hoàn hàng:**\n";
             response += "• Miễn phí: Lỗi từ cửa hàng\n";
             response += "• Phí ship: 30,000đ (khách hàng đổi ý)\n";
             response += "• Hoàn tiền: Miễn phí\n\n";
-            
+
             response += "📞 **Liên hệ hoàn hàng:**\n";
             response += "• Hotline: 1900-xxxx\n";
             response += "• Email: return@legoshop.vn\n";
             response += "• Zalo: zalo.me/legoshop";
-            
+
             return new ChatResponse("SHIPPING", response, null);
         }
 
@@ -494,11 +489,11 @@ public class ChatService {
                 shippingInfo += "\n\n⏰ **Thời gian giao hàng chi tiết:**\n• Giao trong ngày: Đặt trước 14:00 (+30,000đ)\n• Giao nhanh: +50,000đ (giao trong 2-4 giờ)\n• Giao tiêu chuẩn: Miễn phí (1-5 ngày tùy khu vực)";
             }
         }
-        
+
         if (lowerInput.contains("miễn phí") || lowerInput.contains("free")) {
             shippingInfo += "\n\n💡 **Miễn phí ship:**\n• Đơn hàng từ 500,000đ: Miễn phí hoàn toàn\n• Đơn dưới 500,000đ: Phí ship 30,000đ";
         }
-        
+
         if (lowerInput.contains("phí") || lowerInput.contains("cost")) {
             shippingInfo += "\n\n💰 **Phí giao hàng:**\n• Miễn phí: Đơn từ 500,000đ\n• Phí chuẩn: 30,000đ (đơn dưới 500,000đ)\n• Giao nhanh: +50,000đ\n• Giao trong ngày: +30,000đ";
         }
@@ -542,11 +537,11 @@ public class ChatService {
         } catch (Exception e) {
             return new ChatResponse("GENERAL",
                     "👋 Xin chào! Tôi có thể giúp bạn:\n" +
-                    "🔍 Tìm kiếm sản phẩm LEGO\n" +
-                    "💡 Tư vấn mua hàng\n" +
-                    "🚚 Thông tin giao hàng\n" +
-                    "🛡️ Chính sách bảo hành\n\n" +
-                    "Bạn cần hỗ trợ gì ạ?", null);
+                            "🔍 Tìm kiếm sản phẩm LEGO\n" +
+                            "💡 Tư vấn mua hàng\n" +
+                            "🚚 Thông tin giao hàng\n" +
+                            "🛡️ Chính sách bảo hành\n\n" +
+                            "Bạn cần hỗ trợ gì ạ?", null);
         }
     }
 
@@ -597,13 +592,13 @@ public class ChatService {
             Prompt prompt = new Prompt(intentPrompt);
             String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
             String cleanJson = cleanJsonResponse(jsonResponse);
-            
+
             System.out.println("DEBUG: AI Response: " + jsonResponse);
             System.out.println("DEBUG: Cleaned JSON: " + cleanJson);
-            
+
             IntentClassificationDTO result = objectMapper.readValue(cleanJson, IntentClassificationDTO.class);
             System.out.println("DEBUG: Parsed Intent: " + result.getIntent() + ", Confidence: " + result.getConfidence());
-            
+
             // Fix: Handle multiple intents separated by |
             String intent = result.getIntent();
             if (intent != null && intent.contains("|")) {
@@ -624,7 +619,7 @@ public class ChatService {
                 result.setIntent(intent);
                 System.out.println("DEBUG: Fixed Intent: " + intent);
             }
-            
+
             return result;
         } catch (Exception e) {
             System.err.println("DEBUG: Error in AI classification: " + e.getMessage());
@@ -639,47 +634,47 @@ public class ChatService {
 
     private String determineIntentFallback(String userInput) {
         String lowerInput = userInput.toLowerCase();
-        
+
         System.out.println("DEBUG: Analyzing intent for: " + userInput);
         System.out.println("DEBUG: Lower input: " + lowerInput);
-        
+
         // SHIPPING - ưu tiên cao nhất cho shipping (trước SEARCH để tránh conflict)
         if (lowerInput.contains("ship") || lowerInput.contains("giao") || lowerInput.contains("vận chuyển") ||
-            lowerInput.contains("thời gian") || lowerInput.contains("bao lâu") || lowerInput.contains("miễn phí") ||
-            lowerInput.contains("phí ship") || lowerInput.contains("giao hàng") || lowerInput.contains("đến") ||
-            lowerInput.contains("ha noi") || lowerInput.contains("hà nội") || lowerInput.contains("tp.hcm") ||
-            lowerInput.contains("sài gòn") || lowerInput.contains("hồ chí minh") || lowerInput.contains("hoàn hàng") ||
-            lowerInput.contains("đổi trả") || lowerInput.contains("trả hàng") || lowerInput.contains("hoàn tiền")) {
+                lowerInput.contains("thời gian") || lowerInput.contains("bao lâu") || lowerInput.contains("miễn phí") ||
+                lowerInput.contains("phí ship") || lowerInput.contains("đến") ||
+                lowerInput.contains("ha noi") || lowerInput.contains("hà nội") || lowerInput.contains("tp.hcm") ||
+                lowerInput.contains("sài gòn") || lowerInput.contains("hồ chí minh") || lowerInput.contains("hoàn hàng") ||
+                lowerInput.contains("đổi trả") || lowerInput.contains("trả hàng") || lowerInput.contains("hoàn tiền")) {
             System.out.println("DEBUG: Detected SHIPPING intent");
             return "SHIPPING";
         }
-        
+
         // ADVICE - ưu tiên cao cho tư vấn
         if (lowerInput.contains("tư vấn") || lowerInput.contains("gợi ý") || lowerInput.contains("khuyên") ||
-            lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") || lowerInput.contains("nổi tiếng") ||
-            lowerInput.contains("đề xuất") || lowerInput.contains("giới thiệu")) {
+                lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") || lowerInput.contains("nổi tiếng") ||
+                lowerInput.contains("đề xuất") || lowerInput.contains("giới thiệu")) {
             System.out.println("DEBUG: Detected ADVICE intent");
             return "ADVICE";
         }
-        
+
         // SEARCH - tìm kiếm sản phẩm cụ thể (loại bỏ các từ có thể conflict với SHIPPING)
-        if (lowerInput.contains("tìm") || lowerInput.contains("mua") || lowerInput.contains("có") || 
-            lowerInput.contains("lego") || lowerInput.contains("xe") || lowerInput.contains("robot") ||
-            lowerInput.contains("sản phẩm") || lowerInput.contains("đồ chơi") || lowerInput.contains("cho tôi") ||
-            lowerInput.contains("tuổi") || lowerInput.contains("xuất xứ") || 
-            lowerInput.contains("trung quốc") || lowerInput.contains("đức") || lowerInput.contains("mỹ") || 
-            lowerInput.contains("nhật") || lowerInput.contains("hàn quốc")) {
+        if (lowerInput.contains("tìm") || lowerInput.contains("mua") || lowerInput.contains("có") ||
+                lowerInput.contains("lego") || lowerInput.contains("xe") || lowerInput.contains("robot") ||
+                lowerInput.contains("sản phẩm") || lowerInput.contains("đồ chơi") || lowerInput.contains("cho tôi") ||
+                lowerInput.contains("tuổi") || lowerInput.contains("xuất xứ") ||
+                lowerInput.contains("trung quốc") || lowerInput.contains("đức") || lowerInput.contains("mỹ") ||
+                lowerInput.contains("nhật") || lowerInput.contains("hàn quốc")) {
             System.out.println("DEBUG: Detected SEARCH intent");
             return "SEARCH";
         }
-        
+
         // FAQ - câu hỏi thường gặp
         if (lowerInput.contains("bảo hành") || lowerInput.contains("thanh toán") || lowerInput.contains("đổi trả") ||
-            lowerInput.contains("liên hệ") || lowerInput.contains("hotline") || lowerInput.contains("chính sách")) {
+                lowerInput.contains("liên hệ") || lowerInput.contains("hotline") || lowerInput.contains("chính sách")) {
             System.out.println("DEBUG: Detected FAQ intent");
             return "FAQ";
         }
-        
+
         System.out.println("DEBUG: Defaulting to GENERAL intent");
         return "GENERAL";
     }
@@ -688,18 +683,22 @@ public class ChatService {
         try {
             // Cải thiện: Sử dụng logic phân tích đơn giản trước khi gọi AI
             SearchRequestDTO request = parseSearchRequestFromInput(userInput);
-            
+
             if (request.getTen() != null || request.getDoTuoi() != null || request.getXuatXu() != null) {
                 System.out.println("DEBUG: Using parsed search criteria: " + request);
                 List<SanPham> products = searchWithNativeQuery(request);
+                if (products.isEmpty()) {
+                    System.out.println("DEBUG: Strict criteria returned empty, relaxing criteria...");
+                    products = findAlternativeProducts(request);
+                }
                 System.out.println("DEBUG: Found " + products.size() + " products with parsed criteria");
                 return products;
             }
-            
+
             // Nếu không parse được, mới dùng AI
-        String contextInfo = buildContextFromHistory(chatHistory);
-        
-        String searchPrompt = String.format("""
+            String contextInfo = buildContextFromHistory(chatHistory);
+
+            String searchPrompt = String.format("""
             Bạn là chuyên gia phân tích tìm kiếm LEGO.
             
             **NGỮ CẢNH:** %s
@@ -727,17 +726,21 @@ public class ChatService {
             - Chỉ điền thông tin chắc chắn, để null nếu không rõ
             """, contextInfo, userInput);
 
-        try {
-            Prompt prompt = new Prompt(searchPrompt);
-            String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
-            String cleanJson = cleanJsonResponse(jsonResponse);
-            String processedJson = preprocessJsonNumbers(cleanJson);
+            try {
+                Prompt prompt = new Prompt(searchPrompt);
+                String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
+                String cleanJson = cleanJsonResponse(jsonResponse);
+                String processedJson = preprocessJsonNumbers(cleanJson);
                 SearchRequestDTO aiRequest = objectMapper.readValue(processedJson, SearchRequestDTO.class);
                 System.out.println("DEBUG: AI parsed search criteria: " + aiRequest);
                 List<SanPham> products = searchWithRepository(aiRequest);
+                if (products.isEmpty()) {
+                    System.out.println("DEBUG: AI criteria returned empty, relaxing criteria...");
+                    products = findAlternativeProducts(aiRequest);
+                }
                 System.out.println("DEBUG: Found " + products.size() + " products with AI criteria");
                 return products;
-        } catch (Exception e) {
+            } catch (Exception e) {
                 System.err.println("DEBUG: AI parsing failed, using fallback: " + e.getMessage());
                 return searchProductsFallback(userInput);
             }
@@ -755,11 +758,11 @@ public class ChatService {
             if (keywords.length == 0 || keywords[0].length() <= 2) {
                 return new ArrayList<>();
             }
-            
+
             // Sử dụng repository method thay vì load tất cả sản phẩm
             String searchTerm = keywords[0];
             List<SanPham> products = sanPhamRepo.findByTenSanPhamContainingIgnoreCase(searchTerm);
-            
+
             // Nếu không tìm thấy, thử tìm kiếm rộng hơn
             if (products.isEmpty()) {
                 // Thử tìm kiếm với từ khóa khác
@@ -772,7 +775,7 @@ public class ChatService {
                     }
                 }
             }
-            
+
             return products.stream()
                     .limit(3)
                     .collect(Collectors.toList());
@@ -786,15 +789,15 @@ public class ChatService {
         if (products.size() == 1) {
             SanPham product = products.get(0);
             return String.format("🎯 Tìm thấy sản phẩm phù hợp:\n\n" +
-                    "**%s**\n" +
-                    "💰 Giá: %s\n" +
-                    "👶 Độ tuổi: %s\n" +
-                    "🏷️ Thương hiệu: %s\n\n" +
-                    "Bạn có muốn tôi tư vấn thêm về sản phẩm này không?",
+                            "**%s**\n" +
+                            "💰 Giá: %s\n" +
+                            "👶 Độ tuổi: %s\n" +
+                            "🏷️ Thương hiệu: %s\n\n" +
+                            "Bạn có muốn tôi tư vấn thêm về sản phẩm này không?",
                     product.getTenSanPham(),
                     product.getGia() != null ? String.format("%,.0f đ", product.getGia()) : "N/A",
                     product.getDoTuoi(),
-                    product.getThuongHieu());
+                    product.getThuongHieu().getTen());
         } else {
             return String.format("🔍 Tìm thấy %d sản phẩm phù hợp với yêu cầu của bạn:\n\n" +
                     "Bạn có thể cho tôi biết thêm thông tin để tôi tư vấn cụ thể hơn không?", products.size());
@@ -808,7 +811,7 @@ public class ChatService {
         private BigDecimal budget;
         private String experience;
         private String category;
-        
+
         // Getters and setters
         public String getAgeGroup() { return ageGroup; }
         public void setAgeGroup(String ageGroup) { this.ageGroup = ageGroup; }
@@ -825,19 +828,19 @@ public class ChatService {
     private static class FollowUpAnalysis {
         private String analysis;
         private List<SanPham> products;
-        
+
         public FollowUpAnalysis(String analysis, List<SanPham> products) {
             this.analysis = analysis;
             this.products = products;
         }
-        
+
         public String getAnalysis() { return analysis; }
         public List<SanPham> getProducts() { return products; }
     }
 
     private UserNeeds analyzeUserNeeds(String userInput, List<ChatMemory> chatHistory) {
         String contextInfo = buildContextFromHistory(chatHistory);
-        
+
         String analysisPrompt = String.format("""
             Phân tích nhu cầu người dùng từ câu tư vấn và ngữ cảnh.
             
@@ -870,7 +873,7 @@ public class ChatService {
     private List<SanPham> findProductsByNeeds(UserNeeds needs) {
         try {
             SearchRequestDTO criteria = new SearchRequestDTO();
-            
+
             // Set criteria based on needs
             if (needs.getAgeGroup() != null) {
                 criteria.setDoTuoi(extractAgeFromGroup(needs.getAgeGroup()));
@@ -878,16 +881,16 @@ public class ChatService {
             if (needs.getCategory() != null) {
                 criteria.setThuongHieu(needs.getCategory());
             }
-            
+
             List<SanPham> products = searchWithRepository(criteria);
-            
+
             // If no products found, try alternative search
             if (products.isEmpty()) {
                 products = findAlternativeProducts(criteria);
             }
-            
+
             return products.stream().limit(3).collect(Collectors.toList());
-            
+
         } catch (Exception e) {
             return findAlternativeProducts(new SearchRequestDTO());
         }
@@ -898,7 +901,7 @@ public class ChatService {
      */
     private List<SanPham> findBestSellingProducts() {
         String cacheKey = "best_selling";
-        
+
         // Kiểm tra cache trước
         if (isCacheValid(cacheKey)) {
             List<SanPham> cached = bestSellingCache.get(cacheKey);
@@ -907,38 +910,38 @@ public class ChatService {
                 return cached;
             }
         }
-        
+
         try {
             // Thử lấy dữ liệu bán chạy từ 6 tháng gần nhất (rộng hơn)
             LocalDate endDate = LocalDate.now();
             LocalDate startDate = endDate.minusMonths(6);
-            
+
             System.out.println("Searching for best selling products from " + startDate + " to " + endDate);
-            
+
             List<Object[]> results = sanPhamRepo.findTopDaBan(startDate, endDate);
             System.out.println("Found " + results.size() + " results from database");
-            
+
             if (results.isEmpty()) {
                 System.out.println("No best selling data found, using fallback");
                 List<SanPham> fallback = getFallbackProducts();
                 cacheBestSelling(cacheKey, fallback);
                 return fallback;
             }
-            
+
             List<String> tenSP = results.stream()
                     .map(r -> (String) r[1])
                     .limit(3) // Lấy top 3 sản phẩm bán chạy
                     .toList();
-            
+
             System.out.println("Product names: " + tenSP);
-            
+
             List<SanPham> products = tenSP.stream()
                     .map(sanPhamRepo::findByTenSanPham)
                     .filter(product -> product != null)
                     .collect(Collectors.toList());
-            
+
             System.out.println("Found " + products.size() + " valid products");
-            
+
             // Nếu không tìm thấy sản phẩm nào, dùng fallback
             if (products.isEmpty()) {
                 System.out.println("No valid products found, using fallback");
@@ -946,11 +949,11 @@ public class ChatService {
                 cacheBestSelling(cacheKey, fallback);
                 return fallback;
             }
-            
+
             // Cache kết quả
             cacheBestSelling(cacheKey, products);
             return products;
-                    
+
         } catch (Exception e) {
             System.err.println("Error in findBestSellingProducts: " + e.getMessage());
             e.printStackTrace();
@@ -959,7 +962,7 @@ public class ChatService {
             return fallback;
         }
     }
-    
+
     /**
      * Fallback: lấy sản phẩm phổ biến - OPTIMIZED
      */
@@ -967,17 +970,17 @@ public class ChatService {
         try {
             // Sử dụng repository method để lấy sản phẩm có đánh giá tốt
             List<SanPham> topRatedProducts = sanPhamRepo.findTop3ByDanhGiaTrungBinhGreaterThanOrderByDanhGiaTrungBinhDesc(0.0);
-            
+
             if (!topRatedProducts.isEmpty()) {
                 System.out.println("Fallback: Found " + topRatedProducts.size() + " top rated products");
                 return topRatedProducts;
             }
-            
+
             // Nếu không có sản phẩm có đánh giá, lấy sản phẩm mới nhất
             List<SanPham> recentProducts = sanPhamRepo.findTop3ByOrderByIdDesc();
             System.out.println("Fallback: Found " + recentProducts.size() + " recent products");
             return recentProducts;
-            
+
         } catch (Exception e) {
             System.err.println("Error in getFallbackProducts: " + e.getMessage());
             return new ArrayList<>();
@@ -1052,10 +1055,10 @@ public class ChatService {
         } catch (Exception e) {
             System.err.println("Error in generateBestSellingAdvice: " + e.getMessage());
             return String.format("🔥 **TOP %d SẢN PHẨM BÁN CHẠY NHẤT** 🔥\n\n" +
-                    "Dựa trên dữ liệu bán hàng 3 tháng gần nhất, đây là những sản phẩm LEGO được khách hàng yêu thích nhất:\n\n" +
-                    "%s\n\n" +
-                    "💡 **Lời khuyên:** Những sản phẩm này đều có chất lượng cao, phù hợp với nhiều độ tuổi và được đánh giá tốt từ khách hàng. " +
-                    "Bạn có thể chọn theo sở thích hoặc liên hệ tôi để được tư vấn chi tiết hơn!",
+                            "Dựa trên dữ liệu bán hàng 3 tháng gần nhất, đây là những sản phẩm LEGO được khách hàng yêu thích nhất:\n\n" +
+                            "%s\n\n" +
+                            "💡 **Lời khuyên:** Những sản phẩm này đều có chất lượng cao, phù hợp với nhiều độ tuổi và được đánh giá tốt từ khách hàng. " +
+                            "Bạn có thể chọn theo sở thích hoặc liên hệ tôi để được tư vấn chi tiết hơn!",
                     products.size(), formatProductsForAdvice(products));
         }
     }
@@ -1070,7 +1073,7 @@ public class ChatService {
 
     private FollowUpAnalysis analyzeFollowUpQuestion(String userInput, List<ChatMemory> chatHistory) {
         String contextInfo = buildContextFromHistory(chatHistory);
-        
+
         String analysisPrompt = String.format("""
             Phân tích câu hỏi follow-up và xác định cần tìm kiếm sản phẩm không.
             
@@ -1090,18 +1093,18 @@ public class ChatService {
             String jsonResponse = chatClient.call(prompt).getResult().getOutput().getContent();
             String cleanJson = cleanJsonResponse(jsonResponse);
             JsonNode node = objectMapper.readTree(cleanJson);
-            
+
             String analysis = node.get("analysis").asText();
             boolean needProducts = node.get("needProducts").asBoolean();
-            
+
             List<SanPham> products = new ArrayList<>();
             if (needProducts && node.has("searchCriteria")) {
                 String criteria = node.get("searchCriteria").asText();
                 products = searchProductsWithContext(criteria, chatHistory);
             }
-            
+
             return new FollowUpAnalysis(analysis, products);
-            
+
         } catch (Exception e) {
             return new FollowUpAnalysis("Câu hỏi follow-up về cuộc trò chuyện trước", new ArrayList<>());
         }
@@ -1184,7 +1187,10 @@ public class ChatService {
     private SearchRequestDTO parseSearchRequestFromInput(String userInput) {
         SearchRequestDTO request = new SearchRequestDTO();
         String lowerInput = userInput.toLowerCase();
-        
+
+        if (lowerInput.contains("mảnh ghép")){
+            return request;
+        }
         // Parse độ tuổi (sử dụng logic phù hợp với database)
         if (lowerInput.contains("5 tuổi") || lowerInput.contains("5 tuoi")) {
             request.setDoTuoi(5);
@@ -1211,7 +1217,7 @@ public class ChatService {
         } else if (lowerInput.contains("người lớn") || lowerInput.contains("nguoi lon")) {
             request.setDoTuoi(18);
         }
-        
+
         // Parse xuất xứ - Handle encoding issues (ƯU TIÊN CAO)
         if (lowerInput.contains("trung quốc") || lowerInput.contains("trung quoc")) {
             request.setXuatXu("Trung Quốc"); // Database has encoding issue
@@ -1230,59 +1236,11 @@ public class ChatService {
         } else if (lowerInput.contains("thái lan") || lowerInput.contains("thai lan")) {
             request.setXuatXu("Thái Lan");
         }
-        
+
         // Parse thương hiệu
         if (lowerInput.contains("lego")) {
             request.setThuongHieu("LEGO");
         }
-        
-        // Parse tên sản phẩm (chỉ khi KHÔNG có xuất xứ được parse)
-        if (request.getXuatXu() == null) {
-            String[] words = userInput.split("\\s+");
-            List<String> productWords = new ArrayList<>();
-            
-            for (String word : words) {
-                String lowerWord = word.toLowerCase();
-                if (!lowerWord.contains("tuổi") && !lowerWord.contains("tuoi") &&
-                    !lowerWord.contains("trung") && !lowerWord.contains("quốc") && !lowerWord.contains("quoc") &&
-                    !lowerWord.contains("đức") && !lowerWord.contains("duc") &&
-                    !lowerWord.contains("mỹ") && !lowerWord.contains("my") &&
-                    !lowerWord.contains("nhật") && !lowerWord.contains("nhat") &&
-                    !lowerWord.contains("hàn") && !lowerWord.contains("han") &&
-                    !lowerWord.contains("quốc") && !lowerWord.contains("quoc") &&
-                    !lowerWord.contains("đan") && !lowerWord.contains("mạch") && !lowerWord.contains("mach") &&
-                    !lowerWord.contains("việt") && !lowerWord.contains("viet") && !lowerWord.contains("nam") &&
-                    !lowerWord.contains("thái") && !lowerWord.contains("thai") && !lowerWord.contains("lan") &&
-                    !lowerWord.contains("lego") && !lowerWord.contains("cho") && !lowerWord.contains("tôi") &&
-                    !lowerWord.contains("tìm") && !lowerWord.contains("tim") &&
-                    !lowerWord.contains("sản") && !lowerWord.contains("san") &&
-                    !lowerWord.contains("phẩm") && !lowerWord.contains("pham") &&
-                    !lowerWord.contains("và") && !lowerWord.contains("va") &&
-                    !lowerWord.contains("xuất") && !lowerWord.contains("xuat") &&
-                    !lowerWord.contains("xứ") && !lowerWord.contains("xu") &&
-                    !lowerWord.contains("trẻ") && !lowerWord.contains("tre") &&
-                    !lowerWord.contains("giúp") && !lowerWord.contains("giup") &&
-                    word.length() > 1) {
-                    productWords.add(word);
-                }
-            }
-            
-            // Chỉ set tên nếu có từ khóa sản phẩm thực sự (không phải từ mô tả)
-            if (!productWords.isEmpty()) {
-                String productName = String.join(" ", productWords);
-                // Kiểm tra xem có phải là tên sản phẩm thực sự không
-                if (!productName.toLowerCase().contains("tuổi") && 
-                    !productName.toLowerCase().contains("trẻ") &&
-                    !productName.toLowerCase().contains("cho") &&
-                    !productName.toLowerCase().contains("xuất") &&
-                    !productName.toLowerCase().contains("xứ") &&
-                    productName.length() > 2) {
-                    request.setTen(productName);
-                }
-            }
-        }
-        
-        System.out.println("DEBUG: Parsed search request: " + request);
         return request;
     }
 
@@ -1296,81 +1254,136 @@ public class ChatService {
                 .replaceAll("\\s+", "_")
                 .trim();
     }
-    
+
     private boolean isCacheValid(String cacheKey) {
         Long timestamp = cacheTimestamps.get(cacheKey);
         if (timestamp == null) return false;
         return (System.currentTimeMillis() - timestamp) < CACHE_TTL;
     }
-    
+
     private List<SanPham> getCachedProducts(String cacheKey) {
         if (isCacheValid(cacheKey)) {
             List<SanPham> cachedProducts = searchCache.get(cacheKey);
             if (cachedProducts != null) {
                 // Filter out products that are not in business - chỉ filter theo trạng thái
                 List<SanPham> activeProducts = cachedProducts.stream()
-                        .filter(p -> p.getTrangThai() != null && 
-                                   !p.getTrangThai().equals("Ngừng kinh doanh") &&
-                                   !p.getTrangThai().equals("Hết hàng"))
+                        .filter(p -> p.getTrangThai() != null &&
+                                !p.getTrangThai().equals("Ngừng kinh doanh") &&
+                                !p.getTrangThai().equals("Hết hàng"))
                         .collect(Collectors.toList());
-                
-                System.out.println("DEBUG: Cached products: " + cachedProducts.size() + 
-                                 ", Active products: " + activeProducts.size());
-                
+
+                System.out.println("DEBUG: Cached products: " + cachedProducts.size() +
+                        ", Active products: " + activeProducts.size());
+
                 return activeProducts.isEmpty() ? null : activeProducts;
             }
         }
         return null;
     }
-    
+
     private void cacheProducts(String cacheKey, List<SanPham> products) {
         searchCache.put(cacheKey, products);
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
     }
-    
+
     private void cacheBestSelling(String cacheKey, List<SanPham> products) {
         bestSellingCache.put(cacheKey, products);
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
     }
-    
+
     private boolean isClearSearchIntent(String userInput) {
         String lowerInput = userInput.toLowerCase();
-        // Kiểm tra các từ khóa tìm kiếm rõ ràng
-        return (lowerInput.contains("tìm") && lowerInput.contains("cho")) ||
-               (lowerInput.contains("tìm") && lowerInput.contains("tuổi")) ||
-               (lowerInput.contains("tìm") && lowerInput.contains("xuất xứ")) ||
-               (lowerInput.contains("cho") && lowerInput.contains("tuổi")) ||
-               (lowerInput.contains("cho") && lowerInput.contains("xuất xứ")) ||
-               (lowerInput.contains("tuổi") && lowerInput.contains("xuất xứ")) ||
-               (lowerInput.contains("trung quốc") || lowerInput.contains("đức") || 
-                lowerInput.contains("mỹ") || lowerInput.contains("nhật"));
+        // Tránh nhầm với SHIPPING
+        if (containsShippingKeywords(lowerInput)) {
+            return false;
+        }
+        // Kiểm tra các cụm từ tìm kiếm phổ biến
+        boolean genericSearch = lowerInput.contains("tìm") ||
+                (lowerInput.contains("tìm") && (lowerInput.contains("sản phẩm") || lowerInput.contains("lego"))) ||
+                (lowerInput.contains("mua") && lowerInput.contains("lego")) ||
+                (lowerInput.contains("tìm") && lowerInput.contains("cho")) ||
+                (lowerInput.contains("tìm") && lowerInput.contains("tuổi")) ||
+                (lowerInput.contains("tìm") && lowerInput.contains("xuất xứ")) ||
+                (lowerInput.contains("cho") && lowerInput.contains("tuổi")) ||
+                (lowerInput.contains("cho") && lowerInput.contains("xuất xứ"));
+
+        boolean mentionOrigin = lowerInput.contains("xuất xứ") ||
+                lowerInput.contains("trung quốc") || lowerInput.contains("đức") ||
+                lowerInput.contains("mỹ") || lowerInput.contains("mi ") || lowerInput.endsWith("Đan Mạch") ||
+                lowerInput.contains("nhật") || lowerInput.contains("thái lan") || lowerInput.contains("hàn quốc");
+
+        return genericSearch || mentionOrigin;
     }
-    
+
+    private boolean containsShippingKeywords(String lowerInput) {
+        return lowerInput.contains("ship") || lowerInput.contains("giao") ||
+                lowerInput.contains("vận chuyển") || lowerInput.contains("thời gian") || lowerInput.contains("bao lâu") ||
+                lowerInput.contains("miễn phí ship") || lowerInput.contains("phí ship") || lowerInput.contains("tp.hcm") ||
+                lowerInput.contains("hà nội") || lowerInput.contains("sài gòn") || lowerInput.contains("hồ chí minh") ||
+                lowerInput.contains("hoàn") || lowerInput.contains("đổi trả") || lowerInput.contains("trả") ||
+                lowerInput.contains("hoàn tiền");
+    }
+
+    private boolean containsAdviceKeywords(String lowerInput) {
+        return lowerInput.contains("tư vấn") || lowerInput.contains("gợi ý") || lowerInput.contains("khuyên") ||
+                lowerInput.contains("bán chạy") || lowerInput.contains("phổ biến") || lowerInput.contains("nổi tiếng") ||
+                lowerInput.contains("đề xuất") || lowerInput.contains("giới thiệu");
+    }
+
+    private IntentClassificationDTO postCorrectIntent(String userInput, IntentClassificationDTO result) {
+        try {
+            String lower = userInput != null ? userInput.toLowerCase() : "";
+            String intent = result != null && result.getIntent() != null ? result.getIntent().toUpperCase() : "GENERAL";
+
+            // If advice keywords are present and not a shipping question, prefer ADVICE
+            if (containsAdviceKeywords(lower) && !containsShippingKeywords(lower)) {
+                if (!"ADVICE".equals(intent)) {
+                    System.out.println("DEBUG: Post-correcting intent to ADVICE based on keywords");
+                }
+                result.setIntent("ADVICE");
+                return result;
+            }
+
+            // If clear search intent and not shipping, prefer SEARCH
+            if (isClearSearchIntent(userInput) && !containsShippingKeywords(lower)) {
+                if (!"SEARCH".equals(intent)) {
+                    System.out.println("DEBUG: Post-correcting intent to SEARCH based on keywords");
+                }
+                result.setIntent("SEARCH");
+                return result;
+            }
+
+            return result;
+        } catch (Exception e) {
+            return result;
+        }
+    }
+
     private boolean isComplexIntent(String userInput) {
         String lowerInput = userInput.toLowerCase();
         // Chỉ gọi AI cho các trường hợp phức tạp
-        return lowerInput.length() > 20 || 
-               lowerInput.contains("và") || 
-               lowerInput.contains("hoặc") ||
-               lowerInput.contains("nhưng") ||
-               lowerInput.contains("tuy nhiên") ||
-               lowerInput.split("\\s+").length > 8;
+        return lowerInput.length() > 20 ||
+                lowerInput.contains("và") ||
+                lowerInput.contains("hoặc") ||
+                lowerInput.contains("nhưng") ||
+                lowerInput.contains("tuy nhiên") ||
+                lowerInput.split("\\s+").length > 8;
     }
-    
+
     /**
      * Clear cache periodically (có thể gọi từ scheduler)
      */
     public void clearExpiredCache() {
         long currentTime = System.currentTimeMillis();
-        cacheTimestamps.entrySet().removeIf(entry -> 
-            (currentTime - entry.getValue()) > CACHE_TTL);
-        
+        cacheTimestamps.entrySet().removeIf(entry ->
+                (currentTime - entry.getValue()) > CACHE_TTL);
+
         // Clear corresponding cache entries
         searchCache.keySet().removeIf(key -> !cacheTimestamps.containsKey(key));
         intentCache.keySet().removeIf(key -> !cacheTimestamps.containsKey(key));
         bestSellingCache.keySet().removeIf(key -> !cacheTimestamps.containsKey(key));
     }
-    
+
     /**
      * Clear all cache manually
      */
@@ -1381,25 +1394,25 @@ public class ChatService {
         cacheTimestamps.clear();
         System.out.println("DEBUG: All cache cleared");
     }
-    
+
     /**
      * Clear search cache only
      */
     public void clearSearchCache() {
         searchCache.clear();
-        cacheTimestamps.entrySet().removeIf(entry -> 
-            entry.getKey().startsWith("search_"));
+        cacheTimestamps.entrySet().removeIf(entry ->
+                entry.getKey().startsWith("search_"));
         System.out.println("DEBUG: Search cache cleared");
     }
 
-    
+
     /**
      * Method để gọi native query với DTO object (wrapper)
      */
     private List<SanPham> searchWithNativeQuery(SearchRequestDTO request) {
         return searchWithRepository(request);
     }
-    
+
     /**
      * Method để gọi repository với DTO object
      */
@@ -1410,7 +1423,7 @@ public class ChatService {
             System.out.println("  - ten: " + request.getTen());
             System.out.println("  - gia: " + request.getGia());
             System.out.println("  - xuatXu: " + request.getXuatXu());
-            
+
             return sanPhamRepo.timKiemTheoDieuKien(request);
         } catch (Exception e) {
             System.err.println("DEBUG: Repository search failed: " + e.getMessage());
@@ -1418,13 +1431,13 @@ public class ChatService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Method để gọi native query với encoding handling
      */
-    private List<SanPham> searchWithNativeQuery(Integer doTuoi, String ten, BigDecimal gia, 
-                                               String xuatXu, String thuongHieu, String boSuuTap,
-                                               Integer soLuongManhGhepMin, Double danhGiaToiThieu) {
+    private List<SanPham> searchWithNativeQuery(Integer doTuoi, String ten, BigDecimal gia,
+                                                String xuatXu, String thuongHieu, String boSuuTap,
+                                                Integer soLuongManhGhepMin, Double danhGiaToiThieu) {
         try {
             SearchRequestDTO request = new SearchRequestDTO();
             request.setDoTuoi(doTuoi);
@@ -1435,68 +1448,68 @@ public class ChatService {
             request.setBoSuuTap(boSuuTap);
             request.setSoLuongManhGhepMin(soLuongManhGhepMin);
             request.setDanhGiaToiThieu(danhGiaToiThieu);
-            
+
             List<SanPham> products = sanPhamRepo.timKiemTheoDieuKien(request);
-            
+
             System.out.println("DEBUG: Native query found " + products.size() + " products");
             return products;
-            
+
         } catch (Exception e) {
             System.err.println("DEBUG: Native query failed: " + e.getMessage());
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Test method để kiểm tra native query
      */
     public void testNativeQuery() {
         try {
             System.out.println("DEBUG: Testing native query...");
-            
+
             // Test với các input khác nhau
             String[] testInputs = {
-                "Tìm giúp tôi sản phẩm xuất xứ từ nhat",
-                "Tìm giúp tôi sản phẩm xuất xứ từ Nhật Bản",
-                "Tìm giúp tôi sản phẩm xuất xứ từ mỹ",
-                "Tìm giúp tôi sản phẩm xuất xứ từ trung quốc"
+                    "Tìm giúp tôi sản phẩm xuất xứ từ nhat",
+                    "Tìm giúp tôi sản phẩm xuất xứ từ Nhật Bản",
+                    "Tìm giúp tôi sản phẩm xuất xứ từ mỹ",
+                    "Tìm giúp tôi sản phẩm xuất xứ từ trung quốc"
             };
-            
+
             for (String input : testInputs) {
                 System.out.println("---");
                 System.out.println("DEBUG: Testing input: " + input);
-                
+
                 // Test parsing
                 SearchRequestDTO request = parseSearchRequestFromInput(input);
                 System.out.println("DEBUG: Parsed request: " + request);
-                
+
                 // Test native query
                 List<SanPham> products = searchWithRepository(request);
                 System.out.println("DEBUG: Native query results: " + products.size() + " products");
-                
+
                 if (!products.isEmpty()) {
-                    System.out.println("DEBUG: Sample product: " + products.get(0).getTenSanPham() + 
-                        " | Origin: " + (products.get(0).getXuatXu() != null ? products.get(0).getXuatXu().getTen() : "NULL"));
+                    System.out.println("DEBUG: Sample product: " + products.get(0).getTenSanPham() +
+                            " | Origin: " + (products.get(0).getXuatXu() != null ? products.get(0).getXuatXu().getTen() : "NULL"));
                 }
             }
-            
+
         } catch (Exception e) {
             System.err.println("DEBUG: Native query test failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Debug method để trace search flow cụ thể
      */
     public String debugSearchFlow() {
         try {
             System.out.println("=== DEBUG SEARCH FLOW ===");
-            
+
             String userInput = "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi";
             System.out.println("1. User input: " + userInput);
-            
+
             // Test parseSearchRequestFromInput
             SearchRequestDTO request = parseSearchRequestFromInput(userInput);
             System.out.println("2. Parsed request: " + request);
@@ -1504,142 +1517,142 @@ public class ChatService {
             System.out.println("   - ten: " + request.getTen());
             System.out.println("   - gia: " + request.getGia());
             System.out.println("   - xuatXu: " + request.getXuatXu());
-            
+
             // Test searchWithRepository
             System.out.println("3. Calling searchWithRepository...");
             List<SanPham> products = searchWithRepository(request);
             System.out.println("4. Search results: " + products.size() + " products");
-            
+
             if (!products.isEmpty()) {
                 System.out.println("   Sample products:");
-                products.stream().limit(3).forEach(p -> 
-                    System.out.println("   - " + p.getTenSanPham() + " | Age: " + p.getDoTuoi() + " | Status: " + p.getTrangThai()));
+                products.stream().limit(3).forEach(p ->
+                        System.out.println("   - " + p.getTenSanPham() + " | Age: " + p.getDoTuoi() + " | Status: " + p.getTrangThai()));
             }
-            
+
             // Test direct repository call
             System.out.println("5. Testing direct repository call...");
             SearchRequestDTO directRequest = new SearchRequestDTO();
             directRequest.setDoTuoi(12);
             List<SanPham> directProducts = sanPhamRepo.timKiemTheoDieuKien(directRequest);
             System.out.println("6. Direct repository results: " + directProducts.size() + " products");
-            
+
             return "Debug completed - check console for full trace";
-            
+
         } catch (Exception e) {
             System.err.println("Debug search flow failed: " + e.getMessage());
             e.printStackTrace();
             return "Debug failed: " + e.getMessage();
         }
     }
-    
+
     /**
      * Debug method đơn giản để test query
      */
     public String testSimpleQuery() {
         try {
             System.out.println("=== TESTING SIMPLE QUERY ===");
-            
+
             // Test 1: Query tất cả sản phẩm
             List<SanPham> allProducts = sanPhamRepo.findAll();
             System.out.println("Total products: " + allProducts.size());
-            
+
             if (allProducts.isEmpty()) {
                 return "❌ NO PRODUCTS IN DATABASE";
             }
-            
+
             // Test 2: Query với điều kiện đơn giản
             SearchRequestDTO testRequest = new SearchRequestDTO();
             testRequest.setDoTuoi(12);
             List<SanPham> testResults = sanPhamRepo.timKiemTheoDieuKien(testRequest);
             System.out.println("Query results for age <= 12: " + testResults.size());
-            
+
             // Test 3: Query không có điều kiện
             SearchRequestDTO allRequest = new SearchRequestDTO();
             List<SanPham> allResults = sanPhamRepo.timKiemTheoDieuKien(allRequest);
             System.out.println("Query results with no conditions: " + allResults.size());
-            
+
             // Test 4: Query với xuất xứ Mĩ
             SearchRequestDTO originRequest = new SearchRequestDTO();
             originRequest.setXuatXu("Mĩ");
             List<SanPham> originResults = sanPhamRepo.timKiemTheoDieuKien(originRequest);
             System.out.println("Query results for origin Mĩ: " + originResults.size());
-            
+
             // Test 5: Query với xuất xứ Mĩ và độ tuổi 18
             SearchRequestDTO combinedRequest = new SearchRequestDTO();
             combinedRequest.setXuatXu("Mĩ");
             combinedRequest.setDoTuoi(18);
             List<SanPham> combinedResults = sanPhamRepo.timKiemTheoDieuKien(combinedRequest);
             System.out.println("Query results for origin Mĩ and age 18: " + combinedResults.size());
-            
+
             // Test 6: Test parsing "12 tuổi"
             System.out.println("\n=== TESTING PARSING ===");
             String userInput = "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi";
             SearchRequestDTO parsedRequest = parseSearchRequestFromInput(userInput);
             System.out.println("Parsed request: " + parsedRequest);
             System.out.println("Parsed doTuoi: " + parsedRequest.getDoTuoi());
-            
+
             // Test 7: Test search với parsed request
             List<SanPham> parsedResults = sanPhamRepo.timKiemTheoDieuKien(parsedRequest);
             System.out.println("Parsed search results: " + parsedResults.size());
-            
+
             return "Test completed - check console for details. Results: " + testResults.size() + " products found";
-            
+
         } catch (Exception e) {
             System.err.println("Simple query test failed: " + e.getMessage());
             e.printStackTrace();
             return "Test failed: " + e.getMessage();
         }
     }
-    
+
     /**
      * Debug method để kiểm tra dữ liệu database
      */
     public String debugDatabaseData() {
         try {
             System.out.println("=== DEBUG DATABASE DATA ===");
-            
+
             // 1. Kiểm tra tất cả sản phẩm
             List<SanPham> allProducts = sanPhamRepo.findAll();
             System.out.println("Total products in DB: " + allProducts.size());
-            
+
             // 2. Kiểm tra trạng thái sản phẩm
             Map<String, Long> statusCount = allProducts.stream()
-                .collect(Collectors.groupingBy(
-                    p -> p.getTrangThai() != null ? p.getTrangThai() : "NULL",
-                    Collectors.counting()
-                ));
+                    .collect(Collectors.groupingBy(
+                            p -> p.getTrangThai() != null ? p.getTrangThai() : "NULL",
+                            Collectors.counting()
+                    ));
             System.out.println("Product status distribution:");
-            statusCount.forEach((status, count) -> 
-                System.out.println("  " + status + ": " + count));
-            
+            statusCount.forEach((status, count) ->
+                    System.out.println("  " + status + ": " + count));
+
             // 3. Kiểm tra độ tuổi
             Map<Integer, Long> ageCount = allProducts.stream()
-                .filter(p -> p.getDoTuoi() != null)
-                .collect(Collectors.groupingBy(SanPham::getDoTuoi, Collectors.counting()));
+                    .filter(p -> p.getDoTuoi() != null)
+                    .collect(Collectors.groupingBy(SanPham::getDoTuoi, Collectors.counting()));
             System.out.println("Age distribution:");
             ageCount.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> 
-                    System.out.println("  Age " + entry.getKey() + ": " + entry.getValue()));
-            
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry ->
+                            System.out.println("  Age " + entry.getKey() + ": " + entry.getValue()));
+
             // 4. Kiểm tra sản phẩm phù hợp với điều kiện
             List<SanPham> activeProducts = allProducts.stream()
-                .filter(p -> p.getTrangThai() != null && p.getTrangThai().contains("Đang kinh doanh"))
-                .collect(Collectors.toList());
+                    .filter(p -> p.getTrangThai() != null && p.getTrangThai().contains("Đang kinh doanh"))
+                    .collect(Collectors.toList());
             System.out.println("Active products: " + activeProducts.size());
-            
+
             List<SanPham> age12Products = activeProducts.stream()
-                .filter(p -> p.getDoTuoi() != null && p.getDoTuoi() <= 12)
-                .collect(Collectors.toList());
+                    .filter(p -> p.getDoTuoi() != null && p.getDoTuoi() <= 12)
+                    .collect(Collectors.toList());
             System.out.println("Active products age <= 12: " + age12Products.size());
-            
+
             // 5. Hiển thị một vài sản phẩm mẫu
             System.out.println("Sample active products:");
-            activeProducts.stream().limit(5).forEach(p -> 
-                System.out.println("  - " + p.getTenSanPham() + 
-                    " | Age: " + p.getDoTuoi() + 
-                    " | Status: " + p.getTrangThai()));
-            
+            activeProducts.stream().limit(5).forEach(p ->
+                    System.out.println("  - " + p.getTenSanPham() +
+                            " | Age: " + p.getDoTuoi() +
+                            " | Status: " + p.getTrangThai()));
+
             // 6. Test query trực tiếp
             System.out.println("\n=== TESTING DIRECT QUERY ===");
             try {
@@ -1647,154 +1660,154 @@ public class ChatService {
                 queryRequest.setDoTuoi(12);
                 List<SanPham> queryResults = sanPhamRepo.timKiemTheoDieuKien(queryRequest);
                 System.out.println("Direct query results: " + queryResults.size());
-                
+
                 if (!queryResults.isEmpty()) {
                     System.out.println("Query result samples:");
-                    queryResults.stream().limit(3).forEach(p -> 
-                        System.out.println("  - " + p.getTenSanPham() + 
-                            " | Age: " + p.getDoTuoi() + 
-                            " | Status: " + p.getTrangThai()));
+                    queryResults.stream().limit(3).forEach(p ->
+                            System.out.println("  - " + p.getTenSanPham() +
+                                    " | Age: " + p.getDoTuoi() +
+                                    " | Status: " + p.getTrangThai()));
                 }
-                
+
                 // Test query với xuất xứ Mĩ
                 System.out.println("\n=== TESTING ORIGIN QUERY ===");
                 SearchRequestDTO originRequest = new SearchRequestDTO();
                 originRequest.setXuatXu("Mĩ");
                 List<SanPham> originResults = sanPhamRepo.timKiemTheoDieuKien(originRequest);
                 System.out.println("Origin Mĩ query results: " + originResults.size());
-                
+
                 // Test query với xuất xứ Mĩ và độ tuổi 18
                 SearchRequestDTO combinedRequest = new SearchRequestDTO();
                 combinedRequest.setXuatXu("Mĩ");
                 combinedRequest.setDoTuoi(18);
                 List<SanPham> combinedResults = sanPhamRepo.timKiemTheoDieuKien(combinedRequest);
                 System.out.println("Origin Mĩ + Age 18 query results: " + combinedResults.size());
-                
+
             } catch (Exception e) {
                 System.err.println("Direct query failed: " + e.getMessage());
                 e.printStackTrace();
             }
-            
+
             return "Debug completed - check console for details";
-            
+
         } catch (Exception e) {
             System.err.println("Database debug failed: " + e.getMessage());
             e.printStackTrace();
             return "Debug failed: " + e.getMessage();
         }
     }
-    
+
     /**
      * Test method để kiểm tra parsing
      */
     public String testParsing() {
         try {
             System.out.println("=== TESTING PARSING ===");
-            
+
             String userInput = "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi";
             System.out.println("User input: " + userInput);
-            
+
             SearchRequestDTO parsedRequest = parseSearchRequestFromInput(userInput);
             System.out.println("Parsed request: " + parsedRequest);
             System.out.println("Parsed doTuoi: " + parsedRequest.getDoTuoi());
             System.out.println("Parsed ten: " + parsedRequest.getTen());
             System.out.println("Parsed xuatXu: " + parsedRequest.getXuatXu());
-            
+
             // Test search với parsed request
             List<SanPham> parsedResults = sanPhamRepo.timKiemTheoDieuKien(parsedRequest);
             System.out.println("Parsed search results: " + parsedResults.size());
-            
+
             if (!parsedResults.isEmpty()) {
                 System.out.println("Sample results:");
-                parsedResults.stream().limit(3).forEach(p -> 
-                    System.out.println("  - " + p.getTenSanPham() + 
-                        " | Age: " + p.getDoTuoi() + 
-                        " | Status: " + p.getTrangThai()));
+                parsedResults.stream().limit(3).forEach(p ->
+                        System.out.println("  - " + p.getTenSanPham() +
+                                " | Age: " + p.getDoTuoi() +
+                                " | Status: " + p.getTrangThai()));
             }
-            
+
             // Test với query đơn giản hơn
             System.out.println("\n=== TESTING SIMPLE QUERIES ===");
-            
+
             // Test 1: Query không có điều kiện
             SearchRequestDTO emptyRequest = new SearchRequestDTO();
             List<SanPham> emptyResults = sanPhamRepo.timKiemTheoDieuKien(emptyRequest);
             System.out.println("Empty query results: " + emptyResults.size());
-            
+
             // Test 2: Query chỉ với doTuoi
             SearchRequestDTO ageRequest = new SearchRequestDTO();
             ageRequest.setDoTuoi(12);
             List<SanPham> ageResults = sanPhamRepo.timKiemTheoDieuKien(ageRequest);
             System.out.println("Age 12 query results: " + ageResults.size());
-            
+
             // Test 3: Query với doTuoi = null
             SearchRequestDTO nullAgeRequest = new SearchRequestDTO();
             nullAgeRequest.setDoTuoi(null);
             List<SanPham> nullAgeResults = sanPhamRepo.timKiemTheoDieuKien(nullAgeRequest);
             System.out.println("Null age query results: " + nullAgeResults.size());
-            
+
             // Return detailed info instead of just message
-            return "Parsing test completed. Parsed doTuoi: " + parsedRequest.getDoTuoi() + 
-                   ", Search results: " + parsedResults.size() + " products. " +
-                   "Empty query: " + emptyResults.size() + ", Age 12: " + ageResults.size() + 
-                   ", Null age: " + nullAgeResults.size();
-            
+            return "Parsing test completed. Parsed doTuoi: " + parsedRequest.getDoTuoi() +
+                    ", Search results: " + parsedResults.size() + " products. " +
+                    "Empty query: " + emptyResults.size() + ", Age 12: " + ageResults.size() +
+                    ", Null age: " + nullAgeResults.size();
+
         } catch (Exception e) {
             System.err.println("Parsing test failed: " + e.getMessage());
             e.printStackTrace();
             return "Parsing test failed: " + e.getMessage();
         }
     }
-    
+
     /**
      * Test method đơn giản để kiểm tra API
      */
     public String testSimpleAPI() {
         try {
             System.out.println("=== TESTING SIMPLE API ===");
-            
+
             // Test 1: Query tất cả sản phẩm
             List<SanPham> allProducts = sanPhamRepo.findAll();
             System.out.println("Total products: " + allProducts.size());
-            
+
             // Test 2: Query với điều kiện đơn giản
             SearchRequestDTO request = new SearchRequestDTO();
             request.setDoTuoi(12);
             List<SanPham> results = sanPhamRepo.timKiemTheoDieuKien(request);
             System.out.println("Query results: " + results.size());
-            
+
             return "API test completed. Total: " + allProducts.size() + ", Query results: " + results.size();
-            
+
         } catch (Exception e) {
             System.err.println("API test failed: " + e.getMessage());
             e.printStackTrace();
             return "API test failed: " + e.getMessage();
         }
     }
-    
+
     /**
      * Test method để kiểm tra search flow đơn giản
      */
     public void testSimpleSearch() {
         try {
             System.out.println("DEBUG: Testing simple search...");
-            
+
             // Test 1: Search for age 12
             String userInput = "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi";
             System.out.println("DEBUG: User input: " + userInput);
-            
+
             SearchRequestDTO request = parseSearchRequestFromInput(userInput);
             System.out.println("DEBUG: Parsed request: " + request);
-            
+
             List<SanPham> products = searchWithRepository(request);
             System.out.println("DEBUG: Search results: " + products.size() + " products");
-            
+
             if (!products.isEmpty()) {
                 System.out.println("DEBUG: Sample products:");
-                products.forEach(p -> System.out.println("  - " + p.getTenSanPham() + 
-                    " | Age: " + p.getDoTuoi() + 
-                    " | Status: " + p.getTrangThai()));
+                products.forEach(p -> System.out.println("  - " + p.getTenSanPham() +
+                        " | Age: " + p.getDoTuoi() +
+                        " | Status: " + p.getTrangThai()));
             }
-            
+
             // Test 2: Direct repository call
             System.out.println("---");
             System.out.println("DEBUG: Testing direct repository call...");
@@ -1802,55 +1815,55 @@ public class ChatService {
             directRequest.setDoTuoi(12);
             List<SanPham> directProducts = sanPhamRepo.timKiemTheoDieuKien(directRequest);
             System.out.println("DEBUG: Direct call results: " + directProducts.size() + " products");
-            
+
             // Test 3: Check all products
             System.out.println("---");
             System.out.println("DEBUG: Checking all products...");
             List<SanPham> allProducts = sanPhamRepo.findAll();
             System.out.println("DEBUG: Total products: " + allProducts.size());
-            
+
             long activeProducts = allProducts.stream()
                     .filter(p -> p.getTrangThai() != null && p.getTrangThai().contains("Đang kinh doanh"))
                     .count();
             System.out.println("DEBUG: Active products: " + activeProducts);
-            
+
             long age12Products = allProducts.stream()
                     .filter(p -> p.getDoTuoi() != null && p.getDoTuoi() <= 12)
                     .count();
             System.out.println("DEBUG: Products age <= 12: " + age12Products);
-            
+
         } catch (Exception e) {
             System.err.println("DEBUG: Simple search test failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Test method tổng hợp để kiểm tra tất cả các trường hợp parsing
      */
     public String testComprehensiveParsing() {
         try {
             System.out.println("=== COMPREHENSIVE PARSING TEST ===");
-            
+
             String[] testCases = {
-                "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi",
-                "Tìm giúp tôi sản phẩm xuất xứ Thái Lan", 
-                "Tìm giúp tôi sản phẩm xuất xứ Trung Quốc",
-                "Tìm giúp tôi sản phẩm LEGO Technic",
-                "Tìm giúp tôi sản phẩm cho trẻ 5 tuổi xuất xứ Đức",
-                "Tìm giúp tôi sản phẩm LEGO City xuất xứ Mỹ"
+                    "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi",
+                    "Tìm giúp tôi sản phẩm xuất xứ Thái Lan",
+                    "Tìm giúp tôi sản phẩm xuất xứ Trung Quốc",
+                    "Tìm giúp tôi sản phẩm LEGO Technic",
+                    "Tìm giúp tôi sản phẩm cho trẻ 5 tuổi xuất xứ Đức",
+                    "Tìm giúp tôi sản phẩm LEGO City xuất xứ Mỹ"
             };
-            
+
             StringBuilder results = new StringBuilder();
             results.append("=== COMPREHENSIVE PARSING TEST RESULTS ===\n\n");
-            
+
             for (String testInput : testCases) {
                 System.out.println("---");
                 System.out.println("Testing: " + testInput);
-                
+
                 SearchRequestDTO request = parseSearchRequestFromInput(testInput);
                 System.out.println("Result: " + request);
-                
+
                 results.append("Input: ").append(testInput).append("\n");
                 results.append("  - doTuoi: ").append(request.getDoTuoi()).append("\n");
                 results.append("  - ten: ").append(request.getTen() != null ? request.getTen() : "null").append("\n");
@@ -1858,9 +1871,9 @@ public class ChatService {
                 results.append("  - thuongHieu: ").append(request.getThuongHieu() != null ? request.getThuongHieu() : "null").append("\n");
                 results.append("\n");
             }
-            
+
             return results.toString();
-            
+
         } catch (Exception e) {
             System.err.println("Comprehensive test failed: " + e.getMessage());
             e.printStackTrace();
@@ -1874,35 +1887,35 @@ public class ChatService {
     public String testFixThaiLan() {
         try {
             System.out.println("=== TESTING FIX FOR 'xuất xứ Thái Lan' ===");
-            
+
             String userInput = "Tìm giúp tôi sản phẩm xuất xứ Thái Lan";
             System.out.println("User input: " + userInput);
-            
+
             // Test parsing
             SearchRequestDTO request = parseSearchRequestFromInput(userInput);
             System.out.println("Parsed request: " + request);
             System.out.println("Parsed doTuoi: " + request.getDoTuoi());
             System.out.println("Parsed ten: " + request.getTen());
             System.out.println("Parsed xuatXu: " + request.getXuatXu());
-            
+
             // Test search
             List<SanPham> products = searchWithRepository(request);
             System.out.println("Search results: " + products.size() + " products");
-            
+
             if (!products.isEmpty()) {
                 System.out.println("Sample products:");
-                products.stream().limit(3).forEach(p -> 
-                    System.out.println("  - " + p.getTenSanPham() + 
-                        " | Origin: " + (p.getXuatXu() != null ? p.getXuatXu().getTen() : "NULL") + 
-                        " | Status: " + p.getTrangThai()));
-                
+                products.stream().limit(3).forEach(p ->
+                        System.out.println("  - " + p.getTenSanPham() +
+                                " | Origin: " + (p.getXuatXu() != null ? p.getXuatXu().getTen() : "NULL") +
+                                " | Status: " + p.getTrangThai()));
+
                 return "✅ FIX SUCCESSFUL! Found " + products.size() + " products from Thailand. " +
-                       "Parsed xuatXu: " + request.getXuatXu() + ", ten: " + 
-                       (request.getTen() != null ? request.getTen() : "null (correct)");
+                        "Parsed xuatXu: " + request.getXuatXu() + ", ten: " +
+                        (request.getTen() != null ? request.getTen() : "null (correct)");
             } else {
                 return "❌ FIX FAILED! No products found. Check database or query logic.";
             }
-            
+
         } catch (Exception e) {
             System.err.println("Test failed: " + e.getMessage());
             e.printStackTrace();
@@ -1916,35 +1929,35 @@ public class ChatService {
     public String testFix12Tuoi() {
         try {
             System.out.println("=== TESTING FIX FOR 'trẻ 12 tuổi' ===");
-            
+
             String userInput = "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi";
             System.out.println("User input: " + userInput);
-            
+
             // Test parsing
             SearchRequestDTO request = parseSearchRequestFromInput(userInput);
             System.out.println("Parsed request: " + request);
             System.out.println("Parsed doTuoi: " + request.getDoTuoi());
             System.out.println("Parsed ten: " + request.getTen());
             System.out.println("Parsed xuatXu: " + request.getXuatXu());
-            
+
             // Test search
             List<SanPham> products = searchWithRepository(request);
             System.out.println("Search results: " + products.size() + " products");
-            
+
             if (!products.isEmpty()) {
                 System.out.println("Sample products:");
-                products.stream().limit(3).forEach(p -> 
-                    System.out.println("  - " + p.getTenSanPham() + 
-                        " | Age: " + p.getDoTuoi() + 
-                        " | Status: " + p.getTrangThai()));
-                
+                products.stream().limit(3).forEach(p ->
+                        System.out.println("  - " + p.getTenSanPham() +
+                                " | Age: " + p.getDoTuoi() +
+                                " | Status: " + p.getTrangThai()));
+
                 return "✅ FIX SUCCESSFUL! Found " + products.size() + " products for age 12. " +
-                       "Parsed doTuoi: " + request.getDoTuoi() + ", ten: " + 
-                       (request.getTen() != null ? request.getTen() : "null (correct)");
+                        "Parsed doTuoi: " + request.getDoTuoi() + ", ten: " +
+                        (request.getTen() != null ? request.getTen() : "null (correct)");
             } else {
                 return "❌ FIX FAILED! No products found. Check database or query logic.";
             }
-            
+
         } catch (Exception e) {
             System.err.println("Test failed: " + e.getMessage());
             e.printStackTrace();
@@ -1958,89 +1971,89 @@ public class ChatService {
     public void testSearchFlow12Tuoi() {
         try {
             System.out.println("DEBUG: Testing search flow for 12 tuổi...");
-            
+
             String userInput = "Tìm giúp tôi sản phẩm cho trẻ 12 tuổi";
             System.out.println("DEBUG: User input: " + userInput);
-            
+
             // Test parsing
             SearchRequestDTO request = parseSearchRequestFromInput(userInput);
             System.out.println("DEBUG: Parsed request: " + request);
-            
+
             // Test search
             List<SanPham> products = searchWithRepository(request);
             System.out.println("DEBUG: Search results: " + products.size() + " products");
-            
+
             if (!products.isEmpty()) {
                 System.out.println("DEBUG: Sample products:");
-                products.forEach(p -> System.out.println("  - " + p.getTenSanPham() + 
-                    " | Age: " + p.getDoTuoi() + 
-                    " | Status: " + p.getTrangThai()));
+                products.forEach(p -> System.out.println("  - " + p.getTenSanPham() +
+                        " | Age: " + p.getDoTuoi() +
+                        " | Status: " + p.getTrangThai()));
             } else {
                 System.out.println("DEBUG: No products found, checking database...");
-                
+
                 // Test direct query
                 List<SanPham> allProducts = sanPhamRepo.findAll();
                 System.out.println("DEBUG: Total products in database: " + allProducts.size());
-                
+
                 // Check products with age 12
                 List<SanPham> age12Products = allProducts.stream()
                         .filter(p -> p.getDoTuoi() != null && p.getDoTuoi() <= 12)
                         .collect(Collectors.toList());
                 System.out.println("DEBUG: Products with age <= 12: " + age12Products.size());
-                
+
                 if (!age12Products.isEmpty()) {
                     System.out.println("DEBUG: Sample age 12 products:");
-                    age12Products.forEach(p -> System.out.println("  - " + p.getTenSanPham() + 
-                        " | Age: " + p.getDoTuoi() + 
-                        " | Status: " + p.getTrangThai()));
+                    age12Products.forEach(p -> System.out.println("  - " + p.getTenSanPham() +
+                            " | Age: " + p.getDoTuoi() +
+                            " | Status: " + p.getTrangThai()));
                 }
             }
-            
+
         } catch (Exception e) {
             System.err.println("DEBUG: Search flow test failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Test method để kiểm tra encoding fix
      */
     public void testEncodingFix() {
         try {
             System.out.println("DEBUG: Testing encoding fix...");
-            
+
             // Test với các input khác nhau
             String[] testInputs = {
-                "Tìm giúp tôi sản phẩm xuất xứ từ nhat",
-                "Tìm giúp tôi sản phẩm xuất xứ từ Nhật Bản",
-                "Tìm giúp tôi sản phẩm xuất xứ từ mỹ",
-                "Tìm giúp tôi sản phẩm xuất xứ từ trung quốc"
+                    "Tìm giúp tôi sản phẩm xuất xứ từ nhat",
+                    "Tìm giúp tôi sản phẩm xuất xứ từ Nhật Bản",
+                    "Tìm giúp tôi sản phẩm xuất xứ từ mỹ",
+                    "Tìm giúp tôi sản phẩm xuất xứ từ trung quốc"
             };
-            
+
             for (String input : testInputs) {
                 System.out.println("---");
                 System.out.println("DEBUG: Testing input: " + input);
-                
+
                 // Test parsing
                 SearchRequestDTO request = parseSearchRequestFromInput(input);
                 System.out.println("DEBUG: Parsed origin: '" + request.getXuatXu() + "'");
-                
+
                 // Test search with native query
                 List<SanPham> products = searchWithRepository(request);
                 System.out.println("DEBUG: Search results: " + products.size() + " products");
-                
+
                 if (!products.isEmpty()) {
-                    System.out.println("DEBUG: Sample product: " + products.get(0).getTenSanPham() + 
-                        " | Origin: " + (products.get(0).getXuatXu() != null ? products.get(0).getXuatXu().getTen() : "NULL"));
+                    System.out.println("DEBUG: Sample product: " + products.get(0).getTenSanPham() +
+                            " | Origin: " + (products.get(0).getXuatXu() != null ? products.get(0).getXuatXu().getTen() : "NULL"));
                 }
             }
-            
+
         } catch (Exception e) {
             System.err.println("DEBUG: Encoding fix test failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
 
     private String cleanJsonResponse(String jsonResponse) {
         String cleaned = jsonResponse.trim();
@@ -2120,7 +2133,7 @@ public class ChatService {
         dto.setAnhUrls(anhUrls);
         return dto;
     }
-    
+
     /**
      * Batch convert products to DTOs - OPTIMIZED để tránh N+1 queries
      */
@@ -2128,16 +2141,16 @@ public class ChatService {
         if (sanPhams.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         // Batch load tất cả images cho tất cả sản phẩm
         List<Integer> sanPhamIds = sanPhams.stream()
                 .map(SanPham::getId)
                 .collect(Collectors.toList());
-        
+
         List<AnhSp> allImages = anhSpRepo.findBySanPhamIdIn(sanPhamIds);
         Map<Integer, List<AnhSp>> imagesBySanPhamId = allImages.stream()
                 .collect(Collectors.groupingBy(anhSp -> anhSp.getSanPham().getId()));
-        
+
         // Convert to DTOs
         return sanPhams.stream()
                 .map(sanPham -> {
@@ -2175,4 +2188,3 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 }
-

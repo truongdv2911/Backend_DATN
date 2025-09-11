@@ -13,9 +13,9 @@ import lombok.RequiredArgsConstructor;
 @EnableScheduling
 @RequiredArgsConstructor
 public class CacheConfig {
-    
+
     private final ChatService chatService;
-    
+
     /**
      * Dọn dẹp cache mỗi 10 phút
      */

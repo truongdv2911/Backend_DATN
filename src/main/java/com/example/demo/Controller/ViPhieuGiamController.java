@@ -37,6 +37,11 @@ public class ViPhieuGiamController {
         }
     }
 
+    @GetMapping("/lich-su/{userId}")
+    public ResponseEntity<?> getLichSu(@PathVariable Integer userId) {
+        return ResponseEntity.ok(service.getLichSuDoiDiem(userId));
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getDanhSachPhieuTrongTui(
             @PathVariable Integer userId,

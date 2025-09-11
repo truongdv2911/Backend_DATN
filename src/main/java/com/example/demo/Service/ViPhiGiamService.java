@@ -1,12 +1,15 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTOs.ViGiamGiaDTO;
+import com.example.demo.Entity.LichSuDoiDiem;
 import com.example.demo.Entity.PhieuGiamGia;
 import com.example.demo.Entity.User;
 import com.example.demo.Entity.ViPhieuGiamGia;
+import com.example.demo.Repository.LichSuDoiDiemRepository;
 import com.example.demo.Repository.Phieu_giam_gia_Repo;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Repository.ViPhieuGiamGiaRepository;
+import com.example.demo.Responses.LichSuDoiDiemResponse;
 import com.example.demo.Responses.PhieuGiamGiaResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -22,6 +25,7 @@ public class ViPhiGiamService {
     private final ViPhieuGiamGiaRepository repository;
     private final UserRepository usersRepository;
     private final Phieu_giam_gia_Repo phieuGiamGiaRepository;
+    private final LichSuDoiDiemRepository lichSuDoiDiemRepository;
     @Transactional
     public ViPhieuGiamGia addVoucherToWallet(ViGiamGiaDTO dto) {
         if (repository.existsByUser_IdAndPhieuGiamGia_Id(dto.getUserId(), dto.getPhieuGiamGiaId())) {
@@ -66,6 +70,13 @@ public class ViPhiGiamService {
         vi.setUser(user);
         vi.setPhieuGiamGia(phieu);
         vi.setNgayNhan(LocalDateTime.now());
+
+        LichSuDoiDiem lichSu = new LichSuDoiDiem();
+        lichSu.setUser(user);
+        lichSu.setPhieuGiamGia(phieu);
+        lichSu.setDiemDaDoi(phieu.getDiemDoi());
+        lichSu.setMoTa("Đổi " + phieu.getDiemDoi() + " điểm lấy phiếu " + phieu.getMaPhieu());
+        lichSuDoiDiemRepository.save(lichSu);
         return repository.save(vi);
     }
 
@@ -105,5 +116,17 @@ public class ViPhiGiamService {
                 // Đảm bảo khi trạng thái null thì trả về toàn bộ
                 .filter(dto -> trangThai == null || dto.getTrangThaiThucTe().equalsIgnoreCase(trangThai.trim()))
                 .toList();
+    }
+
+    public List<LichSuDoiDiemResponse> getLichSuDoiDiem(Integer userId) {
+        List<LichSuDoiDiem> lichSuList = lichSuDoiDiemRepository.findByUserId(userId);
+
+        return lichSuList.stream().map(ls -> new LichSuDoiDiemResponse(
+                ls.getId(),
+                ls.getDiemDaDoi(),
+                ls.getNgayDoi(),
+                ls.getMoTa(),
+                ls.getPhieuGiamGia() != null ? ls.getPhieuGiamGia().getMaPhieu() : null
+        )).toList();
     }
 }
