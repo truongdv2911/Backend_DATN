@@ -48,7 +48,7 @@ public class User extends BaseEntity implements UserDetails {
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role;
 
-    @Column(name = "diem_tich_luy")
+    @Column(name = "diem_tich_luy", columnDefinition = "int default 0")
     private Integer diemTichLuy;
 
     @Column(name = "otp")
