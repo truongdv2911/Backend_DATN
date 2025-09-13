@@ -1,11 +1,16 @@
 package com.example.demo.Responses;
 
+import com.example.demo.Entity.SanPham;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SanPhamResponseDTO {
     private Integer id;
     private String tenSanPham;
@@ -24,4 +29,28 @@ public class SanPhamResponseDTO {
     private Integer noiBat;
     private String trangThai;
     private List<AnhResponse> anhUrls;
+
+    public static SanPhamResponseDTO fromEntity(SanPham sp, List<AnhResponse> anhResponses) {
+        if (sp == null) return null;
+
+        return new SanPhamResponseDTO(
+                sp.getId(),
+                sp.getTenSanPham(),
+                sp.getMaSanPham(),
+                sp.getDoTuoi(),
+                sp.getMoTa(),
+                sp.getGia(),
+                sp.getSoLuongManhGhep(),
+                sp.getSoLuongTon(),
+                sp.getSoLuongVote(),
+                sp.getDanhGiaTrungBinh(),
+                sp.getDanhMuc() != null ? sp.getDanhMuc().getId() : null,
+                sp.getBoSuuTap() != null ? sp.getBoSuuTap().getId() : null,
+                sp.getXuatXu() != null ? sp.getXuatXu().getId() : null,
+                sp.getThuongHieu() != null ? sp.getThuongHieu().getId() : null,
+                sp.getNoiBat(),
+                sp.getTrangThai(),
+                anhResponses
+        );
+    }
 }

@@ -1,16 +1,13 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Entity.ChatRequest;
-import com.example.demo.Entity.SanPham;
 import com.example.demo.Responses.ChatResponse;
-import com.example.demo.Responses.ErrorResponse;
 import com.example.demo.Service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
