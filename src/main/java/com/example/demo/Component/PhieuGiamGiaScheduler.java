@@ -28,7 +28,7 @@ public class PhieuGiamGiaScheduler {
     private final Phieu_giam_gia_Repo phieuGiamGiaRepo;
     private final KhuyenMaiSanPhamRepository kmspRepo;
     private final San_pham_Repo san_pham_repo;
-    // Chạy mỗi ngày lúc 0h đêm
+
     @Scheduled(fixedDelay  = 3000)
     public void updateTrangThaiPhieuGiamGia() {
         LocalDateTime now = LocalDateTime.now();

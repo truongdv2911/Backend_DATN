@@ -1,23 +1,26 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTOs.ChiTietHoanHangDTO;
+import com.example.demo.DTOs.KetQuaKiemTraRequest;
 import com.example.demo.DTOs.PhieuHoanHangDTO;
 import com.example.demo.Entity.*;
 import com.example.demo.Enum.TrangThaiPhieuHoan;
 import com.example.demo.Enum.TrangThaiThanhToan;
 import com.example.demo.Repository.*;
+import com.example.demo.Responses.AnhResponse;
 import com.example.demo.Responses.ChiTietHoanResponse;
 import com.example.demo.Responses.PhieuHoanHangResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,14 @@ public class HoanHangService {
     private final HoaDonChiTietRepository hoaDonChiTietRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final CloudinaryService cloudinaryService;
+    private final VidPhieuHoanRepository phieuHoanRepository;
+
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+
+    private static final List<String> IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/webp");
+    private static final List<String> VIDEO_TYPES = List.of("video/mp4", "video/quicktime", "video/x-msvideo","video/x-matroska");
 
     @Transactional
     public PhieuHoanHang taoPhieuHoanHang(PhieuHoanHangDTO dto) {
@@ -287,6 +298,13 @@ public class HoanHangService {
                     chiTietHoanResponse.setIdSanPham(chiTiet.getSanPham().getId());
                     return chiTietHoanResponse;
                 }).toList();
+        List<AnhResponse> anhResponses = phieus.getVidPhieuHoans().stream()
+                .map(anh -> {
+                    AnhResponse anhResponse = new AnhResponse();
+                    anhResponse.setId(anh.getId());
+                    anhResponse.setUrl(anh.getUrl());
+                    return anhResponse;
+        }).toList();
 
         phieuHoanHangResponses.setId(phieus.getId());
         phieuHoanHangResponses.setNgayHoan(phieus.getNgayHoan());
@@ -303,6 +321,134 @@ public class HoanHangService {
         phieuHoanHangResponses.setChuTaiKhoan(phieus.getChuTaiKhoan());
         phieuHoanHangResponses.setIdHD(phieus.getHoaDon().getId());
         phieuHoanHangResponses.setChiTietHoanHangs(chiTietHoanResponses);
+        phieuHoanHangResponses.setAnhs(anhResponses);
         return phieuHoanHangResponses;
+    }
+
+    public void uploadAnh(Integer idPhieuHoan, List<MultipartFile> images) throws Exception {
+        try {
+            PhieuHoanHang dg = phieuHoanHangRepository.findById(idPhieuHoan)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu hoàn"));
+
+            int existing = phieuHoanRepository.countByHoanHangId(idPhieuHoan);
+            if (existing + images.size() > 3) {
+                throw new RuntimeException("Tối đa 3 ảnh và video cho mỗi lần hoàn");
+            }
+            for (MultipartFile file : images) {
+                if (!IMAGE_TYPES.contains(file.getContentType())) {
+                    throw new RuntimeException("Chỉ cho phép định dạng ảnh JPG, PNG, WEBP");
+                }
+                if (file.getSize() > MAX_IMAGE_SIZE) {
+                    throw new RuntimeException("Ảnh vượt quá dung lượng 5MB");
+                }
+
+                String fileName = saveFile(file).get("url").toString();
+                String mota = saveFile(file).get("public_id").toString();
+                VidPhieuHoan af = new VidPhieuHoan();
+                af.setUrl(fileName);
+                af.setMota(mota);
+                af.setHoanHang(dg);
+                phieuHoanRepository.save(af);
+            }
+        }catch (Exception e){
+            throw new Exception("loi khi upload anh phiếu hoàn");
+        }
+    }
+
+    public void uploadVideo(Integer danhGiaId, MultipartFile file) throws Exception {
+        try {
+            PhieuHoanHang dg = phieuHoanHangRepository.findById(danhGiaId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu hoàn"));
+
+            if (!VIDEO_TYPES.contains(file.getContentType())) {
+                throw new RuntimeException("Chỉ cho phép video MP4, MOV, AVI");
+            }
+            if (file.getSize() > MAX_VIDEO_SIZE) {
+                throw new RuntimeException("Video vượt quá dung lượng 50MB");
+            }
+
+            String fileName = saveFile(file).get("url").toString();
+            String mota = saveFile(file).get("public_id").toString();
+            VidPhieuHoan vf = new VidPhieuHoan();
+            vf.setUrl(fileName);
+            vf.setMota(mota);
+            vf.setHoanHang(dg);
+            phieuHoanRepository.save(vf);
+        }catch (Exception e){
+            throw new Exception("loi khi upload video danh gia");
+        }
+    }
+
+    private Map saveFile(MultipartFile file) throws IOException {
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        if (originalFileName.contains("..")) {
+            throw new IOException("Tên file không hợp lệ: " + originalFileName);
+        }
+        // Tạo tên file duy nhất
+        Map result = cloudinaryService.upload(file);
+        return result;
+    }
+
+    @Transactional
+    public void kiemTraHang(Integer idPhieu, List<KetQuaKiemTraRequest> ketQuaList) {
+        // 1. Load phiếu hoàn
+        PhieuHoanHang phieuHoan = phieuHoanHangRepository.findById(idPhieu)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu hoàn: " + idPhieu));
+
+        if (!TrangThaiPhieuHoan.DA_DUYET.equals(phieuHoan.getTrangThai())){
+            throw new RuntimeException("Trạng thái phiếu chưa phù hợp");
+        }
+
+        Map<Integer, Integer> mapChiTiet = new HashMap<>();
+        for (ChiTietHoanHang ct : phieuHoan.getChiTietHoanHangs()) {
+            mapChiTiet.put(ct.getSanPham().getId(), ct.getSoLuongHoan());
+        }
+
+        // Map để cộng dồn số lượng kiểm tra
+        Map<Integer, Integer> mapKiemTra = new HashMap<>();
+
+        // 2. Validate từng kết quả
+        for (KetQuaKiemTraRequest ketQua : ketQuaList) {
+            Integer idSp = ketQua.getIdSanPham();
+            Integer slHoan = ketQua.getSoLuongHoan();
+
+            if (!mapChiTiet.containsKey(idSp)) {
+                throw new RuntimeException("Sản phẩm " + idSp + " không có trong phiếu hoàn");
+            }
+
+            if (slHoan == null || slHoan <= 0) {
+                throw new RuntimeException("Số lượng hoàn phải > 0 cho sản phẩm " + idSp);
+            }
+
+            // Cộng dồn để so khớp tổng sau cùng
+            mapKiemTra.put(idSp, mapKiemTra.getOrDefault(idSp, 0) + slHoan);
+
+            // Xử lý nhập kho hoặc hàng lỗi
+            if (ketQua.isSuDungDuoc()) {
+                SanPham sp = sanPhamRepository.findById(idSp)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm: " + idSp));
+
+                sp.setSoLuongTon(sp.getSoLuongTon() + slHoan);
+                sanPhamRepository.save(sp);
+            }
+        }
+
+        // 3. Validate tổng số lượng sau khi kiểm tra
+        for (Map.Entry<Integer, Integer> entry : mapChiTiet.entrySet()) {
+            Integer idSp = entry.getKey();
+            Integer soLuongTrongPhieu = entry.getValue();
+            Integer soLuongKiemTra = mapKiemTra.getOrDefault(idSp, 0);
+
+            if (!soLuongTrongPhieu.equals(soLuongKiemTra)) {
+                throw new RuntimeException(
+                        "Tổng số lượng kiểm tra cho sản phẩm " + idSp +
+                                " (" + soLuongKiemTra + ") không khớp với số lượng phiếu (" + soLuongTrongPhieu + ")"
+                );
+            }
+        }
+
+        // 4. Cập nhật trạng thái phiếu hoàn
+        phieuHoan.setTrangThai(TrangThaiPhieuHoan.DA_KIEM_TRA_HANG);
+        phieuHoanHangRepository.save(phieuHoan);
     }
 }

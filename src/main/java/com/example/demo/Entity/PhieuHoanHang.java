@@ -55,4 +55,7 @@ public class PhieuHoanHang {
 
     @OneToMany(mappedBy = "phieuHoanHang", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChiTietHoanHang> chiTietHoanHangs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "hoanHang", cascade = CascadeType.ALL)
+    private List<VidPhieuHoan> vidPhieuHoans = new ArrayList<>();
 }

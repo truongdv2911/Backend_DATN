@@ -2,10 +2,6 @@ package com.example.demo.Repository;
 
 import com.example.demo.DTOs.SearchRequestDTO;
 import com.example.demo.Entity.SanPham;
-import com.example.demo.Responses.SanPhamResponseDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecificationExecutor<SanPham> {
@@ -183,18 +178,19 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
 
     @Query("""
     SELECT sp
-    FROM SanPham sp
-    JOIN sp.xuatXu xx
-    JOIN sp.thuongHieu th
-    JOIN sp.boSuuTap bst
-    WHERE (:#{#req.doTuoi} IS NULL OR sp.doTuoi <= :#{#req.doTuoi})
-       AND (:#{#req.ten} IS NULL OR LOWER(sp.tenSanPham) LIKE LOWER(CONCAT('%', :#{#req.ten}, '%')))
-       AND (:#{#req.gia} IS NULL OR sp.gia <= :#{#req.gia})
-       AND (:#{#req.xuatXu} IS NULL OR LOWER(xx.ten) LIKE LOWER(CONCAT('%', :#{#req.xuatXu}, '%')))
-       AND (:#{#req.thuongHieu} IS NULL OR LOWER(th.ten) LIKE LOWER(CONCAT('%', :#{#req.thuongHieu}, '%')))
-       AND (:#{#req.boSuuTap} IS NULL OR LOWER(bst.tenBoSuuTap) LIKE LOWER(CONCAT('%', :#{#req.boSuuTap}, '%')))
-       AND (:#{#req.soLuongManhGhepMin} IS NULL OR sp.soLuongManhGhep >= :#{#req.soLuongManhGhepMin})
-       AND (:#{#req.danhGiaToiThieu} IS NULL OR sp.danhGiaTrungBinh >= :#{#req.danhGiaToiThieu})
+        FROM SanPham sp
+         JOIN sp.xuatXu xx
+         JOIN sp.thuongHieu th
+         JOIN sp.boSuuTap bst
+        WHERE (:#{#req.doTuoi} IS NULL OR sp.doTuoi <= :#{#req.doTuoi})
+           AND (:#{#req.ten} IS NULL OR LOWER(sp.tenSanPham) LIKE LOWER(CONCAT('%', :#{#req.ten}, '%')))
+           AND (:#{#req.gia} IS NULL OR sp.gia <= :#{#req.gia})
+           AND (:#{#req.xuatXu} IS NULL OR LOWER(xx.ten) LIKE LOWER(CONCAT('%', :#{#req.xuatXu}, '%')))
+           AND (:#{#req.thuongHieu} IS NULL OR LOWER(th.ten) LIKE LOWER(CONCAT('%', :#{#req.thuongHieu}, '%')))
+           AND (:#{#req.boSuuTap} IS NULL OR LOWER(bst.tenBoSuuTap) LIKE LOWER(CONCAT('%', :#{#req.boSuuTap}, '%')))
+           AND (:#{#req.soLuongManhGhepMin} IS NULL OR sp.soLuongManhGhep >= :#{#req.soLuongManhGhepMin})
+           AND (:#{#req.danhGiaToiThieu} IS NULL OR sp.danhGiaTrungBinh >= :#{#req.danhGiaToiThieu})
+       AND sp.trangThai = 'Đang kinh doanh'
 """)
     List<SanPham> timKiemTheoDieuKien(@Param("req") SearchRequestDTO request);
 
@@ -204,6 +200,7 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
     JOIN san_pham sp ON sp.id = ct.san_pham_id
     JOIN hoa_don hd ON hd.id = ct.hoa_don_id
     WHERE hd.trang_thai = N'Hoàn tất'
+    and sp.trang_thai = N'Đang kinh doanh'
       AND hd.ngay_lap BETWEEN :startDate AND :endDate
     GROUP BY sp.id, sp.ten_san_pham
     ORDER BY so_luong_ban DESC
@@ -213,4 +210,9 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
     @Query("select sp from SanPham sp where sp.soLuongTon < :soLuongCanhBao")
     List<SanPham> spSapHetHang(Integer soLuongCanhBao);
 
+    List<SanPham> findTop3ByDanhGiaTrungBinhGreaterThanOrderByDanhGiaTrungBinhDesc(double v);
+
+    List<SanPham> findTop3ByOrderByIdDesc();
+
+    List<SanPham> findByTenSanPhamContainingIgnoreCase(String searchTerm);
 }

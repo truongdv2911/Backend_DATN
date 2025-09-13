@@ -154,7 +154,11 @@ public class HoaDonService {
                 if (soLuongTon == null || soLuongTon < soLuongBan) {
                     throw new RuntimeException("Sản phẩm '" + sanPham.getTenSanPham() + "' không đủ tồn kho. Hiện còn: " + soLuongTon + ", cần: " + soLuongBan);
                 }
-                if (soLuongTon != null && dtOhoaDon.getLoaiHD() == 1) {
+                // 🔥 Trừ kho ngay nếu là tại quầy hoặc online chuyển khoản
+                boolean truKhoNgay = (dtOhoaDon.getLoaiHD() == 1) ||
+                        ("Chuyển khoản".equalsIgnoreCase(dtOhoaDon.getPhuongThucThanhToan()));
+
+                if (truKhoNgay) {
                     Integer soLuongTonConLai = soLuongTon - soLuongBan;
                     sanPham.setTrangThai(soLuongTonConLai > 0 ? "Đang kinh doanh" : "Hết hàng");
                     sanPham.setSoLuongTon(Math.max(0, soLuongTonConLai));
@@ -427,20 +431,22 @@ public class HoaDonService {
             throw new Exception("Chuyển đổi trạng thái từ " + hoaDon.getTrangThai() + " sang " + trangThai + " không hợp lệ");
         }
 
-        //Tru so luong san pham khi bị don duoc xac nhan
-        if (trangThai.equalsIgnoreCase("Đã xác nhận")
-                && hoaDon.getTrangThai().equalsIgnoreCase("Đang xử lý")) {
+        // ✅ Bỏ qua trừ số lượng nếu thanh toán = chuyển khoản
+        if (!"Chuyển khoản".equalsIgnoreCase(hoaDon.getPhuongThucThanhToan())) {
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
 
             for (HoaDonChiTiet chiTiet : chiTietList) {
                 SanPham sp = chiTiet.getSp();
                 Integer soLuongTru = chiTiet.getSoLuong();
-                if (sp.getSoLuongTon() < soLuongTru){
+
+                if (sp.getSoLuongTon() < soLuongTru) {
                     throw new Exception("Số lượng tồn trong kho không đủ, liên hệ cho user để xác nhận lại");
                 }
+
                 Integer soLuongConLai = sp.getSoLuongTon() - soLuongTru;
                 sp.setTrangThai(soLuongConLai > 0 ? "Đang kinh doanh" : "Hết hàng");
                 sp.setSoLuongTon(soLuongConLai);
+
                 san_pham_repo.save(sp); // Lưu lại số lượng mới
             }
         }

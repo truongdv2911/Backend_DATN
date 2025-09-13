@@ -1,6 +1,9 @@
 package com.example.demo.Controller;
 
+import com.example.demo.DTOs.DTOdanhGia;
+import com.example.demo.DTOs.KetQuaKiemTraRequest;
 import com.example.demo.DTOs.PhieuHoanHangDTO;
+import com.example.demo.Entity.DanhGia;
 import com.example.demo.Entity.PhieuHoanHang;
 import com.example.demo.Enum.TrangThaiPhieuHoan;
 import com.example.demo.Enum.TrangThaiThanhToan;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,38 @@ public class HoanHangController {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/tao-phieu-2", consumes = "multipart/form-data")
+    public ResponseEntity<?> createDanhGiaWithFileImages(
+            @Valid @ModelAttribute PhieuHoanHangDTO dto,
+            @RequestParam("fileAnh") List<MultipartFile> fileAnh,
+            @RequestParam("fileVid") MultipartFile fileVid,
+            BindingResult result
+    ) {
+        if (result.hasErrors()) {
+            String message = String.join(", ", result.getFieldErrors().stream().map(errors -> errors.getDefaultMessage()).toList());
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
+        }
+        try {
+            // Tạo sản phẩm trước
+            PhieuHoanHang hoanHang = hoanHangService.taoPhieuHoanHang(dto);
+
+            // Upload và tạo ảnh sử dụng AnhSpService
+            if (fileAnh != null && !fileAnh.isEmpty() && fileAnh.get(0).getSize() > 0) {
+                hoanHangService.uploadAnh(hoanHang.getId(), fileAnh);
+            }
+
+            // Nếu có video thì upload
+            if (fileVid != null && !fileVid.isEmpty() && fileVid.getSize() > 0) {
+                hoanHangService.uploadVideo(hoanHang.getId(), fileVid);
+            }
+            return ResponseEntity.ok(hoanHangService.convertPHH(hoanHang));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse(500, e.getMessage()));
         }
     }
 
@@ -113,6 +149,21 @@ public class HoanHangController {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new ErrorResponse(500, "Lỗi hệ thống: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/kiem-tra-hang/{idPhieu}")
+    public ResponseEntity<?> kiemTraHang(
+            @PathVariable Integer idPhieu,
+            @RequestBody List<KetQuaKiemTraRequest> ketQuaList) {
+
+        try {
+            hoanHangService.kiemTraHang(idPhieu, ketQuaList);
+            return ResponseEntity.ok(new ErrorResponse(200, "Đã kiểm tra và xử lý hàng hoàn"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
         }
     }
 }

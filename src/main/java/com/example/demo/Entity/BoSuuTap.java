@@ -14,6 +14,7 @@ import java.util.List;
 @Setter
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE )
+@JsonIgnoreProperties({"sanPhams"})
 @Table(name = "Bo_suu_tap")
 public class BoSuuTap {
     @Id
@@ -30,7 +31,6 @@ public class BoSuuTap {
      Date ngayTao;
 
     @OneToMany(mappedBy = "boSuuTap", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties("boSuuTap")
     private List<SanPham> sanPhams;
 
 }

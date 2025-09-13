@@ -48,4 +48,5 @@ public class PhieuHoanHangResponse {
     private Integer idHD;
 
     private List<ChiTietHoanResponse> chiTietHoanHangs = new ArrayList<>();
+    private List<AnhResponse> anhs = new ArrayList<>();
 }
