@@ -1,5 +1,6 @@
 package com.example.demo.Repository;
 
+import com.example.demo.Entity.ThuongHieu;
 import com.example.demo.Entity.XuatXu;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,7 @@ WHERE hd.trang_thai = N'Hoàn tất'
 GROUP BY th.ten_xuat_xu;
 """, nativeQuery = true)
     List<Object[]> doanhThuTheoXuatXu(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT b FROM XuatXu b WHERE b.isDelete = 1")
+    List<XuatXu> findAllActive();
 }

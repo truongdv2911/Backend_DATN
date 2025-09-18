@@ -27,12 +27,13 @@ public class Bo_suu_tap_Service {
         boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
         boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());
         boSuuTap.setNgayTao(new Date());
+        boSuuTap.setIsDelete(1);
         return boSuuTapRepo.save(boSuuTap);
     }
 
 
     public List<BoSuuTap> getAllBoSuuTap() {
-        return boSuuTapRepo.findAll();
+        return boSuuTapRepo.findAllActive();
     }
 
 
@@ -65,7 +66,8 @@ public class Bo_suu_tap_Service {
         if (hasProductsInStock) {
             throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
         }
-        
-        boSuuTapRepo.delete(boSuuTap);
+
+        boSuuTap.setIsDelete(0);
+        boSuuTapRepo.save(boSuuTap);
     }
 }

@@ -29,6 +29,8 @@ public class BoSuuTap {
      Integer namPhatHanh;
     @Column(name = "ngay_tao")
      Date ngayTao;
+    @Column(name = "is_delete")
+    Integer isDelete;
 
     @OneToMany(mappedBy = "boSuuTap", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SanPham> sanPhams;

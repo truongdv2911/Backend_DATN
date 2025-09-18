@@ -26,6 +26,9 @@ public class ThuongHieu {
     @Column(name = "mo_ta")
     private String moTa;
 
+    @Column(name = "is_delete")
+    private Integer isDelete;
+
     @OneToMany(mappedBy = "thuongHieu", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SanPham> sanPhams;
 }

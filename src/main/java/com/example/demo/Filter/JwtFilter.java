@@ -76,7 +76,12 @@ public class JwtFilter extends OncePerRequestFilter {
                 Pair.of("/api/danhmuc/", "GET"),
                 Pair.of("/api/bosuutap/", "GET"),
                 Pair.of("/api/giohang/", "GET"),
-                Pair.of("/api/anhsp/", "GET")
+                Pair.of("/api/anhsp/", "GET"),
+                Pair.of("/api/lego-store/chat", "POST"),
+                Pair.of("/api/lego-store/chat", "DELETE"),
+                Pair.of("api/lego-store/danh-gia", "GET"),
+                Pair.of("api/lego-store/thuong-hieu", "GET"),
+                Pair.of("api/lego-store/xuatXu", "GET")
         );
         for (Pair<String, String> pair:
                 passTokens) {
@@ -86,6 +91,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return true;
             }
         }
-        return true;
+        return false;
     }
 }
