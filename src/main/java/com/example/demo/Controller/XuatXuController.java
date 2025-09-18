@@ -22,7 +22,7 @@ public class XuatXuController {
 
     @GetMapping("/getAll")
     public ResponseEntity<?> getAll(){
-        return ResponseEntity.ok(xuatXuRepository.findAll());
+        return ResponseEntity.ok(xuatXuRepository.findAllActive());
     }
 
     @PostMapping("/createXuatXu")
@@ -36,7 +36,7 @@ public class XuatXuController {
             if (xuatXuRepository.existsByTenIgnoreCase(xuatXuDTO.getTen())) {
                 throw new RuntimeException("Tên bộ sưu tập đã tồn tại!");
             }
-            XuatXu resultObj = xuatXuRepository.save(new XuatXu(null, xuatXuDTO.getTen(), xuatXuDTO.getMoTa(), null));
+            XuatXu resultObj = xuatXuRepository.save(new XuatXu(null, xuatXuDTO.getTen(), xuatXuDTO.getMoTa(), 1, null));
             // Log lịch sử tạo mới
             String moTa = "Tạo mới xuất xứ: " + resultObj.getTen() + " - ID: " + resultObj.getId();
             lichSuLogService.saveLog("TẠO MỚI", "XuatXu", moTa, lichSuLogService.getCurrentUserId());
@@ -62,7 +62,7 @@ public class XuatXuController {
             String logThayDoi = ObjectChangeLogger.generateChangeLog(xuatXu, xuatXuDTO);
             String moTa = "Cập nhật xuất xứ ID: " + id + ". Thay đổi: " + logThayDoi;
             lichSuLogService.saveLog("CẬP NHẬT", "XuatXu", moTa, lichSuLogService.getCurrentUserId());
-            XuatXu resultObj = xuatXuRepository.save(new XuatXu(id, xuatXuDTO.getTen(), xuatXuDTO.getMoTa(), null));
+            XuatXu resultObj = xuatXuRepository.save(new XuatXu(id, xuatXuDTO.getTen(), xuatXuDTO.getMoTa(), 1, null));
             return ResponseEntity.ok(resultObj);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -81,7 +81,8 @@ public class XuatXuController {
             if (hasProductsInStock) {
                 throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
             }
-            xuatXuRepository.delete(xuatXu);
+            xuatXu.setIsDelete(0);
+            xuatXuRepository.save(xuatXu);
             // Log lịch sử xóa
             String moTa = "Xóa xuất xứ ID: " + id + ", Tên: " + xuatXu.getTen();
             lichSuLogService.saveLog("XÓA", "XuatXu", moTa, lichSuLogService.getCurrentUserId());

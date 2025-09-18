@@ -215,4 +215,43 @@ public interface San_pham_Repo extends JpaRepository<SanPham,Integer>, JpaSpecif
     List<SanPham> findTop3ByOrderByIdDesc();
 
     List<SanPham> findByTenSanPhamContainingIgnoreCase(String searchTerm);
+
+    List<SanPham> findByTrangThaiAndTenSanPhamContainingIgnoreCaseOrTrangThaiAndXuatXu_TenContainingIgnoreCase(
+            String status1, String name,String status2, String xuatXu);
+
+    // Tìm theo độ tuổi
+    List<SanPham> findByTrangThaiAndDoTuoiBetween(String status1, Integer min, Integer max);
+
+    // Tìm theo bộ sưu tập
+    List<SanPham> findByTrangThaiAndBoSuuTap_TenBoSuuTapIgnoreCase(String status1, String boSuuTap);
+
+    List<SanPham> findTop3ByTrangThaiOrderByNgayTaoDesc(String status1);
+
+    @Query(
+            value = """
+            SELECT top 3 sp.*
+            FROM San_pham sp
+            JOIN Hoa_don_chi_tiet hdct ON hdct.san_pham_id = sp.id
+            JOIN Hoa_don hd ON hdct.hoa_don_id = hd.id
+            WHERE hd.trang_thai = N'Hoàn tất'
+            and sp.trang_thai = N'Đang kinh doanh'
+            GROUP BY sp.id, sp.ten_san_pham, sp.ma_san_pham, sp.do_tuoi, sp.mo_ta,
+                     sp.gia, sp.so_luong_manh_ghep, sp.so_luong_ton, sp.anh_dai_dien,
+                     sp.so_luong_vote, sp.danh_gia_trung_binh, sp.ngay_tao,
+                     sp.danh_muc_id, sp.bo_suu_tap_id, sp.trang_thai,
+                     sp.xuat_xu_id, sp.thuong_hieu_id, sp.is_noi_bat, sp.ngay_sua, sp.gia_km
+            ORDER BY SUM(hdct.so_luong) DESC
+            """,
+            nativeQuery = true
+    )
+    List<SanPham> findBestSeller();
+
+    @Query("""
+SELECT s FROM SanPham s
+WHERE s.trangThai = :status
+  AND (LOWER(s.tenSanPham) LIKE LOWER(CONCAT('%', :keyword, '%'))
+       OR LOWER(s.xuatXu.ten) LIKE LOWER(CONCAT('%', :keyword, '%')))
+""")
+    List<SanPham> searchActive(@Param("status") String status,
+                               @Param("keyword") String keyword);
 }

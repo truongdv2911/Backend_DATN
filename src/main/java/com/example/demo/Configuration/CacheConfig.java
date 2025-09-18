@@ -1,11 +1,8 @@
 package com.example.demo.Configuration;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-
-import com.example.demo.Service.ChatService;
 
 import lombok.RequiredArgsConstructor;
 
