@@ -254,4 +254,12 @@ WHERE s.trangThai = :status
 """)
     List<SanPham> searchActive(@Param("status") String status,
                                @Param("keyword") String keyword);
+
+    List<SanPham> findByTrangThaiAndGiaKMBetween(String đang_kinh_doanh, BigDecimal min, BigDecimal max);
+
+    List<SanPham> findByTrangThaiAndGiaKMGreaterThanEqual(String đang_kinh_doanh, BigDecimal min);
+
+    List<SanPham> findByTrangThaiAndSoLuongManhGhepBetween(String đang_kinh_doanh, Integer minPieces, Integer maxPieces);
+
+    List<SanPham> findByTrangThaiAndSoLuongManhGhepGreaterThanEqual(String đang_kinh_doanh, Integer minPieces);
 }
