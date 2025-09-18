@@ -24,7 +24,7 @@ public class ThuongHieuController {
 
     @GetMapping("/getAll")
     public ResponseEntity<?> getAll(){
-        return ResponseEntity.ok(thuongHieuRepository.findAll());
+        return ResponseEntity.ok(thuongHieuRepository.findAllActive());
     }
 
     @PostMapping("/createTH")
@@ -37,7 +37,7 @@ public class ThuongHieuController {
             if (thuongHieuRepository.existsByTen(thuongHieuDTO.getTen())) {
                 throw new RuntimeException("Tên thuong hieu đã tồn tại!");
             }
-            ThuongHieu resultObj = thuongHieuRepository.save(new ThuongHieu(null, thuongHieuDTO.getTen(), thuongHieuDTO.getMoTa(), null));
+            ThuongHieu resultObj = thuongHieuRepository.save(new ThuongHieu(null, thuongHieuDTO.getTen(), thuongHieuDTO.getMoTa(), 1, null));
             // Log lịch sử tạo mới
             String moTa = "Tạo mới thương hiệu: " + resultObj.getTen() + " - ID: " + resultObj.getId();
             lichSuLogService.saveLog("TẠO MỚI", "ThuongHieu", moTa, lichSuLogService.getCurrentUserId());
@@ -63,7 +63,7 @@ public class ThuongHieuController {
             String logThayDoi = ObjectChangeLogger.generateChangeLog(thuongHieu, thuongHieuDTO);
             String moTa = "Cập nhật thương hiệu ID: " + id + ". Thay đổi: " + logThayDoi;
             lichSuLogService.saveLog("CẬP NHẬT", "ThuongHieu", moTa, lichSuLogService.getCurrentUserId());
-            ThuongHieu resultObj = thuongHieuRepository.save(new ThuongHieu(id, thuongHieuDTO.getTen(), thuongHieuDTO.getMoTa(), null));
+            ThuongHieu resultObj = thuongHieuRepository.save(new ThuongHieu(id, thuongHieuDTO.getTen(), thuongHieuDTO.getMoTa(), 1, null));
             return ResponseEntity.ok(resultObj);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
@@ -82,11 +82,12 @@ public class ThuongHieuController {
             if (hasProductsInStock) {
                 throw new RuntimeException("Không thể xóa thuong hieu. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa thuong hieu.");
             }
-            thuongHieuRepository.delete(thuongHieu);
+            thuongHieu.setIsDelete(0);
+            thuongHieuRepository.save(thuongHieu);
             // Log lịch sử xóa
             String moTa = "Xóa thương hiệu ID: " + id + ", Tên: " + thuongHieu.getTen();
             lichSuLogService.saveLog("XÓA", "ThuongHieu", moTa, lichSuLogService.getCurrentUserId());
-            return ResponseEntity.ok("xoa thanh cong");
+            return ResponseEntity.ok(new ErrorResponse(200,"xoa thanh cong"));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }

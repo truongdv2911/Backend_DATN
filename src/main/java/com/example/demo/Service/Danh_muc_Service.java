@@ -23,12 +23,13 @@ public class   Danh_muc_Service {
         DanhMuc danhMuc = new DanhMuc();
         danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
         danhMuc.setMoTa(danhMucDTO.getMoTa());
+        danhMuc.setIsDelete(1);
         return danhMucRepo.save(danhMuc);
     }
 
 
     public List<DanhMuc> getAllDanhMuc() {
-        return danhMucRepo.findAll();
+        return danhMucRepo.findAllActive();
     }
 
 
@@ -63,7 +64,8 @@ public class   Danh_muc_Service {
         if (hasProductsInStock) {
             throw new RuntimeException("Không thể xóa danh mục. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa danh mục.");
         }
-        
-        danhMucRepo.delete(danhMuc);
+
+        danhMuc.setIsDelete(0);
+        danhMucRepo.save(danhMuc);
     }
 }

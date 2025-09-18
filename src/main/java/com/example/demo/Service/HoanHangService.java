@@ -34,6 +34,7 @@ public class HoanHangService {
     private final EmailService emailService;
     private final CloudinaryService cloudinaryService;
     private final VidPhieuHoanRepository phieuHoanRepository;
+    private final HangThanhLyRepository hangThanhLyRepository;
 
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
@@ -423,13 +424,22 @@ public class HoanHangService {
             // Cộng dồn để so khớp tổng sau cùng
             mapKiemTra.put(idSp, mapKiemTra.getOrDefault(idSp, 0) + slHoan);
 
+            SanPham sp = sanPhamRepository.findById(idSp)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm: " + idSp));
+
             // Xử lý nhập kho hoặc hàng lỗi
             if (ketQua.isSuDungDuoc()) {
-                SanPham sp = sanPhamRepository.findById(idSp)
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm: " + idSp));
-
                 sp.setSoLuongTon(sp.getSoLuongTon() + slHoan);
                 sanPhamRepository.save(sp);
+            }
+            else {
+                // ❗ Hàng lỗi -> chuyển sang hàng thanh lý
+                HangThanhLy hangThanhLy = new HangThanhLy();
+                hangThanhLy.setSanPham(sp);
+                hangThanhLy.setSoLuong(slHoan);
+                hangThanhLy.setNgayNhap(LocalDateTime.now());
+                hangThanhLy.setGhiChu("Hoàn trả nhưng không sử dụng được từ phiếu " + idPhieu);
+                hangThanhLyRepository.save(hangThanhLy);
             }
         }
 

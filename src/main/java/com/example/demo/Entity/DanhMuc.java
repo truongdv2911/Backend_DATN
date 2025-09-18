@@ -25,6 +25,9 @@ public class DanhMuc {
     @Column(name = "mo_ta", columnDefinition = "TEXT")
     private String moTa;
 
+    @Column(name = "is_delete")
+    private Integer isDelete;
+
     @OneToMany(mappedBy = "danhMuc", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SanPham> sanPhams;
 
