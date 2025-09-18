@@ -11,6 +11,7 @@ import com.example.demo.Responses.SanPhamResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -109,6 +110,75 @@ public class ChatService2 {
             return buildSearchResponse(
                     "Sản phẩm phù hợp cho độ tuổi " + age + "+", results
             );
+        }
+        // 4. Theo giá tiền
+        // ví dụ: "tìm sản phẩm giá từ 500000 đến 1000000" hoặc "giá dưới 300000"
+        if (lower.contains("giá")) {
+            Matcher rangeMatcher = Pattern.compile("(\\d+(?:\\.\\d+)?)").matcher(lower);
+            BigDecimal min = BigDecimal.ZERO;
+            BigDecimal max = null;
+
+            List<BigDecimal> numbers = new ArrayList<>();
+            while (rangeMatcher.find()) {
+                numbers.add(new BigDecimal(rangeMatcher.group(1)));
+            }
+
+            if (numbers.size() == 1) {
+                // câu kiểu "giá dưới 300000" hoặc "dưới 300000"
+                if (lower.contains("dưới") || lower.contains("tối đa") || lower.contains("nhỏ hơn")) {
+                    max = numbers.get(0);
+                } else if (lower.contains("trên") || lower.contains("tối thiểu") || lower.contains("lớn hơn")) {
+                    min = numbers.get(0);
+                } else {
+                    // chỉ một số -> coi như max
+                    max = numbers.get(0);
+                }
+            } else if (numbers.size() >= 2) {
+                min = numbers.get(0);
+                max = numbers.get(1);
+            }
+
+            if (max != null) {
+                results = productRepository.findByTrangThaiAndGiaKMBetween("Đang kinh doanh", min, max);
+                return buildSearchResponse(
+                        String.format("Sản phẩm có giá từ %s đến %s", min, max), results);
+            } else {
+                results = productRepository.findByTrangThaiAndGiaKMGreaterThanEqual("Đang kinh doanh", min);
+                return buildSearchResponse(
+                        String.format("Sản phẩm có giá từ %s trở lên", min), results);
+            }
+        }
+
+        // 5. Theo số lượng mảnh ghép
+        if (lower.contains("mảnh ghép") || lower.contains("mảnh")) {
+            Matcher matcher = Pattern.compile("(\\d{1,5})").matcher(lower);
+            Integer minPieces = 0, maxPieces = null;
+            List<Integer> nums = new ArrayList<>();
+            while (matcher.find()) {
+                nums.add(Integer.parseInt(matcher.group(1)));
+            }
+            if (nums.size() == 1) {
+                if (lower.contains("dưới") || lower.contains("ít hơn")) {
+                    maxPieces = nums.get(0);
+                } else if (lower.contains("trên") || lower.contains("nhiều hơn")) {
+                    minPieces = nums.get(0);
+                } else {
+                    maxPieces = nums.get(0);
+                }
+            } else if (nums.size() >= 2) {
+                minPieces = nums.get(0);
+                maxPieces = nums.get(1);
+            }
+
+            if (maxPieces != null) {
+                results = productRepository.findByTrangThaiAndSoLuongManhGhepBetween("Đang kinh doanh", minPieces, maxPieces);
+                return buildSearchResponse(
+                        String.format("Sản phẩm có từ %d đến %d mảnh ghép", minPieces, maxPieces), results);
+            } else {
+                results = productRepository.findByTrangThaiAndSoLuongManhGhepGreaterThanEqual("Đang kinh doanh", minPieces);
+                return buildSearchResponse(
+                        String.format("Sản phẩm có từ %d mảnh ghép trở lên", minPieces), results);
+            }
         }
 
         String keyword = extractKeyword(lower);
