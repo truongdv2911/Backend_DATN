@@ -18,6 +18,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("select u from User u where (:roleId is null or u.role.id = :roleId) and u.trangThai = 1")
     List<User> pageUser(@Param("roleId") String roleId);
 
+    @Query(value = "SELECT COUNT(*) AS total_users\n" +
+            "FROM users where trang_thai =1", nativeQuery = true)
+    Integer userActive();
+
     boolean existsByEmail(String email); // Thêm phương thức này
 
     List<User> findByTenContainingIgnoreCaseOrEmailContainingIgnoreCase(String hoTen, String email);
@@ -33,4 +37,26 @@ GROUP BY kh.id, kh.ten
 ORDER BY tong_tien DESC;
 """, nativeQuery = true)
     List<Object[]> topKhachHang(LocalDate startDate, LocalDate endDate);
+
+    @Query(value = "SELECT\n" +
+            "    CASE \n" +
+            "        WHEN u.total_until_yesterday = 0 THEN NULL  -- hoặc 0 nếu muốn\n" +
+            "        ELSE ( t.today_count * 100.0 / u.total_until_yesterday )\n" +
+            "    END AS growth_percent\n" +
+            "FROM (\n" +
+            "    -- Số user mới hôm nay\n" +
+            "    SELECT COUNT(*) AS today_count\n" +
+            "    FROM users\n" +
+            "    WHERE CONVERT(date, ngay_tao) = CONVERT(date, GETDATE())\n" +
+            ") t\n" +
+            "CROSS JOIN (\n" +
+            "    -- Tổng user đã có đến hết ngày hôm qua\n" +
+            "    SELECT COUNT(*) AS total_until_yesterday\n" +
+            "    FROM users\n" +
+            "    WHERE CONVERT(date, ngay_tao) <= CONVERT(date, DATEADD(day, -1, GETDATE()))\n" +
+            ") u;", nativeQuery = true)
+    Double phanTramTangUser();
+
+    @Query(value = "select top 10 * from Users u where u.trang_thai = 1 and u.role_id = 3 ORDER BY ngay_tao Desc;", nativeQuery = true)
+    List<User> findTop10UserNew();
 }

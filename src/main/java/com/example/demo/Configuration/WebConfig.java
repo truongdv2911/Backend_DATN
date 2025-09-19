@@ -79,9 +79,9 @@ public class WebConfig {
                         .requestMatchers(HttpMethod.PUT, ("/api/sanpham/**")).hasAnyRole(admin, staff)
                         .requestMatchers(HttpMethod.DELETE, ("/api/sanpham/**")).hasRole(admin)
 
-                        .requestMatchers(HttpMethod.GET, ("/api/khuyenmai/**")).hasAnyRole(admin, staff)
-                        .requestMatchers(HttpMethod.POST, ("/api/khuyenmai/**")).hasAnyRole(admin, staff)
-                        .requestMatchers(HttpMethod.PUT, ("/api/khuyenmai/**")).hasAnyRole(admin, staff)
+                        .requestMatchers(HttpMethod.GET, ("/api/khuyenmai/**")).hasAnyRole(admin)
+                        .requestMatchers(HttpMethod.POST, ("/api/khuyenmai/**")).hasAnyRole(admin)
+                        .requestMatchers(HttpMethod.PUT, ("/api/khuyenmai/**")).hasAnyRole(admin)
                         .requestMatchers(HttpMethod.DELETE, ("/api/khuyenmai/**")).hasRole(admin)
 
                         .requestMatchers(HttpMethod.GET, ("/api/danhmuc/**")).permitAll()
@@ -100,8 +100,8 @@ public class WebConfig {
                         .requestMatchers(HttpMethod.DELETE, ("/api/bosuutap/**")).hasRole(admin)
 
                         .requestMatchers(HttpMethod.GET, ("/api/phieugiamgia/**")).permitAll()
-                        .requestMatchers(HttpMethod.POST, ("/api/phieugiamgia/**")).hasAnyRole(admin, staff)
-                        .requestMatchers(HttpMethod.PUT, ("/api/phieugiamgia/**")).hasAnyRole(admin, staff)
+                        .requestMatchers(HttpMethod.POST, ("/api/phieugiamgia/**")).hasAnyRole(admin)
+                        .requestMatchers(HttpMethod.PUT, ("/api/phieugiamgia/**")).hasAnyRole(admin)
                         .requestMatchers(HttpMethod.DELETE, ("/api/phieugiamgia/**")).hasRole(admin)
 
                         .requestMatchers(HttpMethod.GET, ("/api/giohang/**")).permitAll()
@@ -139,19 +139,14 @@ public class WebConfig {
                         .requestMatchers(HttpMethod.PUT, ("api/lego-store/xuatXu/**")).hasAnyRole(admin, staff)
                         .requestMatchers(HttpMethod.DELETE, ("api/lego-store/xuatXu/**")).hasRole(admin)
 
-                        .requestMatchers(HttpMethod.GET, ("/api/lego-store/chat/**")).permitAll()
-                        .requestMatchers(HttpMethod.POST, ("/api/lego-store/chat/**")).hasAnyRole(admin, staff, user)
-                        .requestMatchers(HttpMethod.PUT, ("/api/lego-store/chat/**")).hasAnyRole(admin, staff, user)
-                        .requestMatchers(HttpMethod.DELETE, ("/api/lego-store/chat/**")).hasAnyRole(admin, user, staff)
-
                         .requestMatchers(HttpMethod.GET, ("api/lego-store/danh-gia/**")).permitAll()
                         .requestMatchers(HttpMethod.POST, ("api/lego-store/danh-gia/**")).hasAnyRole(admin, staff, user)
                         .requestMatchers(HttpMethod.PUT, ("api/lego-store/danh-gia/**")).hasAnyRole(admin, staff, user)
                         .requestMatchers(HttpMethod.DELETE, ("api/lego-store/danh-gia/**")).hasAnyRole(admin, user, staff)
 
-                        .requestMatchers(HttpMethod.GET, ("api/lego-store/hoan-hang/**")).hasAnyRole(admin, staff)
-                        .requestMatchers(HttpMethod.POST, ("api/lego-store/hoan-hang/**")).hasAnyRole(admin, staff)
-                        .requestMatchers(HttpMethod.PUT, ("api/lego-store/hoan-hang/**")).hasAnyRole(admin, staff)
+                        .requestMatchers(HttpMethod.GET, ("api/lego-store/hoan-hang/**")).permitAll()
+                        .requestMatchers(HttpMethod.POST, ("api/lego-store/hoan-hang/**")).permitAll()
+                        .requestMatchers(HttpMethod.PUT, ("api/lego-store/hoan-hang/**")).hasAnyRole(admin)
                         .requestMatchers(HttpMethod.DELETE, ("api/lego-store/hoan-hang/**")).hasRole(admin)
 
                         .requestMatchers(HttpMethod.GET, ("api/lego-store/lich-su-log/**")).hasAnyRole(admin, staff)
@@ -162,9 +157,11 @@ public class WebConfig {
                         .requestMatchers(HttpMethod.GET, ("/api/lego-store/san-pham-yeu-thich/**")).permitAll()
                         .requestMatchers(HttpMethod.POST, ("/api/lego-store/san-pham-yeu-thich/**")).hasAnyRole(admin, staff, user)
                         .requestMatchers(HttpMethod.PUT, ("/api/lego-store/san-pham-yeu-thich/**")).hasAnyRole(admin, staff, user)
-                        .requestMatchers(HttpMethod.DELETE, ("/api/lego-store/san-pham-yeu-thich/**")).hasRole(admin)
+                        .requestMatchers(HttpMethod.DELETE, ("/api/lego-store/san-pham-yeu-thich/**")).hasAnyRole(admin, user)
 
-                        .requestMatchers(HttpMethod.GET, ("api/lego-store/thong-ke/**")).hasAnyRole(admin, staff)
+                        .requestMatchers(HttpMethod.GET, ("api/lego-store/thong-ke/**")).hasAnyRole(admin)
+
+                        .requestMatchers(HttpMethod.GET, ("/api/lego-store/hang-thanh-ly")).hasAnyRole(admin)
 
                         .requestMatchers(HttpMethod.GET, ("api/lego-store/vi-phieu-giam-gia/**")).permitAll()
                         .requestMatchers(HttpMethod.POST, ("api/lego-store/vi-phieu-giam-gia/**")).hasAnyRole(admin, staff, user)

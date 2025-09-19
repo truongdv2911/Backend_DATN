@@ -1,5 +1,7 @@
 package com.example.demo.Service;
 
+import com.example.demo.DTOs.DanhSachGanDayDTO;
+import com.example.demo.DTOs.DoanhThuDTO;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.*;
 import com.example.demo.Responses.*;
@@ -9,10 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +25,7 @@ public class ThongKeService {
     private final XuatXuRepository xuatXuRepository;
     private final PhieuHoanRepository phieuHoanRepository;
     private final UserRepository userRepository;
+    private final DanhGiaRepository danhGiaRepository;
 
     public BigDecimal doanhThuTheoNgay(LocalDate startDate, LocalDate endDate){
         return hoaDonRepository.doanhThuTheoNgay(startDate,endDate);
@@ -146,5 +146,79 @@ public class ThongKeService {
                         row -> (String) row[0],
                         row -> new BigDecimal(row[1].toString())
                 ));
+    }
+
+    public DashboardStats tangTruongUser() throws Exception {
+        try {
+            Integer users = userRepository.userActive();
+            Double tiLe = Objects.requireNonNullElse(userRepository.phanTramTangUser(), 0.0);
+
+            Integer donHang = hoaDonRepository.donToday();
+            Double tiLeDonHang = Objects.requireNonNullElse(hoaDonRepository.tileDon(), 0.0);
+
+            BigDecimal doanhThu = hoaDonRepository.doanhThuThang();
+            Double tiLedoanhThu = Objects.requireNonNullElse(hoaDonRepository.tileDoanhThu(), 0.0);
+
+            return new DashboardStats(users,tiLe,donHang,tiLeDonHang,doanhThu,tiLedoanhThu);
+        }catch (Exception e){
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public List<DanhSachGanDayDTO> getRecentActivities() {
+        List<DanhSachGanDayDTO> list = new ArrayList<>();
+
+        // 1. Người dùng mới đăng ký
+        userRepository.findTop10UserNew()
+                .forEach(u -> list.add(new DanhSachGanDayDTO(
+                        "Người dùng mới đăng ký",
+                        u.getTen(),
+                        u.getNgayTao()
+                )));
+
+        // 2. Đơn hàng mới
+        hoaDonRepository.findTop10DonHangNew()
+                .forEach(o -> list.add(new DanhSachGanDayDTO(
+                        "Đơn hàng mới",
+                        o.getTenNguoiNhan(),
+                        o.getNgayTao()
+                )));
+
+        // 4. Đánh giá sản phẩm
+        danhGiaRepository.findTop10DanhGiaNew()
+                .forEach(r -> list.add(new DanhSachGanDayDTO(
+                        "Đánh giá sản phẩm",
+                        r.getUser().getTen(),
+                        r.getNgayDanhGia()
+                )));
+
+        hoaDonRepository.findTop10DonHangHuy()
+                .forEach(c -> list.add(new DanhSachGanDayDTO(
+                        "Hủy đơn hàng",
+                        c.getTenNguoiNhan(),
+                        c.getNgayTao()
+                )));
+        // Sắp xếp tất cả theo thời gian giảm dần
+        list.sort((a, b) -> b.getTime().compareTo(a.getTime()));
+        return list;
+    }
+
+    public List<DoanhThuDTO> getRevenue7Days() {
+        List<Object[]> rows = hoaDonRepository.finddoanhTHu7Days();
+
+        // Chuyển sang DTO và bảo đảm đủ 7 ngày (kể cả ngày không có đơn)
+        Map<LocalDate, BigDecimal> map = new HashMap<>();
+        for (Object[] r : rows) {
+            LocalDate d = ((java.sql.Date) r[0]).toLocalDate();
+            BigDecimal total = (BigDecimal) r[1];
+            map.put(d, total);
+        }
+
+        List<DoanhThuDTO> result = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate day = LocalDate.now().minusDays(i);
+            result.add(new DoanhThuDTO(day, map.getOrDefault(day, BigDecimal.ZERO)));
+        }
+        return result;
     }
 }

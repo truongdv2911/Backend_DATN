@@ -1,9 +1,12 @@
 package com.example.demo.Controller;
 
+import com.example.demo.DTOs.DanhSachGanDayDTO;
+import com.example.demo.DTOs.DoanhThuDTO;
 import com.example.demo.Entity.SanPham;
 import com.example.demo.Responses.*;
 import com.example.demo.Service.ThongKeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -97,5 +100,20 @@ public class ThongKeController {
             @RequestParam LocalDate endDate
     ) {
         return thongKeService.getDoanhThuTheoXuatXu(startDate, endDate);
+    }
+
+    @GetMapping("/tong-nguoi-dung")
+    public ResponseEntity<?> dashboard() throws Exception {
+        return ResponseEntity.ok(thongKeService.tangTruongUser());
+    }
+
+    @GetMapping("/gan-day")
+    public List<DanhSachGanDayDTO> getRecent() {
+        return thongKeService.getRecentActivities();
+    }
+
+    @GetMapping("/last7days")
+    public List<DoanhThuDTO> getLast7Days() {
+        return thongKeService.getRevenue7Days();
     }
 }
