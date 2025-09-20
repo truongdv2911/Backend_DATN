@@ -432,7 +432,9 @@ public class HoaDonService {
         }
 
         // ✅ Bỏ qua trừ số lượng nếu thanh toán = chuyển khoản
-        if (!"Chuyển khoản".equalsIgnoreCase(hoaDon.getPhuongThucThanhToan())) {
+        if (!"Chuyển khoản".equalsIgnoreCase(hoaDon.getPhuongThucThanhToan())
+                && "Đang xử lý".equalsIgnoreCase(hoaDon.getTrangThai())
+                && "Đã xác nhận".equalsIgnoreCase(trangThai)) {
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
 
             for (HoaDonChiTiet chiTiet : chiTietList) {
@@ -451,20 +453,22 @@ public class HoaDonService {
             }
         }
 
-        //Cập nhật lại số lượng khi bị hủy
-//        if ((trangThai.equalsIgnoreCase("Đã hủy") || trangThai.equalsIgnoreCase("Thất bại"))
-//                && !(hoaDon.getTrangThai().equalsIgnoreCase("Đã hủy") || !hoaDon.getTrangThai().equalsIgnoreCase("Thất bại"))) {
-//            List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
-//
-//            for (HoaDonChiTiet chiTiet : chiTietList) {
-//                SanPham sp = chiTiet.getSp();
-//                Integer soLuongHoanLai = chiTiet.getSoLuong();
-//                Integer soLuongConLai = sp.getSoLuongTon() + soLuongHoanLai;
-//                sp.setTrangThai(soLuongConLai > 0 ? "Đang kinh doanh" : "Hết hàng");
-//                sp.setSoLuongTon(soLuongConLai);
-//                san_pham_repo.save(sp); // Lưu lại số lượng mới
-//            }
-//        }
+ //       Cập nhật lại số lượng khi bị hủy
+        if ((trangThai.equalsIgnoreCase("Đã hủy") || trangThai.equalsIgnoreCase("Thất bại"))
+                && !(hoaDon.getTrangThai().equalsIgnoreCase("Đã hủy")
+                || hoaDon.getTrangThai().equalsIgnoreCase("Thất bại"))
+                && "Chuyển khoản".equalsIgnoreCase(hoaDon.getPhuongThucThanhToan())) {
+            List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByIdOrder(id);
+
+            for (HoaDonChiTiet chiTiet : chiTietList) {
+                SanPham sp = chiTiet.getSp();
+                Integer soLuongHoanLai = chiTiet.getSoLuong();
+                Integer soLuongConLai = sp.getSoLuongTon() + soLuongHoanLai;
+                sp.setTrangThai(soLuongConLai > 0 ? "Đang kinh doanh" : "Hết hàng");
+                sp.setSoLuongTon(soLuongConLai);
+                san_pham_repo.save(sp); // Lưu lại số lượng mới
+            }
+        }
 
         hoaDon.setTrangThai(trangThai);
 
