@@ -111,6 +111,17 @@ public class ChatService2 {
                     "Sản phẩm phù hợp cho độ tuổi " + age + "+", results
             );
         }
+
+        // Giá cao nhất / thấp nhất
+        if (lower.contains("cao nhất") || lower.contains("đắt nhất") || lower.contains("max")) {
+            results = productRepository.findTop3ByTrangThaiOrderByGiaKMDesc("Đang kinh doanh");
+            return buildSearchResponse("Sản phẩm giá cao nhất", results);
+        }
+        if (lower.contains("thấp nhất") || lower.contains("rẻ nhất") || lower.contains("min")) {
+            results = productRepository.findTop3ByTrangThaiOrderByGiaKMAsc("Đang kinh doanh");
+            return buildSearchResponse("Sản phẩm giá thấp nhất", results);
+        }
+
         // 4. Theo giá tiền
         // ví dụ: "tìm sản phẩm giá từ 500000 đến 1000000" hoặc "giá dưới 300000"
         if (lower.contains("giá")) {

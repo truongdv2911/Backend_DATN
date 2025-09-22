@@ -131,6 +131,59 @@ public class HoanHangService {
             // Hoàn một phần - cập nhật lại tổng tiền hóa đơn
             HoaDon hoaDon = phieu.getHoaDon();
             hoaDon.setTongTien(hoaDon.getTongTien().subtract(phieu.getTongTienHoan()));
+
+            // Cập nhật/xóa các hóa đơn chi tiết theo số lượng hoàn trong phiếu
+            List<ChiTietHoanHang> chiTietHoans = chiTietHoanHangRepository.findByPhieuHoanHang(phieu);
+            if (chiTietHoans != null && !chiTietHoans.isEmpty()) {
+                // Map<productId, qtyToReturn>
+                Map<Integer, Integer> soLuongHoanTheoSanPham = new HashMap<>();
+                for (ChiTietHoanHang cth : chiTietHoans) {
+                    if (cth.getSanPham() != null && cth.getSanPham().getId() != null) {
+                        int spId = cth.getSanPham().getId();
+                        int soLuong = cth.getSoLuongHoan() == null ? 0 : cth.getSoLuongHoan();
+                        soLuongHoanTheoSanPham.put(spId, soLuongHoanTheoSanPham.getOrDefault(spId, 0) + soLuong);
+                    }
+                }
+
+                List<HoaDonChiTiet> hdcts = hoaDonChiTietRepository.findByHd(hoaDon);
+                List<HoaDonChiTiet> canXoa = new ArrayList<>();
+                List<HoaDonChiTiet> canCapNhat = new ArrayList<>();
+
+                for (HoaDonChiTiet hdct : hdcts) {
+                    if (hdct.getSp() == null) continue;
+                    Integer spId = hdct.getSp().getId();
+                    if (spId == null) continue;
+                    Integer soLuongCanHoan = soLuongHoanTheoSanPham.get(spId);
+                    if (soLuongCanHoan == null || soLuongCanHoan <= 0) continue;
+
+                    int soLuongHienTai = hdct.getSoLuong() == null ? 0 : hdct.getSoLuong();
+                    if (soLuongHienTai <= 0) continue;
+
+                    // Trừ theo từng dòng, hỗ trợ nhiều dòng cho cùng một sản phẩm
+                    int truDuoc = Math.min(soLuongHienTai, soLuongCanHoan);
+                    int soLuongConLai = soLuongHienTai - truDuoc;
+
+                    if (soLuongConLai <= 0) {
+                        canXoa.add(hdct);
+                    } else {
+                        hdct.setSoLuong(soLuongConLai);
+                        if (hdct.getGia() != null) {
+                            hdct.setTongTien(hdct.getGia().multiply(BigDecimal.valueOf(soLuongConLai)));
+                        }
+                        canCapNhat.add(hdct);
+                    }
+
+                    // Cập nhật lại số lượng còn phải hoàn cho sản phẩm này
+                    soLuongHoanTheoSanPham.put(spId, soLuongCanHoan - truDuoc);
+                }
+
+                if (!canCapNhat.isEmpty()) {
+                    hoaDonChiTietRepository.saveAll(canCapNhat);
+                }
+                if (!canXoa.isEmpty()) {
+                    hoaDonChiTietRepository.deleteAll(canXoa);
+                }
+            }
             hoaDonRepository.save(hoaDon);
         }
 

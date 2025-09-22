@@ -156,7 +156,6 @@ public class HoanHangController {
     public ResponseEntity<?> kiemTraHang(
             @PathVariable Integer idPhieu,
             @RequestBody List<KetQuaKiemTraRequest> ketQuaList) {
-
         try {
             hoanHangService.kiemTraHang(idPhieu, ketQuaList);
             return ResponseEntity.ok(new ErrorResponse(200, "Đã kiểm tra và xử lý hàng hoàn"));
