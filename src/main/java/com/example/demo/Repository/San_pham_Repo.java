@@ -262,4 +262,8 @@ WHERE s.trangThai = :status
     List<SanPham> findByTrangThaiAndSoLuongManhGhepBetween(String đang_kinh_doanh, Integer minPieces, Integer maxPieces);
 
     List<SanPham> findByTrangThaiAndSoLuongManhGhepGreaterThanEqual(String đang_kinh_doanh, Integer minPieces);
+
+    // Giá cao nhất / thấp nhất theo giá khuyến mãi hiện tại
+    List<SanPham> findTop3ByTrangThaiOrderByGiaKMDesc(String status);
+    List<SanPham> findTop3ByTrangThaiOrderByGiaKMAsc(String status);
 }

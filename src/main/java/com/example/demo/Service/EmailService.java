@@ -53,7 +53,8 @@ public class EmailService {
 
     private String buildHtmlContent(HoaDonEmailDTO req) {
         StringBuilder productsHtml = new StringBuilder();
-        DecimalFormat df = new DecimalFormat("#,###");
+        DecimalFormat df = new DecimalFormat("#,##0.##");
+        df.setRoundingMode(java.math.RoundingMode.DOWN);
 
         // Format sản phẩm
         for (SanPhamHoaDonEmail product : req.getListSp()) {
