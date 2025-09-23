@@ -79,7 +79,7 @@ public class XuatXuController {
                         return soLuongTon != null && soLuongTon > 0;
                     });
             if (hasProductsInStock) {
-                throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
+                throw new RuntimeException("Không thể xóa xuất xứ. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa xuất xứ.");
             }
             xuatXu.setIsDelete(0);
             xuatXuRepository.save(xuatXu);
@@ -87,7 +87,10 @@ public class XuatXuController {
             String moTa = "Xóa xuất xứ ID: " + id + ", Tên: " + xuatXu.getTen();
             lichSuLogService.saveLog("XÓA", "XuatXu", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(new ErrorResponse(200,"xoa thanh cong"));
-        }catch (Exception e){
+        }catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }
+        catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
         }
     }

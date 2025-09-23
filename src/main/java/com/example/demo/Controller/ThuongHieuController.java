@@ -80,7 +80,7 @@ public class ThuongHieuController {
                         return soLuongTon != null && soLuongTon > 0;
                     });
             if (hasProductsInStock) {
-                throw new RuntimeException("Không thể xóa thuong hieu. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa thuong hieu.");
+                throw new RuntimeException("Không thể xóa thương hiệu. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa thương hiệu.");
             }
             thuongHieu.setIsDelete(0);
             thuongHieuRepository.save(thuongHieu);
@@ -88,8 +88,12 @@ public class ThuongHieuController {
             String moTa = "Xóa thương hiệu ID: " + id + ", Tên: " + thuongHieu.getTen();
             lichSuLogService.saveLog("XÓA", "ThuongHieu", moTa, lichSuLogService.getCurrentUserId());
             return ResponseEntity.ok(new ErrorResponse(200,"xoa thanh cong"));
-        }catch (Exception e){
+        }
+        catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
+        }
+        catch (Exception e){
+            return ResponseEntity.badRequest().body(new ErrorResponse(500, e.getMessage()));
         }
     }
 }

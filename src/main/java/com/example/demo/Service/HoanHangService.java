@@ -81,6 +81,17 @@ public class HoanHangService {
 
         // Xử lý chi tiết hoàn
         BigDecimal tongTien = BigDecimal.ZERO;
+        
+        // Tính tỷ lệ giảm giá nếu có phiếu giảm giá
+        // Ví dụ: Hóa đơn có tamTinh = 1,000,000đ, soTienGiam = 100,000đ
+        // => tyLeGiamGia = 100,000 / 1,000,000 = 0.1 (10%)
+        // Khi hoàn sản phẩm giá 100,000đ, sẽ hoàn: 100,000 * (1 - 0.1) = 90,000đ
+        BigDecimal tyLeGiamGia = BigDecimal.ZERO;
+        if (hoaDon.getSoTienGiam() != null && hoaDon.getSoTienGiam().compareTo(BigDecimal.ZERO) > 0 
+            && hoaDon.getTamTinh() != null && hoaDon.getTamTinh().compareTo(BigDecimal.ZERO) > 0) {
+            tyLeGiamGia = hoaDon.getSoTienGiam().divide(hoaDon.getTamTinh(),10, java.math.RoundingMode.HALF_UP);
+        }
+        
         for (ChiTietHoanHangDTO ctdto : dto.getChiTietHoanHangs()) {
             SanPham sp = sanPhamRepository.findById(ctdto.getIdSanPham())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
@@ -93,8 +104,17 @@ public class HoanHangService {
                     throw new RuntimeException("Số lượng hoàn cho sản phẩm ID " + ctdto.getIdSanPham() + " vượt quá số lượng trong hóa đơn");
                 }
 
-            BigDecimal giaHoan = hoaDonChiTietRepository
+            // Lấy giá gốc từ hóa đơn chi tiết
+            BigDecimal giaGoc = hoaDonChiTietRepository
                     .getGiaSanPhamTrongHoaDon(dto.getIdHoaDon(), ctdto.getIdSanPham());
+            
+            // Áp dụng tỷ lệ giảm giá vào giá hoàn (nếu có)
+            BigDecimal giaHoan = giaGoc;
+            if (tyLeGiamGia.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal soTienGiamChoSP = giaGoc.multiply(tyLeGiamGia);
+                giaHoan = giaGoc.subtract(soTienGiamChoSP);
+            }
+            
             BigDecimal tongGiaHoan = giaHoan.multiply(BigDecimal.valueOf(ctdto.getSoLuongHoan()));
 
             ChiTietHoanHang ct = new ChiTietHoanHang();
@@ -125,13 +145,11 @@ public class HoanHangService {
         if (isHoanToanBo(phieu)) {
             HoaDon hoaDon = phieu.getHoaDon();
             hoaDon.setTrangThai("Hoàn toàn bộ");
-            hoaDon.setTongTien(hoaDon.getTongTien().subtract(phieu.getTongTienHoan()));
             hoaDonRepository.save(hoaDon);
         } else {
             // Hoàn một phần - cập nhật lại tổng tiền hóa đơn
             HoaDon hoaDon = phieu.getHoaDon();
-            hoaDon.setTongTien(hoaDon.getTongTien().subtract(phieu.getTongTienHoan()));
-
+            
             // Cập nhật/xóa các hóa đơn chi tiết theo số lượng hoàn trong phiếu
             List<ChiTietHoanHang> chiTietHoans = chiTietHoanHangRepository.findByPhieuHoanHang(phieu);
             if (chiTietHoans != null && !chiTietHoans.isEmpty()) {
@@ -184,6 +202,29 @@ public class HoanHangService {
                     hoaDonChiTietRepository.deleteAll(canXoa);
                 }
             }
+            
+            // Tính lại tổng tiền hóa đơn sau khi hoàn
+            // Lấy tất cả chi tiết hóa đơn còn lại
+            List<HoaDonChiTiet> chiTietConLai = hoaDonChiTietRepository.findByHd(hoaDon);
+            BigDecimal tamTinhMoi = chiTietConLai.stream()
+                    .map(HoaDonChiTiet::getTongTien)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // Áp dụng lại giảm giá theo tỷ lệ cũ
+            BigDecimal soTienGiamHoaDon = hoaDon.getSoTienGiam() != null ? hoaDon.getSoTienGiam() : BigDecimal.ZERO;
+            BigDecimal tyLeGiamGia = BigDecimal.ZERO;
+            if (soTienGiamHoaDon.compareTo(BigDecimal.ZERO) > 0 && hoaDon.getTamTinh().compareTo(BigDecimal.ZERO) > 0) {
+                tyLeGiamGia = soTienGiamHoaDon.divide(hoaDon.getTamTinh(),10, java.math.RoundingMode.HALF_UP);
+            }
+            
+            BigDecimal soTienGiamMoi = tamTinhMoi.multiply(tyLeGiamGia);
+            BigDecimal phiShip = hoaDon.getPhiShip() != null ? hoaDon.getPhiShip() : BigDecimal.ZERO;
+            BigDecimal tongTienCuoiCung = tamTinhMoi.subtract(soTienGiamMoi).add(phiShip);
+            
+            // Cập nhật hóa đơn
+            hoaDon.setTamTinh(tamTinhMoi);
+            hoaDon.setSoTienGiam(soTienGiamMoi);
+            hoaDon.setTongTien(tongTienCuoiCung);
             hoaDonRepository.save(hoaDon);
         }
 
@@ -433,13 +474,13 @@ public class HoanHangService {
         }
     }
 
-    private Map saveFile(MultipartFile file) throws IOException {
+    private Map<String, Object> saveFile(MultipartFile file) throws IOException {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
         if (originalFileName.contains("..")) {
             throw new IOException("Tên file không hợp lệ: " + originalFileName);
         }
         // Tạo tên file duy nhất
-        Map result = cloudinaryService.upload(file);
+        Map<String, Object> result = cloudinaryService.upload(file);
         return result;
     }
 
