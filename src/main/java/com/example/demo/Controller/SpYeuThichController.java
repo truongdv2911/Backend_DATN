@@ -83,7 +83,7 @@ public class SpYeuThichController {
                 return ResponseEntity.badRequest().body(new ErrorResponse(400, message));
             }
             SanPhamYeuThich sp = spYeuThichService.addSPyeuThich(dto);
-            return ResponseEntity.ok(sp);
+            return ResponseEntity.ok(new ErrorResponse(200, "thêm yêu thích thành công"));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(new ErrorResponse(400, ex.getMessage()));
         }catch (Exception e){

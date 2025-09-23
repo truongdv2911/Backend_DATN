@@ -84,7 +84,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 Pair.of("api/lego-store/xuatXu", "GET"),
                 Pair.of("/api/lego-store/payment", "GET"),
                 Pair.of("api/lego-store/hoa-don", "GET"),
-                Pair.of("api/lego-store/user", "GET")
+                Pair.of("api/lego-store/user", "GET"),
+                Pair.of("/api/lego-store/san-pham-yeu-thich", "GET")
         );
         for (Pair<String, String> pair:
                 passTokens) {
