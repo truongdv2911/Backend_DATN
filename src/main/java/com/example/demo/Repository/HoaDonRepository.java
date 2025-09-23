@@ -95,6 +95,7 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
                                   SUM(tong_tien) AS total
                            FROM Hoa_don
                            WHERE ngay_lap >= DATEADD(day, -6, CAST(GETDATE() AS date))
+                           and trang_thai = N'Hoàn tất'
                            GROUP BY CAST(ngay_lap AS DATE)
                            ORDER BY order_date
 """, nativeQuery = true)

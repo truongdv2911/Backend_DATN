@@ -85,7 +85,7 @@ public class ThuongHieuController {
                         return soLuongTon != null && soLuongTon > 0;
                     });
             if (hasProductsInStock) {
-                throw new RuntimeException("Không thể xóa thương hiệu. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa thương hiệu.");
+                throw new RuntimeException("Không thể xóa thương hiệu. Vẫn còn sản phẩm trong kho (số lượng tồn > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa thương hiệu.");
             }
             thuongHieu.setIsDelete(0);
             thuongHieuRepository.save(thuongHieu);

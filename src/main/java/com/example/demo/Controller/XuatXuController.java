@@ -84,7 +84,7 @@ public class XuatXuController {
                         return soLuongTon != null && soLuongTon > 0;
                     });
             if (hasProductsInStock) {
-                throw new RuntimeException("Không thể xóa xuất xứ. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa xuất xứ.");
+                throw new RuntimeException("Không thể xóa xuất xứ. Vẫn còn sản phẩm trong kho (số lượng tồn > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa xuất xứ.");
             }
             xuatXu.setIsDelete(0);
             xuatXuRepository.save(xuatXu);
