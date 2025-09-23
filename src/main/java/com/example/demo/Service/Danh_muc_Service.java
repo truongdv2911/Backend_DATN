@@ -2,6 +2,7 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.DanhMucDTO;
 import com.example.demo.Entity.DanhMuc;
+import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.Danh_muc_Repo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,8 @@ public class   Danh_muc_Service {
         }
         danhMuc.setTenDanhMuc(danhMucDTO.getTenDanhMuc());
         danhMuc.setMoTa(danhMucDTO.getMoTa());
+        List<SanPham> sp = danhMuc.getSanPhams();
+        danhMuc.setSanPhams(sp);
         return danhMucRepo.save(danhMuc);
     }
 

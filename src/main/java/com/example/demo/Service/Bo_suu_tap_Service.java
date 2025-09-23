@@ -2,12 +2,14 @@ package com.example.demo.Service;
 
 import com.example.demo.DTOs.BoSuuTapDTO;
 import com.example.demo.Entity.BoSuuTap;
+import com.example.demo.Entity.SanPham;
 import com.example.demo.Repository.Bo_suu_tap_Repo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -51,6 +53,8 @@ public class Bo_suu_tap_Service {
         boSuuTap.setTenBoSuuTap(boSuuTapDTO.getTenBoSuuTap());
         boSuuTap.setMoTa(boSuuTapDTO.getMoTa());
         boSuuTap.setNamPhatHanh(boSuuTapDTO.getNamPhatHanh());
+        List<SanPham> sp = boSuuTap.getSanPhams();
+        boSuuTap.setSanPhams(sp);
         return boSuuTapRepo.save(boSuuTap);
     }
 

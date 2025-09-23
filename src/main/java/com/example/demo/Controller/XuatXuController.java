@@ -1,6 +1,7 @@
 package com.example.demo.Controller;
 
 import com.example.demo.DTOs.XuatXuDTO;
+import com.example.demo.Entity.SanPham;
 import com.example.demo.Entity.ThuongHieu;
 import com.example.demo.Entity.XuatXu;
 import com.example.demo.Repository.XuatXuRepository;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -62,7 +65,9 @@ public class XuatXuController {
             String logThayDoi = ObjectChangeLogger.generateChangeLog(xuatXu, xuatXuDTO);
             String moTa = "Cập nhật xuất xứ ID: " + id + ". Thay đổi: " + logThayDoi;
             lichSuLogService.saveLog("CẬP NHẬT", "XuatXu", moTa, lichSuLogService.getCurrentUserId());
-            XuatXu resultObj = xuatXuRepository.save(new XuatXu(id, xuatXuDTO.getTen(), xuatXuDTO.getMoTa(), 1, null));
+            List<SanPham> sp = xuatXu.getSanPhams();
+            xuatXu.setSanPhams(sp);
+            XuatXu resultObj = xuatXuRepository.save(new XuatXu(id, xuatXuDTO.getTen(), xuatXuDTO.getMoTa(), 1, sp));
             return ResponseEntity.ok(resultObj);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
