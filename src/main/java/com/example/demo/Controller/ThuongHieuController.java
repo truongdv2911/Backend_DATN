@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.DTOs.ThuongHieuDTO;
 import com.example.demo.DTOs.XuatXuDTO;
+import com.example.demo.Entity.SanPham;
 import com.example.demo.Entity.ThuongHieu;
 import com.example.demo.Entity.XuatXu;
 import com.example.demo.Repository.ThuongHieuRepository;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/lego-store/thuong-hieu")
@@ -63,7 +66,9 @@ public class ThuongHieuController {
             String logThayDoi = ObjectChangeLogger.generateChangeLog(thuongHieu, thuongHieuDTO);
             String moTa = "Cập nhật thương hiệu ID: " + id + ". Thay đổi: " + logThayDoi;
             lichSuLogService.saveLog("CẬP NHẬT", "ThuongHieu", moTa, lichSuLogService.getCurrentUserId());
-            ThuongHieu resultObj = thuongHieuRepository.save(new ThuongHieu(id, thuongHieuDTO.getTen(), thuongHieuDTO.getMoTa(), 1, null));
+            List<SanPham> sp = thuongHieu.getSanPhams();
+            thuongHieu.setSanPhams(sp);
+            ThuongHieu resultObj = thuongHieuRepository.save(new ThuongHieu(id, thuongHieuDTO.getTen(), thuongHieuDTO.getMoTa(), 1, sp));
             return ResponseEntity.ok(resultObj);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new ErrorResponse(400, e.getMessage()));
