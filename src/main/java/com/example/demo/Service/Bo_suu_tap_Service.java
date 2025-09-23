@@ -64,7 +64,7 @@ public class Bo_suu_tap_Service {
                     return soLuongTon != null && soLuongTon > 0;
                 });
         if (hasProductsInStock) {
-            throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (soLuongTon > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
+            throw new RuntimeException("Không thể xóa bộ sưu tập. Vẫn còn sản phẩm trong kho (số lượng tồn > 0). Vui lòng bán hết tất cả sản phẩm trước khi xóa bộ sưu tập.");
         }
 
         boSuuTap.setIsDelete(0);
