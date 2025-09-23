@@ -13,5 +13,5 @@ import java.util.List;
 public class ChatResponse {
     private String responseType; // "SEARCH", "ADVICE", "SHIPPING", "FAQ", "GENERAL"
     private String message;
-    private List<SanPhamResponseDTO> products;
+    private List<SanPhamResponse2> products;
 }

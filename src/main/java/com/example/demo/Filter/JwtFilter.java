@@ -78,7 +78,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 Pair.of("/api/giohang/", "GET"),
                 Pair.of("/api/anhsp/", "GET"),
                 Pair.of("/api/chat", "POST"),
-                Pair.of("/api/chat", "DELETE"),
+                Pair.of("/api/chat", "GET"),
                 Pair.of("api/lego-store/danh-gia", "GET"),
                 Pair.of("api/lego-store/thuong-hieu", "GET"),
                 Pair.of("api/lego-store/xuatXu", "GET"),

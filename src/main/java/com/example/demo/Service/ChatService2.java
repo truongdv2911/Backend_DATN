@@ -7,6 +7,7 @@ import com.example.demo.Repository.Anh_sp_Repo;
 import com.example.demo.Repository.San_pham_Repo;
 import com.example.demo.Responses.AnhResponse;
 import com.example.demo.Responses.ChatResponse;
+import com.example.demo.Responses.SanPhamResponse2;
 import com.example.demo.Responses.SanPhamResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -206,7 +207,7 @@ public class ChatService2 {
                             "Bạn có muốn thử tìm với từ khóa khác hoặc cần gợi ý về các sản phẩm phù hợp không? 😊",
                     Collections.emptyList());
         }
-        List<SanPhamResponseDTO> dtos =
+        List<SanPhamResponse2> dtos =
                 convertToResponseDTOs(list);
 
         return new ChatResponse("SEARCH", "🔎 " + title, dtos);
@@ -219,7 +220,7 @@ public class ChatService2 {
                 .replace("xuất xứ", "")
                 .trim();
     }
-    public List<SanPhamResponseDTO> convertToResponseDTOs(List<SanPham> sanPhams) {
+    public List<SanPhamResponse2> convertToResponseDTOs(List<SanPham> sanPhams) {
         if (sanPhams.isEmpty()) {
             return new ArrayList<>();
         }
@@ -247,13 +248,14 @@ public class ChatService2 {
                             })
                             .toList();
 
-                    SanPhamResponseDTO dto = new SanPhamResponseDTO();
+                    SanPhamResponse2 dto = new SanPhamResponse2();
                     dto.setId(sanPham.getId());
                     dto.setTenSanPham(sanPham.getTenSanPham());
                     dto.setMaSanPham(sanPham.getMaSanPham());
                     dto.setDoTuoi(sanPham.getDoTuoi());
                     dto.setMoTa(sanPham.getMoTa());
                     dto.setGia(sanPham.getGia());
+                    dto.setGiaKM(sanPham.getGiaKM());
                     dto.setSoLuongManhGhep(sanPham.getSoLuongManhGhep());
                     dto.setSoLuongTon(sanPham.getSoLuongTon());
                     dto.setSoLuongVote(sanPham.getSoLuongVote());
