@@ -166,9 +166,9 @@ public void deleteAnhSp(Integer id) {
             List<AnhSp> existingImages = anhSpRepository.findBySanPhamId(sanPhamId);
             int totalImagesAfterUpload = existingImages.size() + files.length;
 
-            if (totalImagesAfterUpload > 7) {
+            if (totalImagesAfterUpload > 10) {
                 throw new RuntimeException("Sản phẩm đã có " + existingImages.size() + " ảnh. "
-                        + "Chỉ được upload tối đa 7 ảnh. Chỉ có thể thêm " + (7 - existingImages.size()) + " ảnh nữa.");
+                        + "Chỉ được upload tối đa 10 ảnh. Chỉ có thể thêm " + (10 - existingImages.size()) + " ảnh nữa.");
             }
 
 
